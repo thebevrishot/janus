@@ -62,6 +62,12 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 		LogsBloom: "",
 	}
 
+	// contractAddress : DATA, 20 Bytes - The contract address created, if the transaction was a contract creation, otherwise null.
+	if status != "0x1" {
+		// if failure, should return null for contractAddress, instead of the zero address.
+		ethTxReceipt.ContractAddress = ""
+	}
+
 	return &ethTxReceipt, nil
 }
 

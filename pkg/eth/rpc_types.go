@@ -184,19 +184,19 @@ func (r *GetTransactionByHashRequest) UnmarshalJSON(data []byte) error {
 type (
 	GetTransactionReceiptRequest  string
 	GetTransactionReceiptResponse struct {
-		TransactionHash   string `json:"transactionHash"`   // DATA, 32 Bytes - hash of the transaction.
-		TransactionIndex  string `json:"transactionIndex"`  // QUANTITY - integer of the transactions index position in the block.
-		BlockHash         string `json:"blockHash"`         // DATA, 32 Bytes - hash of the block where this transaction was in.
-		BlockNumber       string `json:"blockNumber"`       // QUANTITY - block number where this transaction was in.
-		From              string `json:"from,omitempty"`    // DATA, 20 Bytes - address of the sender.
-		To                string `json:"to,omitempty"`      // DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
-		CumulativeGasUsed string `json:"cumulativeGasUsed"` // QUANTITY - The total amount of gas used when this transaction was executed in the block.
-		GasUsed           string `json:"gasUsed"`           // QUANTITY - The amount of gas used by this specific transaction alone.
-		ContractAddress   string `json:"contractAddress"`   // DATA, 20 Bytes - The contract address created, if the transaction was a contract creation, otherwise null.
-		Logs              []Log  `json:"logs"`              // Array - Array of log objects, which this transaction generated.
-		LogsBloom         string `json:"logsBloom"`         // DATA, 256 Bytes - Bloom filter for light clients to quickly retrieve related logs.
-		Root              string `json:"root,omitempty"`    // DATA 32 bytes of post-transaction stateroot (pre Byzantium)
-		Status            string `json:"status"`            // QUANTITY either 1 (success) or 0 (failure)
+		TransactionHash   string `json:"transactionHash"`           // DATA, 32 Bytes - hash of the transaction.
+		TransactionIndex  string `json:"transactionIndex"`          // QUANTITY - integer of the transactions index position in the block.
+		BlockHash         string `json:"blockHash"`                 // DATA, 32 Bytes - hash of the block where this transaction was in.
+		BlockNumber       string `json:"blockNumber"`               // QUANTITY - block number where this transaction was in.
+		From              string `json:"from,omitempty"`            // DATA, 20 Bytes - address of the sender.
+		To                string `json:"to,omitempty"`              // DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
+		CumulativeGasUsed string `json:"cumulativeGasUsed"`         // QUANTITY - The total amount of gas used when this transaction was executed in the block.
+		GasUsed           string `json:"gasUsed"`                   // QUANTITY - The amount of gas used by this specific transaction alone.
+		ContractAddress   string `json:"contractAddress,omitempty"` // DATA, 20 Bytes - The contract address created, if the transaction was a contract creation, otherwise null.
+		Logs              []Log  `json:"logs"`                      // Array - Array of log objects, which this transaction generated.
+		LogsBloom         string `json:"logsBloom"`                 // DATA, 256 Bytes - Bloom filter for light clients to quickly retrieve related logs.
+		Root              string `json:"root,omitempty"`            // DATA 32 bytes of post-transaction stateroot (pre Byzantium)
+		Status            string `json:"status"`                    // QUANTITY either 1 (success) or 0 (failure)
 	}
 
 	Log struct {
