@@ -32,6 +32,17 @@ func (m *Method) FromHexAddress(addr string) (string, error) {
 	return string(response), nil
 }
 
+func (m *Method) SignMessage(addr string, msg string) (string, error) {
+	// returns a base64 string
+	var signature string
+	err := m.Request("signmessage", []string{addr, msg}, &signature)
+	if err != nil {
+		return "", err
+	}
+
+	return signature, nil
+}
+
 func (m *Method) GetTransactionReceipt(txHash string) (*GetTransactionReceiptResponse, error) {
 	var resp *GetTransactionReceiptResponse
 	err := m.Request(MethodGetTransactionReceipt, GetTransactionReceiptRequest(txHash), &resp)

@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -53,14 +54,24 @@ func New(
 func (s *Server) Start() error {
 	e := s.echo
 	e.Use(middleware.CORS())
-	e.Use(middleware.BodyDump(func(c echo.Context, req []byte, resp []byte) {
+	e.Use(middleware.BodyDump(func(c echo.Context, req []byte, res []byte) {
 		myctx := c.Get("myctx")
 		cc, ok := myctx.(*myCtx)
 		if !ok {
 			return
 		}
 
-		level.Debug(cc.logger).Log("msg", "body dump", "reqBody", req, "respBody", resp)
+		if s.debug {
+			level.Debug(cc.logger).Log("msg", "ETH RPC")
+
+			reqBody, err := qtum.ReformatJSON(req)
+			resBody, err := qtum.ReformatJSON(res)
+			if err == nil {
+				fmt.Printf("=> ETH request\n%s\n", reqBody)
+				fmt.Printf("<= ETH response\n%s\n", resBody)
+			}
+
+		}
 	}))
 
 	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {

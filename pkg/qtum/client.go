@@ -28,6 +28,15 @@ type Client struct {
 	idMutex sync.Mutex
 }
 
+func ReformatJSON(input []byte) ([]byte, error) {
+	var v interface{}
+	err := json.Unmarshal([]byte(input), &v)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(v, "", "  ")
+}
+
 func NewClient(rpcURL string, opts ...func(*Client) error) (*Client, error) {
 	err := checkRPCURL(rpcURL)
 	if err != nil {
@@ -92,9 +101,8 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 
 	if c.debug {
 		maxBodySize := 1024 * 8
-		var v interface{}
-		err := json.Unmarshal(respBody, &v)
-		formattedBody, err := json.MarshalIndent(v, "", "  ")
+
+		formattedBody, err := ReformatJSON(respBody)
 		formattedBodyStr := string(formattedBody)
 		if len(formattedBodyStr) > maxBodySize {
 			formattedBodyStr = formattedBodyStr[0:maxBodySize/2] + "\n...snip...\n" + formattedBodyStr[len(formattedBody)-maxBodySize/2:]

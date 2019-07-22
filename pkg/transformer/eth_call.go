@@ -1,6 +1,8 @@
 package transformer
 
 import (
+	"fmt"
+
 	"github.com/dcb9/janus/pkg/eth"
 	"github.com/dcb9/janus/pkg/qtum"
 	"github.com/dcb9/janus/pkg/utils"
@@ -24,7 +26,7 @@ func (p *ProxyETHCall) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) 
 	return p.request(&req)
 }
 
-func (p *ProxyETHCall) request(ethreq *eth.CallRequest) (*eth.CallResponse, error) {
+func (p *ProxyETHCall) request(ethreq *eth.CallRequest) (interface{}, error) {
 	// eth req -> qtum req
 	qtumreq, err := p.ToRequest(ethreq)
 	if err != nil {
@@ -63,8 +65,20 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 	}, nil
 }
 
-func (p *ProxyETHCall) ToResponse(ethresp *qtum.CallContractResponse) *eth.CallResponse {
-	data := utils.AddHexPrefix(ethresp.ExecutionResult.Output)
+func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} {
+	excepted := qresp.ExecutionResult.Excepted
+	if excepted != "None" {
+		return &eth.JSONRPCError{
+			Code:    -32000,
+			Message: fmt.Sprintf("VM exception: %s", excepted),
+			// To see how eth_call supports revert reason, see:
+			// https://gist.github.com/hayeah/795bc18a683053218fb3ff5032d31144
+			//
+			// Data: ...
+		}
+	}
+
+	data := utils.AddHexPrefix(qresp.ExecutionResult.Output)
 	qtumresp := eth.CallResponse(data)
 	return &qtumresp
 }

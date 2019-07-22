@@ -71,7 +71,7 @@ func QtumAmountToEthValue(amount float64) (string, error) {
 
 func unmarshalRequest(data []byte, v interface{}) error {
 	if err := json.Unmarshal(data, v); err != nil {
-		return errors.Wrap(UnmarshalRequestErr, err.Error())
+		return errors.Wrap(err, "Invalid RPC input")
 	}
 	return nil
 }

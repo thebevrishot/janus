@@ -1,8 +1,12 @@
 package eth
 
 import (
+	"encoding/hex"
 	"encoding/json"
-	"errors"
+	"strings"
+
+	"github.com/dcb9/janus/pkg/utils"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -116,6 +120,53 @@ type (
 	BlockNumberResponse           string
 	NetVersionResponse            string
 )
+
+// ========== eth_sign ============= //
+
+type (
+	SignRequest struct {
+		Account string
+		Message []byte
+	}
+	SignResponse string
+)
+
+func (t *SignRequest) UnmarshalJSON(data []byte) (err error) {
+	var params []interface{}
+
+	err = json.Unmarshal(data, &params)
+	if err != nil {
+		return errors.New("abc abcd")
+	}
+
+	if len(params) != 2 {
+		return errors.New("expects 2 arguments")
+	}
+
+	if account, ok := params[0].(string); ok {
+		t.Account = account
+	} else {
+		return errors.New("account address should be a hex string")
+	}
+
+	if data, ok := params[1].(string); ok {
+		var msg []byte
+		if !strings.HasPrefix(data, "0x") {
+			msg = []byte(data)
+		} else {
+			msg, err = hex.DecodeString(utils.RemoveHexPrefix(data))
+			if err != nil {
+				return errors.Wrap(err, "invalid data format")
+			}
+		}
+
+		t.Message = msg
+	} else {
+		return errors.New("data should be a hex string")
+	}
+
+	return nil
+}
 
 // ========== GetLogs ============= //
 

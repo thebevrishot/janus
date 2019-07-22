@@ -44,6 +44,11 @@ func httpHandler(c echo.Context) error {
 		return err
 	}
 
+	// Allow transformer to return an explicit JSON error
+	if jerr, isJSONErr := result.(*eth.JSONRPCError); isJSONErr {
+		return cc.JSONRPCError(jerr)
+	}
+
 	return cc.JSONRPCResult(result)
 }
 
