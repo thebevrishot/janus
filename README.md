@@ -1,36 +1,34 @@
-Qtum adapter to Ethereum JSON RPC
-=====================================
+# Qtum adapter to Ethereum JSON RPC
 
-Table of Contents
-=================
+# Table of Contents
 
-* [Requirements](#requirements)
-* [Installation](#installation)
-* [Pet Shop](#pet-shop)
-* [Start server](#start-server)
-* [Truffle](#truffle)
-   * [Migration](#migration)
-   * [Test SimpleStore](#test-simplestore)
-   * [Test ERC20](#test-erc20)
-* [ERC20 with QtumJS](#erc20-with-qtumjs)
-   * [Deploy myToken](#deploy-mytoken)
-   * [Methods](#methods)
-      * [mint](#mint)
-      * [balance](#balance)
-      * [transfer](#transfer)
-      * [logs](#logs)
-      * [events](#events)
-* [Interact with QtumJS](#interact-with-qtumjs)
-* [Try to interact with contract](#try-to-interact-with-contract)
-   * [Assumption parameters](#assumption-parameters)
-   * [createcontract method](#createcontract-method)
-   * [gettransaction method](#gettransaction-method)
-   * [gettransactionreceipt method](#gettransactionreceipt-method)
-   * [sendtocontract method](#sendtocontract-method)
-   * [callcontract method](#callcontract-method)
-   * [sendtoaddress method](#sendtoaddress-method)
-* [Support ETH methods](#support-eth-methods)
-* [Known issues](#known-issues)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Pet Shop](#pet-shop)
+- [Start server](#start-server)
+- [Truffle](#truffle)
+  - [Migration](#migration)
+  - [Test SimpleStore](#test-simplestore)
+  - [Test ERC20](#test-erc20)
+- [ERC20 with QtumJS](#erc20-with-qtumjs)
+  - [Deploy myToken](#deploy-mytoken)
+  - [Methods](#methods)
+    - [mint](#mint)
+    - [balance](#balance)
+    - [transfer](#transfer)
+    - [logs](#logs)
+    - [events](#events)
+- [Interact with QtumJS](#interact-with-qtumjs)
+- [Try to interact with contract](#try-to-interact-with-contract)
+  - [Assumption parameters](#assumption-parameters)
+  - [createcontract method](#createcontract-method)
+  - [gettransaction method](#gettransaction-method)
+  - [gettransactionreceipt method](#gettransactionreceipt-method)
+  - [sendtocontract method](#sendtocontract-method)
+  - [callcontract method](#callcontract-method)
+  - [sendtoaddress method](#sendtoaddress-method)
+- [Support ETH methods](#support-eth-methods)
+- [Known issues](#known-issues)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -46,8 +44,8 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 ## Installation
 
 ```
-$ go get github.com/dcb9/janus/...
-$ cd $GOPATH/src/github.com/dcb9/janus/playground
+$ go get github.com/qtumproject/janus/...
+$ cd $GOPATH/src/github.com/qtumproject/janus/playground
 $ yarn install
 ```
 
@@ -201,10 +199,11 @@ truffle(development)> token.balanceOf(acc2).then(function(res) { console.log(res
 ## ERC20 with QtumJS
 
 ### Deploy myToken
+
 ```
 $ sh deploy-myToken.sh
   + solar deploy contracts/MyToken.sol --gasPrice=0.0000001 '[21000000]' --force
-  exec: solc [contracts/MyToken.sol --combined-json bin,metadata --optimize --allow-paths /Users/bob/Documents/golangWorkspace/src/github.com/dcb9/janus/playground]
+  exec: solc [contracts/MyToken.sol --combined-json bin,metadata --optimize --allow-paths /Users/bob/Documents/golangWorkspace/src/github.com/qtumproject/janus/playground]
   cli gasPrice 0.0000001 1e-07
   gasPrice 1e-07 100
   gasPriceWei 100
@@ -416,13 +415,12 @@ Ctrl-C to terminate events subscription
      type: 'Transfer' } }
 ```
 
-
 ## Interact with QtumJS
 
 ```
 $ sh deploy-SimpleStore.sh
   + solar deploy ./contracts/SimpleStore.sol '["1"]' --gasPrice=0.0000001 --force
-  exec: solc [./contracts/SimpleStore.sol --combined-json bin,metadata --optimize --allow-paths /Users/bob/Documents/golangWorkspace/src/github.com/dcb9/janus/playground]
+  exec: solc [./contracts/SimpleStore.sol --combined-json bin,metadata --optimize --allow-paths /Users/bob/Documents/golangWorkspace/src/github.com/qtumproject/janus/playground]
   cli gasPrice 0.0000001 1e-07
   gasPrice 1e-07 100
   gasPriceWei 100
@@ -672,10 +670,10 @@ $ curl --header 'Content-Type: application/json' --data \
   "id": "10"
 }
 ```
-curl --header 'Content-Type: application/json' --data \
-       '{"id":"10","jsonrpc":"2.0","method":"eth_getLogs","params":[]}' \
-  'localhost:23889'
 
+curl --header 'Content-Type: application/json' --data \
+ '{"id":"10","jsonrpc":"2.0","method":"eth_getLogs","params":[]}' \
+ 'localhost:23889'
 
 ## Support ETH methods
 

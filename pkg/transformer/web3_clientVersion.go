@@ -1,7 +1,7 @@
 package transformer
 
 import (
-	"github.com/dcb9/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/eth"
 )
 
 // Web3ClientVersion implements web3_clientVersion

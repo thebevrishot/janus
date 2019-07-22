@@ -1,9 +1,9 @@
 package transformer
 
 import (
-	"github.com/dcb9/janus/pkg/eth"
-	"github.com/dcb9/janus/pkg/qtum"
-	"github.com/dcb9/janus/pkg/utils"
+	"github.com/qtumproject/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 

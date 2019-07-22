@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/dcb9/janus/pkg/eth"
-	"github.com/dcb9/janus/pkg/qtum"
-	"github.com/dcb9/janus/pkg/transformer"
+	"github.com/qtumproject/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/transformer"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/labstack/echo"

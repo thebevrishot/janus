@@ -5,7 +5,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/dcb9/janus/pkg/utils"
+	"github.com/qtumproject/janus/pkg/utils"
 )
 
 type (

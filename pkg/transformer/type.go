@@ -3,7 +3,7 @@ package transformer
 import (
 	"errors"
 
-	"github.com/dcb9/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/eth"
 )
 
 var UnmarshalRequestErr = errors.New("Input is invalid")

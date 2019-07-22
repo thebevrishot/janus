@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/dcb9/janus/pkg/utils"
+	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/pkg/errors"
 )
 

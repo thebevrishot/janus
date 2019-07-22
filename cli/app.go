@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dcb9/janus/pkg/qtum"
-	"github.com/dcb9/janus/pkg/server"
-	"github.com/dcb9/janus/pkg/transformer"
+	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/server"
+	"github.com/qtumproject/janus/pkg/transformer"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"

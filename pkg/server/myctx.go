@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/dcb9/janus/pkg/eth"
-	"github.com/dcb9/janus/pkg/transformer"
+	"github.com/qtumproject/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/transformer"
 	"github.com/go-kit/kit/log"
 	"github.com/labstack/echo"
 )

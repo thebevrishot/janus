@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	stdLog "log"
 
-	"github.com/dcb9/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/go-kit/kit/log/level"
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"

@@ -3,9 +3,9 @@ package transformer
 import (
 	"log"
 
-	"github.com/dcb9/janus/pkg/eth"
-	"github.com/dcb9/janus/pkg/qtum"
-	"github.com/dcb9/janus/pkg/utils"
+	"github.com/qtumproject/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/pkg/errors"
 )
 

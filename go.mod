@@ -1,4 +1,4 @@
-module github.com/dcb9/janus
+module github.com/qtumproject/janus
 
 go 1.12
 

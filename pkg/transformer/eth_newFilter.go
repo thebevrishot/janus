@@ -3,13 +3,13 @@ package transformer
 import (
 	"encoding/json"
 
-	"github.com/dcb9/janus/pkg/utils"
+	"github.com/qtumproject/janus/pkg/utils"
 
 	"math/big"
 
 	"github.com/dcb9/go-ethereum/common/hexutil"
-	"github.com/dcb9/janus/pkg/eth"
-	"github.com/dcb9/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 // ProxyETHNewFilter implements ETHProxy

@@ -1,7 +1,7 @@
 package qtum
 
 import (
-	"github.com/dcb9/janus/pkg/utils"
+	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/pkg/errors"
 )
 
