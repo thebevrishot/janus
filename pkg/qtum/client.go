@@ -20,6 +20,9 @@ type Client struct {
 	URL  string
 	doer doer
 
+	// hex addresses to return for eth_accounts
+	ETHAccounts []string
+
 	logger log.Logger
 	debug  bool
 
@@ -182,6 +185,13 @@ func SetDebug(debug bool) func(*Client) error {
 func SetLogger(l log.Logger) func(*Client) error {
 	return func(c *Client) error {
 		c.logger = log.WithPrefix(l, "component", "qtum.Client")
+		return nil
+	}
+}
+
+func SetETHAccounts(addrs []string) func(*Client) error {
+	return func(c *Client) error {
+		c.ETHAccounts = addrs
 		return nil
 	}
 }

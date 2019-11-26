@@ -1,10 +1,10 @@
 package transformer
 
 import (
-	"github.com/qtumproject/janus/pkg/eth"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 type Transformer struct {
