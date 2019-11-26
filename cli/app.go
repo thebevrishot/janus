@@ -67,6 +67,7 @@ func action(pc *kingpin.ParseContext) error {
 	var accounts []string
 	if *accountsFile != nil {
 		accounts = loadAccounts(*accountsFile)
+		(*accountsFile).Close()
 	}
 
 	fmt.Println("ETH accounts", accounts)
