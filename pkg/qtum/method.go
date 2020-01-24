@@ -3,6 +3,7 @@ package qtum
 import (
 	"math/big"
 
+	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
 )
 
@@ -93,11 +94,28 @@ func (m *Method) GetBlock(hash string) (resp *GetBlockResponse, err error) {
 }
 
 func (m *Method) Generate(blockNum int, maxTries *int) (resp GenerateResponse, err error) {
+	if len(m.ETHAccounts) == 0 {
+		return nil, errors.New("you must specify eth accounts")
+
+	}
+
+	hexAddress := m.ETHAccounts[0]
+
+	qAddress, err := m.FromHexAddress(hexAddress)
+	if err != nil {
+		return nil, err
+	}
+
 	req := GenerateRequest{
 		BlockNum: blockNum,
+		Address:  qAddress,
 		MaxTries: maxTries,
 	}
-	err = m.Request(MethodGenerate, &req, &resp)
+
+	// bytes, _ := req.MarshalJSON()
+	// log.Println("generatetoaddres req:", bytes)
+
+	err = m.Request(MethodGenerateToAddress, &req, &resp)
 	return
 }
 

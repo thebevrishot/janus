@@ -28,7 +28,7 @@ const (
 	MethodGetBlock              = "getblock"
 	MethodGetAddressesByAccount = "getaddressesbyaccount"
 	MethodGetAccountInfo        = "getaccountinfo"
-	MethodGenerate              = "generate"
+	MethodGenerateToAddress     = "generatetoaddress"
 	MethodListUnspent           = "listunspent"
 )
 
