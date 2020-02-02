@@ -2,11 +2,11 @@ package cli
 
 import (
 	"bufio"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/btcsuite/btcutil"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
@@ -19,7 +19,7 @@ import (
 var (
 	app = kingpin.New("janus", "Qtum adapter to Ethereum JSON RPC")
 
-	accountsFile = app.Flag("accounts", "account addresses (in hex) returned by eth_accounts").File()
+	accountsFile = app.Flag("accounts", "account private keys (in WIF) returned by eth_accounts").File()
 
 	qtumRPC     = app.Flag("qtum-rpc", "URL of qtum RPC service").Envar("QTUM_RPC").Default("").String()
 	qtumNetwork = app.Flag("qtum-network", "").Envar("QTUM_NETWORK").Default("regtest").String()
@@ -29,27 +29,22 @@ var (
 	devMode = app.Flag("dev", "[Insecure] Developer mode").Default("false").Bool()
 )
 
-func loadAccounts(r io.Reader) []string {
-	var accounts []string
+func loadAccounts(r io.Reader) qtum.Accounts {
+	var accounts qtum.Accounts
 
 	if accountsFile != nil {
 		s := bufio.NewScanner(*accountsFile)
 		for s.Scan() {
-			addr := s.Text()
-			if addr == "" {
-				continue
-			}
+			line := s.Text()
 
-			buf, err := hex.DecodeString(addr)
+			wif, err := btcutil.DecodeWIF(line)
 			if err != nil {
+				// log.lev
+				// FIXME: log error
 				continue
 			}
 
-			if len(buf) != 20 {
-				continue
-			}
-
-			accounts = append(accounts, s.Text())
+			accounts = append(accounts, wif)
 		}
 	}
 
@@ -64,15 +59,15 @@ func action(pc *kingpin.ParseContext) error {
 		logger = level.NewFilter(logger, level.AllowWarn())
 	}
 
-	var accounts []string
+	var accounts qtum.Accounts
 	if *accountsFile != nil {
 		accounts = loadAccounts(*accountsFile)
 		(*accountsFile).Close()
 	}
 
-	fmt.Println("ETH accounts", accounts)
+	isMain := *qtumNetwork == qtum.ChainMain
 
-	qtumJSONRPC, err := qtum.NewClient(*qtumRPC, qtum.SetDebug(*devMode), qtum.SetLogger(logger), qtum.SetETHAccounts(accounts))
+	qtumJSONRPC, err := qtum.NewClient(isMain, *qtumRPC, qtum.SetDebug(*devMode), qtum.SetLogger(logger), qtum.SetAccounts(accounts))
 	if err != nil {
 		return errors.Wrap(err, "jsonrpc#New")
 	}

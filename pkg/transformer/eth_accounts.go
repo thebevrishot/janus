@@ -21,13 +21,10 @@ func (p *ProxyETHAccounts) Request(_ *eth.JSONRPCRequest) (interface{}, error) {
 
 func (p *ProxyETHAccounts) request() (eth.AccountsResponse, error) {
 	var accounts eth.AccountsResponse
-	for _, addr := range p.ETHAccounts {
-		// addr, err := p.Base58AddressToHex(base58Addr)
 
-		// discard addresses that cannot be converted to hex format (i.e. multisig, segwit)
-		// if err != nil {
-		// 	continue
-		// }
+	for _, acc := range p.Accounts {
+		acc := qtum.Account{acc}
+		addr := acc.ToHexAddress()
 
 		accounts = append(accounts, utils.AddHexPrefix(addr))
 	}

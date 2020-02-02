@@ -21,10 +21,13 @@ type Client struct {
 	doer doer
 
 	// hex addresses to return for eth_accounts
-	ETHAccounts []string
+	Accounts Accounts
 
 	logger log.Logger
 	debug  bool
+
+	// is this client using the main network?
+	isMain bool
 
 	id      *big.Int
 	idStep  *big.Int
@@ -40,13 +43,14 @@ func ReformatJSON(input []byte) ([]byte, error) {
 	return json.MarshalIndent(v, "", "  ")
 }
 
-func NewClient(rpcURL string, opts ...func(*Client) error) (*Client, error) {
+func NewClient(isMain bool, rpcURL string, opts ...func(*Client) error) (*Client, error) {
 	err := checkRPCURL(rpcURL)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &Client{
+		isMain: isMain,
 		doer:   http.DefaultClient,
 		URL:    rpcURL,
 		logger: log.NewNopLogger(),
@@ -62,6 +66,10 @@ func NewClient(rpcURL string, opts ...func(*Client) error) (*Client, error) {
 	}
 
 	return c, nil
+}
+
+func (c *Client) IsMain() bool {
+	return c.isMain
 }
 
 func (c *Client) Request(method string, params interface{}, result interface{}) error {
@@ -189,9 +197,9 @@ func SetLogger(l log.Logger) func(*Client) error {
 	}
 }
 
-func SetETHAccounts(addrs []string) func(*Client) error {
+func SetAccounts(accounts Accounts) func(*Client) error {
 	return func(c *Client) error {
-		c.ETHAccounts = addrs
+		c.Accounts = accounts
 		return nil
 	}
 }

@@ -11,15 +11,15 @@ type Method struct {
 	*Client
 }
 
-func (m *Method) Base58AddressToHex(addr string) (string, error) {
-	var response GetHexAddressResponse
-	err := m.Request(MethodGetHexAddress, GetHexAddressRequest(addr), &response)
-	if err != nil {
-		return "", err
-	}
+// func (m *Method) Base58AddressToHex(addr string) (string, error) {
+// 	var response GetHexAddressResponse
+// 	err := m.Request(MethodGetHexAddress, GetHexAddressRequest(addr), &response)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	return string(response), nil
-}
+// 	return string(response), nil
+// }
 
 func (m *Method) FromHexAddress(addr string) (string, error) {
 	addr = utils.RemoveHexPrefix(addr)
@@ -94,14 +94,14 @@ func (m *Method) GetBlock(hash string) (resp *GetBlockResponse, err error) {
 }
 
 func (m *Method) Generate(blockNum int, maxTries *int) (resp GenerateResponse, err error) {
-	if len(m.ETHAccounts) == 0 {
-		return nil, errors.New("you must specify eth accounts")
+	if len(m.Accounts) == 0 {
+		return nil, errors.New("you must specify QTUM accounts")
 
 	}
 
-	hexAddress := m.ETHAccounts[0]
+	acc := Account{m.Accounts[0]}
 
-	qAddress, err := m.FromHexAddress(hexAddress)
+	qAddress, err := acc.ToBase58Address(m.isMain)
 	if err != nil {
 		return nil, err
 	}
