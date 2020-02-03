@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
@@ -68,17 +69,23 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 	// We assume that this tx is a contract invokation (create or call), if we can
 	// find a create or call script.
 	for _, out := range decodedRawTx.Vout {
-		script := out.ScriptPubKey.Asm
-		switch out.ScriptPubKey.Type {
-		// case "call":
-		// 	if asm, err = qtum.ParseCallASM(script); err != nil {
-		// 		return nil, err
-		// 	}
-		// case "create":
-		// 	if asm, err = qtum.ParseCreateASM(script); err != nil {
-		// 		return nil, err
-		// 	}
-		case "create_sender":
+		script := strings.Split(out.ScriptPubKey.Asm, " ")
+		finalOp := script[len(script)-1]
+
+		// switch out.ScriptPubKey.Type
+		switch finalOp {
+		case "OP_CALL":
+			info, err := qtum.ParseCallSenderASM(script)
+			// OP_CALL with OP_SENDER has the script type "nonstandard"
+			if err != nil {
+				return nil, err
+			}
+
+			invokeInfo = info
+
+			break
+		case "OP_CREATE":
+			// OP_CALL with OP_SENDER has the script type "create_sender"
 			info, err := qtum.ParseCreateSenderASM(script)
 			if err != nil {
 				return nil, err
@@ -87,10 +94,7 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 			invokeInfo = info
 
 			break
-		default:
-			continue
 		}
-		break
 	}
 
 	if invokeInfo != nil {
