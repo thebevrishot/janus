@@ -1,15 +1,13 @@
 package transformer
 
 import (
-	"math/big"
-
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/pkg/errors"
 )
 
 // ProxyETHGetTransactionByHash implements ETHProxy
@@ -53,68 +51,70 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 		return nil, errors.Wrap(err, "Qtum#DecodeRawTransaction")
 	}
 
-	var gas, gasPrice, input string
-	type asmWithGasGasPriceEncodedABI interface {
-		CallData() string
-		GasPrice() (*big.Int, error)
-		GasLimit() (*big.Int, error)
+	ethTx := eth.GetTransactionByHashResponse{
+		Hash:      utils.AddHexPrefix(tx.Txid),
+		BlockHash: utils.AddHexPrefix(tx.Blockhash),
+		Nonce:     "",
+		Value:     ethVal,
+
+		// Contract invokation info:
+		// Input,
+		// Gas,
+		// GasPrice,
 	}
 
-	var asm asmWithGasGasPriceEncodedABI
+	var invokeInfo *qtum.ContractInvokeInfo
+
+	// We assume that this tx is a contract invokation (create or call), if we can
+	// find a create or call script.
 	for _, out := range decodedRawTx.Vout {
+		script := out.ScriptPubKey.Asm
 		switch out.ScriptPubKey.Type {
-		case "call":
-			if asm, err = qtum.ParseCallASM(out.ScriptPubKey.Asm); err != nil {
+		// case "call":
+		// 	if asm, err = qtum.ParseCallASM(script); err != nil {
+		// 		return nil, err
+		// 	}
+		// case "create":
+		// 	if asm, err = qtum.ParseCreateASM(script); err != nil {
+		// 		return nil, err
+		// 	}
+		case "create_sender":
+			info, err := qtum.ParseCreateSenderASM(script)
+			if err != nil {
 				return nil, err
 			}
-		case "create":
-			if asm, err = qtum.ParseCreateASM(out.ScriptPubKey.Asm); err != nil {
-				return nil, err
-			}
+
+			invokeInfo = info
+
+			break
 		default:
 			continue
 		}
 		break
 	}
 
-	if asm != nil {
-		input = utils.AddHexPrefix(asm.CallData())
-		gasLimitBigInt, err := asm.GasLimit()
-		if err != nil {
-			return nil, err
-		}
-		gasPriceBigInt, err := asm.GasPrice()
-		if err != nil {
-			return nil, err
-		}
-		gas = hexutil.EncodeBig(gasLimitBigInt)
-		gasPrice = hexutil.EncodeBig(gasPriceBigInt)
-	}
+	if invokeInfo != nil {
+		ethTx.From = utils.AddHexPrefix(invokeInfo.From)
+		ethTx.Gas = utils.AddHexPrefix(invokeInfo.GasLimit) // not really "gas sent by user", but ¯\_(ツ)_/¯
+		ethTx.GasPrice = utils.AddHexPrefix(invokeInfo.GasPrice)
+		ethTx.Input = utils.AddHexPrefix(invokeInfo.CallData)
 
-	ethTxResp := eth.GetTransactionByHashResponse{
-		Hash:      utils.AddHexPrefix(tx.Txid),
-		BlockHash: utils.AddHexPrefix(tx.Blockhash),
-		Nonce:     "",
-		Value:     ethVal,
-		Input:     input,
-		Gas:       gas,
-		GasPrice:  gasPrice,
-	}
-
-	if asm != nil {
 		receipt, err := p.Qtum.GetTransactionReceipt(tx.Txid)
 		if err != nil && err != qtum.EmptyResponseErr {
 			return nil, err
 		}
+
 		if receipt != nil {
-			ethTxResp.BlockNumber = hexutil.EncodeUint64(receipt.BlockNumber)
-			ethTxResp.TransactionIndex = hexutil.EncodeUint64(receipt.TransactionIndex)
-			ethTxResp.From = utils.AddHexPrefix(receipt.From)
-			ethTxResp.To = utils.AddHexPrefix(receipt.ContractAddress)
+			ethTx.BlockNumber = hexutil.EncodeUint64(receipt.BlockNumber)
+			ethTx.TransactionIndex = hexutil.EncodeUint64(receipt.TransactionIndex)
+
+			if receipt.ContractAddress != "0000000000000000000000000000000000000000" {
+				ethTx.To = utils.AddHexPrefix(receipt.ContractAddress)
+			}
 		}
 	}
 
-	return &ethTxResp, nil
+	return &ethTx, nil
 }
 
 func (p *ProxyETHGetTransactionByHash) ToRequest(ethreq *eth.GetTransactionByHashRequest) *qtum.GetTransactionRequest {
