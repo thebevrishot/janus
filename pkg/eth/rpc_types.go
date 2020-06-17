@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/utils"
 )
 
 type (

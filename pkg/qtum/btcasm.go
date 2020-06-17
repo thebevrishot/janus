@@ -1,6 +1,7 @@
 package qtum
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/pkg/errors"
@@ -23,7 +24,8 @@ func ParseCallSenderASM(parts []string) (*ContractInvokeInfo, error) {
 	// "1 7926223070547d2d15b2ef5e7383e541c338ffe9 69463043021f3ba540f52e0bae0c608c3d7135424fb683c77ee03217fcfe0af175c586aadc02200222e460a42268f02f130bc46f3ef62f228dd8051756dc13693332423515fcd401210299d391f528b9edd07284c7e23df8415232a8ce41531cf460a390ce32b4efd112 OP_SENDER 4 40000000 40 60fe47b10000000000000000000000000000000000000000000000000000000000000319 9e11fba86ee5d0ba4996b0d1973de6b694f4fc95 OP_CALL"
 
 	if len(parts) != 10 {
-		return nil, errors.New("invalid create_sender script")
+		fmt.Println("Hit the len of parts does not equal 10")
+		return nil, errors.New(fmt.Sprintf("invalid create_sender script for parts 10: %v", parts))
 	}
 
 	// 1    // address type of the pubkeyhash (public key hash)
@@ -80,7 +82,7 @@ func ParseCreateSenderASM(parts []string) (*ContractInvokeInfo, error) {
 	// OP_CREATE
 
 	if len(parts) != 9 {
-		return nil, errors.New("invalid create_sender script")
+		return nil, errors.New(fmt.Sprintf("invalid create_sender script for parts 9: %v", len(parts)))
 	}
 
 	gasLimit, err := stringBase10ToHex(parts[5])

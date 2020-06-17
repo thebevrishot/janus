@@ -1,9 +1,9 @@
 package transformer
 
 import (
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 // ProxyETHUninstallFilter implements ETHProxy

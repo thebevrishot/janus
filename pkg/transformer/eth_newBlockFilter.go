@@ -3,9 +3,9 @@ package transformer
 import (
 	"log"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 // ProxyETHNewBlockFilter implements ETHProxy

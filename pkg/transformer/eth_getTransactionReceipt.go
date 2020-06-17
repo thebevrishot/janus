@@ -1,10 +1,10 @@
 package transformer
 
 import (
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 // ProxyETHGetTransactionReceipt implements ETHProxy

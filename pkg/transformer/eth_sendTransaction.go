@@ -3,10 +3,10 @@ package transformer
 import (
 	"log"
 
+	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
-	"github.com/pkg/errors"
 )
 
 // ProxyETHSendTransaction implements ETHProxy
