@@ -88,12 +88,16 @@ type (
 		Headers    int64   `json:"headers"`
 		Mediantime int64   `json:"mediantime"`
 		Pruned     bool    `json:"pruned"`
-		Softforks  []struct {
-			ID     string `json:"id"`
-			Reject struct {
-				Status bool `json:"status"`
-			} `json:"reject"`
-			Version int64 `json:"version"`
+		Softforks  map[string]struct {
+			Type   string `json:"type"`
+			Active bool   `json:"active"`
+			Height int64  `json:"height"`
+			Bip9   struct {
+				Status    string `json:"status"`
+				StartTime int64  `json:"start_time"`
+				Timout    int64  `json:"timeout"`
+				Since     int64  `json:"since"`
+			}
 		} `json:"softforks"`
 		Verificationprogress float64 `json:"verificationprogress"`
 	}
