@@ -97,7 +97,7 @@ type (
 				StartTime int64  `json:"start_time"`
 				Timout    int64  `json:"timeout"`
 				Since     int64  `json:"since"`
-			}
+			} `json:"bip9"`
 		} `json:"softforks"`
 		Verificationprogress float64 `json:"verificationprogress"`
 	}
