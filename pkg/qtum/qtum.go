@@ -1,8 +1,8 @@
 package qtum
 
 import (
-	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/utils"
 )
 
 type Qtum struct {

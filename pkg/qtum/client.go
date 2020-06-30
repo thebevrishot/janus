@@ -82,12 +82,7 @@ func (c *Client) Request(method string, params interface{}, result interface{}) 
 	if err != nil {
 		return err
 	}
-
-	if err = json.Unmarshal(resp.RawResult, result); err != nil {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(resp.RawResult, result)
 }
 
 func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {

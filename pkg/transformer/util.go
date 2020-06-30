@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/utils"
 )
 
 type EthGas interface {

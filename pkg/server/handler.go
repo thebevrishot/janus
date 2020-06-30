@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	stdLog "log"
 
-	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/go-kit/kit/log/level"
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/eth"
 )
 
 func httpHandler(c echo.Context) error {
