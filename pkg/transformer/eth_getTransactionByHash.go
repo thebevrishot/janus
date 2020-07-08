@@ -34,7 +34,6 @@ func (p *ProxyETHGetTransactionByHash) Request(rawreq *eth.JSONRPCRequest) (inte
 func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) (*eth.GetTransactionByHashResponse, error) {
 	var tx *qtum.GetTransactionResponse
 	if err := p.Qtum.Request(qtum.MethodGetTransaction, req, &tx); err != nil {
-		fmt.Println("err", err.Error())
 		if err == qtum.EmptyResponseErr {
 			return nil, nil
 		}
