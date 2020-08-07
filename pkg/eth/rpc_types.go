@@ -3,6 +3,7 @@ package eth
 import (
 	"encoding/hex"
 	"encoding/json"
+	"math/big"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -18,7 +19,7 @@ type (
 		To       string  `json:"to"`
 		Gas      *ETHInt `json:"gas"`      // optional
 		GasPrice *ETHInt `json:"gasPrice"` // optional
-		Value    string  `json:"value"`    // optional
+		Value    *ETHInt `json:"value"`    // optional
 		Data     string  `json:"data"`     // optional
 		Nonce    string  `json:"nonce"`    // optional
 	}
@@ -40,7 +41,7 @@ func (r *SendTransactionRequest) UnmarshalJSON(data []byte) error {
 // see: https://ethereum.stackexchange.com/questions/8384/transfer-an-amount-between-two-ethereum-accounts-using-json-rpc
 func (t *SendTransactionRequest) IsSendEther() bool {
 	// data must be empty
-	return t.Value != "" && t.To != "" && t.From != "" && t.Data == ""
+	return t.Value.Cmp(big.NewInt(0)) != 0 && t.To != "" && t.From != "" && t.Data == ""
 }
 
 func (t *SendTransactionRequest) IsCreateContract() bool {

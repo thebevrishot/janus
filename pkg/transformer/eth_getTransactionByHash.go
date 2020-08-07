@@ -1,7 +1,6 @@
 package transformer
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"

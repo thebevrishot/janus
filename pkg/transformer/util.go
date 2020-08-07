@@ -25,8 +25,9 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 			return
 		}
 	}
-
-	gasPriceFloat64, err := EthValueToQtumAmount(g.GasPriceHex())
+	var hexInt *big.Int
+	hexInt.SetString(g.GasPriceHex(), 16)
+	gasPriceFloat64, err := EthValueToQtumAmount(hexInt)
 	if err != nil {
 		return nil, "0.0", err
 	}
@@ -35,24 +36,18 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 	return
 }
 
-func EthValueToQtumAmount(val string) (float64, error) {
-	if val == "" {
-		return 0.0000004, nil
+func EthValueToQtumAmount(val *big.Int) (decimal.Decimal, error) {
+	if val == big.NewInt(0) {
+		return decimal.NewFromFloat(0.0000004), nil
 	}
 
-	ethVal, err := utils.DecodeBig(val)
+	/*ethVal, err := utils.DecodeBig(val)
 	if err != nil {
-		return 0.0, err
-	}
+		return decimal.NewFromFloat(0.0), err
+	}*/
 
-	ethDecimal := decimal.NewFromBigInt(ethVal, 0)
-
-	amount := ethDecimal.Mul(decimal.NewFromFloat(float64(1e-8)))
-	result, exact := amount.Float64()
-	if !exact {
-		return 0, fmt.Errorf("Could not get an exact value for value %v got %v", val, result)
-	}
-	return result, nil
+	ethDecimal := decimal.NewFromBigInt(val, 0)
+	return ethDecimal.Mul(decimal.NewFromFloat(float64(1e-8))), nil
 }
 
 func QtumAmountToEthValue(amount float64) (string, error) {
