@@ -2,20 +2,18 @@ package transformer
 
 import (
 	"testing"
-
-	"github.com/shopspring/decimal"
 )
 
 func TestEthValueToQtumAmount(t *testing.T) {
 	cases := []map[string]interface{}{
 		{
 			"in":   "0x64",
-			"want": decimal.NewFromFloat(float64(0.000001)),
+			"want": float64(0.000001),
 		},
 		{
 
 			"in":   "0x1",
-			"want": decimal.NewFromFloat(0.00000001),
+			"want": 0.00000001,
 		},
 	}
 	for _, c := range cases {

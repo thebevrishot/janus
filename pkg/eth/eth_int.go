@@ -21,12 +21,6 @@ func (i *ETHInt) MarshalJSON() ([]byte, error) {
 	return json.Marshal(i.Int)
 }
 
-func (i *ETHInt) ToBigInt() *big.Int {
-	var inter interface{}
-	inter = i
-	return inter.(*big.Int)
-}
-
 // UnmarshalJSON needs to be able to parse ETHInt from both hex string or number
 func (i *ETHInt) UnmarshalJSON(data []byte) (err error) {
 	if len(data) == 0 {
