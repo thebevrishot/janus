@@ -30,8 +30,6 @@ const (
 	MethodGetAccountInfo        = "getaccountinfo"
 	MethodGenerateToAddress     = "generatetoaddress"
 	MethodListUnspent           = "listunspent"
-	MethodCreateRawTx           = "createrawtransaction"
-	MethodSignRawTx             = "signrawtransactionwithkey"
 )
 
 type JSONRPCRequest struct {

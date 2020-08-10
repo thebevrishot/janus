@@ -2,14 +2,11 @@ package transformer
 
 import (
 	"log"
-	"math/big"
 
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
-
-	"github.com/shopspring/decimal"
 )
 
 // ProxyETHSendTransaction implements ETHProxy
@@ -52,10 +49,10 @@ func (p *ProxyETHSendTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		return nil, err
 	}
 
-	var amount decimal.Decimal
-	if ethtx.Value.Cmp(big.NewInt(0)) != 0 {
+	amount := 0.0
+	if ethtx.Value != "" {
 		var err error
-		amount, err = EthValueToQtumAmount(ethtx.Value.Int)
+		amount, err = EthValueToQtumAmount(ethtx.Value)
 		if err != nil {
 			return nil, errors.Wrap(err, "EthValueToQtumAmount:")
 		}
@@ -64,7 +61,7 @@ func (p *ProxyETHSendTransaction) requestSendToContract(ethtx *eth.SendTransacti
 	qtumreq := qtum.SendToContractRequest{
 		ContractAddress: utils.RemoveHexPrefix(ethtx.To),
 		Datahex:         utils.RemoveHexPrefix(ethtx.Data),
-		Amount:          amount.StringFixed(8),
+		Amount:          amount,
 		GasLimit:        gasLimit,
 		GasPrice:        gasPrice,
 	}
@@ -104,7 +101,7 @@ func (p *ProxyETHSendTransaction) requestSendToAddress(req *eth.SendTransactionR
 		return nil, err
 	}
 
-	amount, err := EthValueToQtumAmount(req.Value.Int)
+	amount, err := EthValueToQtumAmount(req.Value)
 	if err != nil {
 		return nil, err
 	}

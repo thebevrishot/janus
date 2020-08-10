@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
-	"github.com/shopspring/decimal"
 )
 
 type EthGas interface {
@@ -25,9 +24,8 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 			return
 		}
 	}
-	var hexInt *big.Int
-	hexInt.SetString(g.GasPriceHex(), 16)
-	gasPriceFloat64, err := EthValueToQtumAmount(hexInt)
+
+	gasPriceFloat64, err := EthValueToQtumAmount(g.GasPriceHex())
 	if err != nil {
 		return nil, "0.0", err
 	}
@@ -36,23 +34,31 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 	return
 }
 
-func EthValueToQtumAmount(val *big.Int) (decimal.Decimal, error) {
-	if val == big.NewInt(0) {
-		return decimal.NewFromFloat(0.0000004), nil
+func EthValueToQtumAmount(val string) (float64, error) {
+	if val == "" {
+		return 0.0000004, nil
 	}
 
-	/*ethVal, err := utils.DecodeBig(val)
+	ethVal, err := utils.DecodeBig(val)
 	if err != nil {
-		return decimal.NewFromFloat(0.0), err
-	}*/
+		return 0.0, err
+	}
 
-	ethDecimal := decimal.NewFromBigInt(val, 0)
-	return ethDecimal.Mul(decimal.NewFromFloat(float64(1e-8))), nil
+	ethValFloat64 := new(big.Float)
+	ethValFloat64, success := ethValFloat64.SetString(ethVal.String())
+	if !success {
+		return 0.0, errors.New("big.Float#SetString is not success")
+	}
+
+	amount := ethValFloat64.Mul(ethValFloat64, big.NewFloat(float64(1e-8)))
+	result, _ := amount.Float64()
+
+	return result, nil
 }
 
 func QtumAmountToEthValue(amount float64) (string, error) {
-	bigAmount := decimal.NewFromFloat(amount)
-	bigAmount = bigAmount.Mul(decimal.NewFromFloat(1e8))
+	bigAmount := big.NewFloat(amount)
+	bigAmount = bigAmount.Mul(bigAmount, big.NewFloat(float64(1e8)))
 
 	result := new(big.Int)
 	result, success := result.SetString(bigAmount.String(), 10)
