@@ -322,18 +322,27 @@ type UninstallFilterRequest string
 // true if the filter was successfully uninstalled, otherwise false.
 type UninstallFilterResponse bool
 
-func (r *UninstallFilterRequest) UnmarshalJSON(data []byte) error {
+func unmarshalParamOneString(data []byte) (string, error) {
 	var params []string
 	err := json.Unmarshal(data, &params)
+	if err != nil {
+		return "", err
+	}
+
+	if len(params) == 0 {
+		return "", errors.New("params must be set")
+	}
+
+	return params[0], nil
+}
+
+func (r *UninstallFilterRequest) UnmarshalJSON(data []byte) error {
+	str, err := unmarshalParamOneString(data)
 	if err != nil {
 		return err
 	}
 
-	if len(params) == 0 {
-		return errors.New("params must be set")
-	}
-
-	*r = UninstallFilterRequest(params[0])
+	*r = UninstallFilterRequest(str)
 
 	return nil
 }
@@ -345,17 +354,12 @@ type GetFilterChangesRequest string
 type GetFilterChangesResponse []interface{}
 
 func (r *GetFilterChangesRequest) UnmarshalJSON(data []byte) error {
-	var params []string
-	err := json.Unmarshal(data, &params)
+	str, err := unmarshalParamOneString(data)
 	if err != nil {
 		return err
 	}
 
-	if len(params) == 0 {
-		return errors.New("params must be set")
-	}
-
-	*r = GetFilterChangesRequest(params[0])
+	*r = GetFilterChangesRequest(str)
 
 	return nil
 }
@@ -495,3 +499,23 @@ type (
 		Tag     string
 	}
 )
+
+type EVMSnapshotRequest struct {
+}
+
+type EVMSnapshotResponse string
+
+type EVMRevertRequest string
+
+func (r *EVMRevertRequest) UnmarshalJSON(data []byte) error {
+	str, err := unmarshalParamOneString(data)
+	if err != nil {
+		return err
+	}
+
+	*r = EVMRevertRequest(str)
+
+	return nil
+}
+
+type EVMRevertResponse bool

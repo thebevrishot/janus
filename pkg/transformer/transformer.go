@@ -103,6 +103,8 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHSign{Qtum: qtumRPCClient},
 		&ProxyETHGasPrice{Qtum: qtumRPCClient},
 		&ProxyETHTxCount{Qtum: qtumRPCClient},
+		&ProxyEVMSnapshot{Qtum: qtumRPCClient},
+		&ProxyEVMRevert{Qtum: qtumRPCClient},
 	}
 }
 

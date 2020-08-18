@@ -30,7 +30,7 @@ func (p *ProxyETHNewBlockFilter) request() (eth.NewBlockFilterResponse, error) {
 
 	if p.Chain() == qtum.ChainRegTest {
 		defer func() {
-			if _, generateErr := p.Generate(1, nil); generateErr != nil {
+			if _, generateErr := p.Generate(1); generateErr != nil {
 				log.Println("generate block err: ", generateErr)
 			}
 		}()

@@ -30,6 +30,7 @@ const (
 	MethodGetAccountInfo        = "getaccountinfo"
 	MethodGenerateToAddress     = "generatetoaddress"
 	MethodListUnspent           = "listunspent"
+	MethodInvalidateBlock       = "invalidateblock"
 )
 
 type JSONRPCRequest struct {

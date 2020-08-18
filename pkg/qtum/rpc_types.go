@@ -717,7 +717,6 @@ type (
 	GenerateRequest struct {
 		BlockNum int
 		Address  string
-		MaxTries *int
 	}
 	GenerateResponse []string
 )
@@ -730,10 +729,6 @@ func (r *GenerateRequest) MarshalJSON() ([]byte, error) {
 	params := []interface{}{
 		r.BlockNum,
 		r.Address,
-	}
-
-	if r.MaxTries != nil {
-		params = append(params, r.MaxTries)
 	}
 
 	return json.Marshal(params)

@@ -3,7 +3,6 @@ package qtum
 import (
 	"math/big"
 
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
 )
 
@@ -105,27 +104,12 @@ func (m *Method) GetBlock(hash string) (resp *GetBlockResponse, err error) {
 	return
 }
 
-func (m *Method) Generate(blockNum int, maxTries *int) (resp GenerateResponse, err error) {
-	if len(m.Accounts) == 0 {
-		return nil, errors.New("you must specify QTUM accounts")
-
-	}
-
-	acc := Account{m.Accounts[0]}
-
-	qAddress, err := acc.ToBase58Address(m.isMain)
-	if err != nil {
-		return nil, err
-	}
-
+func (m *Method) Generate(blockNum int) (resp GenerateResponse, err error) {
 	req := GenerateRequest{
 		BlockNum: blockNum,
-		Address:  qAddress,
-		MaxTries: maxTries,
+		// Just a throw away address for mining a block in regtest.
+		Address: "qUjqjdrRAYQf2VTZuAfdR2QacJcsGMH7jE",
 	}
-
-	// bytes, _ := req.MarshalJSON()
-	// log.Println("generatetoaddres req:", bytes)
 
 	err = m.Request(MethodGenerateToAddress, &req, &resp)
 	return
@@ -157,4 +141,19 @@ func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse
 		return nil, err
 	}
 	return
+}
+
+type InvalidateBlockRequest struct {
+	BlockHash string `json:"blockhash"`
+}
+type InvalidateBlockResponse struct{}
+
+func (m *Method) InvalidateBlock(hash string) (resp *InvalidateBlockResponse, err error) {
+
+	var res InvalidateBlockResponse
+	err = m.Request(MethodInvalidateBlock, &InvalidateBlockRequest{
+		BlockHash: hash,
+	}, &res)
+
+	return &res, err
 }
