@@ -80,7 +80,8 @@ func (p *ProxyEVMSnapshot) Method() string {
 
 func (p *ProxyEVMSnapshot) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
 	// Mine a block before taking the snapshot. We want to restore to the block
-	// before this generated block.
+	// before this generated block. When revert is called on this snapshot id,
+	// this block will be invalidated.
 	//
 	// Note: there might be a corner case where this generated block is not empty.
 	// To avoid this problem, should only use janus in regtest by itself, s.t.
