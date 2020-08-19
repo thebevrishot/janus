@@ -21,6 +21,13 @@ func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest) (interface{}, 
 		return nil, err
 	}
 
+	// When deploying a contract, the To address is empty. And we won't be
+	// able to get an gas estimate from callcontract.
+	if ethreq.To == "" {
+		// Just return 10 qtum
+		return eth.EstimateGasResponse(hexutil.EncodeUint64(uint64(10 * 1e9))), nil
+	}
+
 	// eth req -> qtum req
 	qtumreq, err := p.ToRequest(&ethreq)
 	if err != nil {
