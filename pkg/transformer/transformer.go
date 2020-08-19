@@ -105,6 +105,7 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHTxCount{Qtum: qtumRPCClient},
 		&ProxyEVMSnapshot{Qtum: qtumRPCClient},
 		&ProxyEVMRevert{Qtum: qtumRPCClient},
+		&ProxyETHChainID{},
 	}
 }
 

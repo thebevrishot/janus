@@ -119,6 +119,7 @@ type (
 	PersonalUnlockAccountResponse bool
 	BlockNumberResponse           string
 	NetVersionResponse            string
+	ETHChainIDResponse            string
 )
 
 // ========== eth_sign ============= //
