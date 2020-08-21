@@ -3,10 +3,9 @@ package transformer
 import (
 	"log"
 
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
-	//"github.com/qtumproject/janus/pkg/utils"
+	"github.com/qtumproject/janus/pkg/utils"
 )
 
 // ProxyETHSendRawTransaction implements ETHProxy
@@ -32,5 +31,10 @@ func (p *ProxyETHSendRawTransaction) Request(rawreq *eth.JSONRPCRequest) (interf
 		}()
 	}
 
-	return nil, errors.New("Unknown operation")
+	var resp string // tx hash
+	if err := p.Qtum.Request(qtum.MethodSendToContract, &req, &resp); err != nil {
+		return nil, err
+	}
+
+	return utils.AddHexPrefix(resp), nil
 }
