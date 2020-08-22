@@ -26,7 +26,7 @@ func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest) (interface
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err
 	}
-
+	fmt.Printf("we got here")
 	fixedAmount := 0.0
 	if req.Value != "" {
 		var err error
@@ -41,11 +41,18 @@ func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest) (interface
 		return nil, err
 	}
 
+	/*bytez, err := json.Marshal(inputs)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("json formatting: %v\n", string(bytez))*/
+
 	if req.IsCreateContract() {
 		return p.requestCreateContract(&req, inputs)
 	} else if req.IsSendEther() {
 		return p.requestSendToAddress(&req, inputs)
 	} else if req.IsCallContract() {
+		fmt.Printf("we are here")
 		return p.requestSendToContract(&req, inputs)
 	}
 
@@ -61,7 +68,7 @@ func (p *ProxyETHSignTransaction) getRequiredUtxos(from string, neededAmount dec
 	}
 	// need to get utxos with txid and vouts. In order to do this we get a list of unspent transactions and begin summing them up
 	// todo: convert from to actual qtum address/figure out how to do that.
-	var unspentListReq *qtum.ListUnspentRequest = &qtum.ListUnspentRequest{6, 999, []string{base58Addr}}
+	var unspentListReq *qtum.ListUnspentRequest = &qtum.ListUnspentRequest{MinConf: 6, MaxConf: 999, Addresses: []string{base58Addr}}
 	qtumresp, err := p.ListUnspent(unspentListReq)
 	if err != nil {
 		return nil, err
@@ -72,13 +79,15 @@ func (p *ProxyETHSignTransaction) getRequiredUtxos(from string, neededAmount dec
 	var balanceReqMet bool
 	for _, utxo := range *qtumresp {
 		balance.Add(decimal.NewFromFloat(utxo.Amount))
-		inputs = append(inputs, qtum.RawTxInputs{utxo.Txid, utxo.Vout})
+		inputs = append(inputs, qtum.RawTxInputs{TxID: utxo.Txid, Vout: utxo.Vout})
 		if balance.GreaterThanOrEqual(neededAmount) {
 			balanceReqMet = true
 			break
 		}
 	}
 	if balanceReqMet {
+		// this is useful for figuring out which utxo was signed as list_unspent seems to be non deterministic
+		//fmt.Printf("utxos: %v\n", inputs)
 		return inputs, nil
 	}
 	return nil, fmt.Errorf("Insufficient UTXO value attempted to be sent")
@@ -99,7 +108,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		}
 	}
 
-	contractInteractTx := qtum.SendToContractRequest{
+	contractInteractTx := &qtum.SendToContractRawRequest{
 		ContractAddress: utils.RemoveHexPrefix(ethtx.To),
 		Datahex:         utils.RemoveHexPrefix(ethtx.Data),
 		Amount:          amount,
@@ -122,8 +131,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		return "", errors.Errorf("No such account: %s", fromAddr)
 	}
 
-	var contractMap = map[string]interface{}{"contract": contractInteractTx}
-	rawtxreq := []interface{}{inputs, contractMap}
+	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.SendToContractRawRequest{"contract": contractInteractTx}}}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
 		return "", err
@@ -170,7 +178,7 @@ func (p *ProxyETHSignTransaction) requestSendToAddress(req *eth.SendTransactionR
 		return "", err
 	}
 
-	var addressValMap = map[string]interface{}{to: amount}
+	var addressValMap = map[string]float64{to: amount}
 	rawtxreq := []interface{}{inputs, addressValMap}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
@@ -199,12 +207,6 @@ func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransaction
 		return "", err
 	}
 
-	contractDeploymentTx := &qtum.CreateContractRequest{
-		ByteCode: utils.RemoveHexPrefix(req.Data),
-		GasLimit: gasLimit,
-		GasPrice: gasPrice,
-	}
-
 	from := req.From
 	if utils.IsEthHexAddress(from) {
 		from, err = p.FromHexAddress(from)
@@ -212,8 +214,12 @@ func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransaction
 			return "", err
 		}
 	}
-
-	contractDeploymentTx.SenderAddress = from
+	contractDeploymentTx := &qtum.CreateContractRawRequest{
+		ByteCode:      utils.RemoveHexPrefix(req.Data),
+		GasLimit:      gasLimit,
+		GasPrice:      gasPrice,
+		SenderAddress: from,
+	}
 
 	fromAddr := utils.RemoveHexPrefix(req.From)
 
@@ -222,8 +228,7 @@ func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransaction
 		return "", errors.Errorf("No such account: %s", fromAddr)
 	}
 
-	var contractMap = map[string]interface{}{"contract": contractDeploymentTx}
-	rawtxreq := []interface{}{inputs, contractMap}
+	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.CreateContractRawRequest{"contract": contractDeploymentTx}}}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
 		return "", err
@@ -238,7 +243,7 @@ func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransaction
 	if len(resp.Errors) != 0 {
 		var errStr = []string{"List of errors in raw transaction signing: "}
 		for _, i := range resp.Errors {
-			errStr = append(errStr, fmt.Sprint("For txid %v there was an error: %v", i.Txid, i.Error))
+			errStr = append(errStr, fmt.Sprint("For txid \"%v\" there was an error: %v", i.Txid, i.Error))
 		}
 		return "", fmt.Errorf(strings.Join(errStr, "\n"))
 	}

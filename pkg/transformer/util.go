@@ -34,6 +34,24 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 	return
 }
 
+func EthGasToQtumRaw(g EthGas) (gasLimit *big.Int, gasPrice float64, err error) {
+	gasLimit = big.NewInt(40000000)
+	if gas := g.GasHex(); gas != "" {
+		gasLimit, err = utils.DecodeBig(gas)
+		if err != nil {
+			err = errors.Wrap(err, "decode gas")
+			return
+		}
+	}
+
+	gasPrice, err = EthValueToQtumAmount(g.GasPriceHex())
+	if err != nil {
+		return nil, 0.0, err
+	}
+
+	return
+}
+
 func EthValueToQtumAmount(val string) (float64, error) {
 	if val == "" {
 		return 0.0000004, nil
