@@ -136,7 +136,7 @@ func (t *SignRequest) UnmarshalJSON(data []byte) (err error) {
 
 	err = json.Unmarshal(data, &params)
 	if err != nil {
-		return errors.New("abc abcd")
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	if len(params) != 2 {
@@ -185,7 +185,7 @@ func (r *GetLogsRequest) UnmarshalJSON(data []byte) error {
 	type Request GetLogsRequest
 	var params []Request
 	if err := json.Unmarshal(data, &params); err != nil {
-		return err
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	if len(params) == 0 {
@@ -219,7 +219,7 @@ func (r *GetTransactionByHashRequest) UnmarshalJSON(data []byte) error {
 	var params []string
 	err := json.Unmarshal(data, &params)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	if len(params) == 0 {
@@ -268,7 +268,7 @@ func (r *GetTransactionReceiptRequest) UnmarshalJSON(data []byte) error {
 	var params []string
 	err := json.Unmarshal(data, &params)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	if len(params) == 0 {
@@ -296,7 +296,7 @@ func (r *GetCodeRequest) UnmarshalJSON(data []byte) error {
 	var params []string
 	err := json.Unmarshal(data, &params)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	if len(params) == 0 {
@@ -326,7 +326,7 @@ func (r *UninstallFilterRequest) UnmarshalJSON(data []byte) error {
 	var params []string
 	err := json.Unmarshal(data, &params)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	if len(params) == 0 {
@@ -348,7 +348,7 @@ func (r *GetFilterChangesRequest) UnmarshalJSON(data []byte) error {
 	var params []string
 	err := json.Unmarshal(data, &params)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	if len(params) == 0 {
@@ -423,7 +423,7 @@ type (
 func (r *GetBlockByNumberRequest) UnmarshalJSON(data []byte) error {
 	var params []json.RawMessage
 	if err := json.Unmarshal(data, &params); err != nil {
-		return err
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	if len(params) == 0 {
@@ -453,7 +453,7 @@ type NewFilterRequest struct {
 func (r *NewFilterRequest) UnmarshalJSON(data []byte) error {
 	var params []json.RawMessage
 	if err := json.Unmarshal(data, &params); err != nil {
-		return err
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	if len(params) == 0 {
@@ -463,7 +463,7 @@ func (r *NewFilterRequest) UnmarshalJSON(data []byte) error {
 	var req Req
 
 	if err := json.Unmarshal(params[0], &req); err != nil {
-		return err
+		return errors.Wrap(err, "json unmarshalling")
 	}
 
 	*r = NewFilterRequest(req)

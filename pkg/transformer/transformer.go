@@ -14,6 +14,7 @@ type Transformer struct {
 	transformers map[string]ETHProxy
 }
 
+// New creates a new Transformer
 func New(qtumClient *qtum.Qtum, proxies []ETHProxy, opts ...Option) (*Transformer, error) {
 	if qtumClient == nil {
 		return nil, errors.New("qtumClient cannot be nil")
@@ -40,6 +41,7 @@ func New(qtumClient *qtum.Qtum, proxies []ETHProxy, opts ...Option) (*Transforme
 	return t, nil
 }
 
+// Register registers an ETHProxy to a Transformer
 func (t *Transformer) Register(p ETHProxy) error {
 	if t.transformers == nil {
 		t.transformers = make(map[string]ETHProxy)
@@ -55,6 +57,7 @@ func (t *Transformer) Register(p ETHProxy) error {
 	return nil
 }
 
+// Transform takes a Transformer and transforms the request from ETH request and returns the proxy request
 func (t *Transformer) Transform(rpcReq *eth.JSONRPCRequest) (interface{}, error) {
 	p, err := t.getProxy(rpcReq)
 	if err != nil {
@@ -73,6 +76,7 @@ func (t *Transformer) getProxy(rpcReq *eth.JSONRPCRequest) (ETHProxy, error) {
 	return p, nil
 }
 
+// DefaultProxies are the default proxy methods made available
 func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 	filter := eth.NewFilterSimulator()
 	getFilterChanges := &ProxyETHGetFilterChanges{Qtum: qtumRPCClient, filter: filter}

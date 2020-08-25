@@ -97,7 +97,7 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 
 	if c.debug {
 		fmt.Printf("=> qtum RPC request\n%s\n", reqBody)
-		// l.Log("reqBody", reqBody)
+		l.Log("reqBody", reqBody)
 	}
 
 	respBody, err := c.do(bytes.NewReader(reqBody))
@@ -107,7 +107,6 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 
 	if c.debug {
 		maxBodySize := 1024 * 8
-
 		formattedBody, err := ReformatJSON(respBody)
 		formattedBodyStr := string(formattedBody)
 		if len(formattedBodyStr) > maxBodySize {
@@ -118,7 +117,7 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 			fmt.Printf("<= qtum RPC response\n%s\n", formattedBodyStr)
 		}
 
-		// l.Log("respBody", "abc")
+		l.Log("respBody", "abc")
 	}
 
 	res, err := responseBodyToResult(respBody)
@@ -131,6 +130,9 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 
 func (c *Client) NewRPCRequest(method string, params interface{}) (*JSONRPCRequest, error) {
 	paramsJSON, err := json.Marshal(params)
+	l := log.With(level.Debug(c.logger))
+
+	l.Log("params json: %v", paramsJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +166,11 @@ func (c *Client) do(body io.Reader) ([]byte, error) {
 		}
 	}()
 
-	return ioutil.ReadAll(resp.Body)
+	reader, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "ioutil error in qtum client package")
+	}
+	return reader, nil
 }
 
 type doer interface {

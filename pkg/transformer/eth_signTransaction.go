@@ -26,7 +26,6 @@ func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest) (interface
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err
 	}
-	fmt.Printf("we got here")
 	fixedAmount := 0.0
 	if req.Value != "" {
 		var err error
@@ -52,7 +51,6 @@ func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest) (interface
 	} else if req.IsSendEther() {
 		return p.requestSendToAddress(&req, inputs)
 	} else if req.IsCallContract() {
-		fmt.Printf("we are here")
 		return p.requestSendToContract(&req, inputs)
 	}
 
@@ -78,7 +76,8 @@ func (p *ProxyETHSignTransaction) getRequiredUtxos(from string, neededAmount dec
 	var inputs []qtum.RawTxInputs
 	var balanceReqMet bool
 	for _, utxo := range *qtumresp {
-		balance.Add(decimal.NewFromFloat(utxo.Amount))
+		balanceToAdd := decimal.NewFromFloat(utxo.Amount)
+		balance = balance.Add(balanceToAdd)
 		inputs = append(inputs, qtum.RawTxInputs{TxID: utxo.Txid, Vout: utxo.Vout})
 		if balance.GreaterThanOrEqual(neededAmount) {
 			balanceReqMet = true

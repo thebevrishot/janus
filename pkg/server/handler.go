@@ -20,21 +20,21 @@ func httpHandler(c echo.Context) error {
 	var rpcReq *eth.JSONRPCRequest
 	decoder := json.NewDecoder(c.Request().Body)
 	if err := decoder.Decode(&rpcReq); err != nil {
-		return err
+		return errors.Wrap(err, "json decoder issue")
 	}
 
 	cc.rpcReq = rpcReq
 
 	level.Info(cc.logger).Log("msg", "proxy RPC", "method", rpcReq.Method)
 
-	// level.Debug(cc.logger).Log("msg", "before call transformer#Transform")
+	level.Debug(cc.logger).Log("msg", "before call transformer#Transform")
 	result, err := cc.transformer.Transform(rpcReq)
-	// level.Debug(cc.logger).Log("msg", "after call transformer#Transform")
+	level.Debug(cc.logger).Log("msg", "after call transformer#Transform")
 
 	if err != nil {
 		err1 := errors.Cause(err)
 		if err != err1 {
-			level.Error(cc.logger).Log("err", err.Error())
+			level.Error(cc.logger).Log("err", err1.Error())
 			return cc.JSONRPCError(&eth.JSONRPCError{
 				Code:    100,
 				Message: err1.Error(),

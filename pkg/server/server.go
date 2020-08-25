@@ -70,7 +70,6 @@ func (s *Server) Start() error {
 				fmt.Printf("=> ETH request\n%s\n", reqBody)
 				fmt.Printf("<= ETH response\n%s\n", resBody)
 			}
-
 		}
 	}))
 
@@ -126,7 +125,11 @@ func batchRequestsMiddleware(h echo.HandlerFunc) echo.HandlerFunc {
 		// Request
 		reqBody := []byte{}
 		if c.Request().Body != nil { // Read
-			reqBody, _ = ioutil.ReadAll(c.Request().Body)
+			var err error
+			reqBody, err = ioutil.ReadAll(c.Request().Body)
+			if err != nil {
+				panic(fmt.Sprintf("%v", err))
+			}
 		}
 		isBatchRequests := func(msg json.RawMessage) bool {
 			return msg[0] == '['
@@ -139,6 +142,7 @@ func batchRequestsMiddleware(h echo.HandlerFunc) echo.HandlerFunc {
 
 		var rpcReqs []*eth.JSONRPCRequest
 		if err := c.Bind(&rpcReqs); err != nil {
+			fmt.Printf("HELLOOOOOOOOOOO\n")
 			return err
 		}
 
@@ -147,6 +151,7 @@ func batchRequestsMiddleware(h echo.HandlerFunc) echo.HandlerFunc {
 		for _, req := range rpcReqs {
 			result, err := callHttpHandler(cc, req)
 			if err != nil {
+				fmt.Printf("HELLOOOOOOOOOOO from the handler\n")
 				return err
 			}
 
@@ -160,8 +165,10 @@ func batchRequestsMiddleware(h echo.HandlerFunc) echo.HandlerFunc {
 func callHttpHandler(cc *myCtx, req *eth.JSONRPCRequest) (*eth.JSONRPCResult, error) {
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
+		fmt.Printf("do we hit here?")
 		return nil, err
 	}
+	fmt.Printf("reqBytes: %v", string(reqBytes))
 
 	httpreq := httptest.NewRequest(echo.POST, "/", ioutil.NopCloser(bytes.NewReader(reqBytes)))
 	httpreq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -174,13 +181,15 @@ func callHttpHandler(cc *myCtx, req *eth.JSONRPCRequest) (*eth.JSONRPCResult, er
 		transformer: cc.transformer,
 	}
 	newCtx.Set("myctx", myCtx)
-
+	fmt.Printf("HELLOOOOOOOOOOO did I even reach here?\n")
 	if err = httpHandler(myCtx); err != nil {
+		fmt.Printf("HELLOOOOOOOOOOO from yet another handler\n")
 		errorHandler(err, myCtx)
 	}
 
 	var result *eth.JSONRPCResult
 	if err = json.Unmarshal(rec.Body.Bytes(), &result); err != nil {
+		fmt.Printf("HELLOOOOOOOOOOO from the eth json rpc unmarshaler\n")
 		return nil, err
 	}
 
