@@ -8,6 +8,25 @@ import (
 	"github.com/qtumproject/janus/pkg/utils"
 )
 
+// TODO: Wipe these out when it comes time to change over from floats to integers, and change SendToContractRequest to not use strings were numerics will do
+// Todo: Go and fix the need for a custom json unmarshall in the non raw versions of these types
+
+type SendToContractRawRequest struct {
+	ContractAddress string   `json:"contractAddress"`
+	Datahex         string   `json:"data"`
+	Amount          float64  `json:"amount"`
+	GasLimit        *big.Int `json:"gasLimit"`
+	GasPrice        string   `json:"gasPrice"`
+	SenderAddress   string   `json:"senderaddress"`
+}
+
+type CreateContractRawRequest struct {
+	ByteCode      string   `json:"bytecode"`
+	GasLimit      *big.Int `json:"gasLimit"`
+	GasPrice      string   `json:"gasPrice"`
+	SenderAddress string   `json:"senderaddress"`
+}
+
 type (
 	Log struct {
 		Address string   `json:"address"`

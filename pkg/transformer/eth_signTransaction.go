@@ -40,12 +40,6 @@ func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest) (interface
 		return nil, err
 	}
 
-	/*bytez, err := json.Marshal(inputs)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("json formatting: %v\n", string(bytez))*/
-
 	if req.IsCreateContract() {
 		return p.requestCreateContract(&req, inputs)
 	} else if req.IsSendEther() {
@@ -76,8 +70,7 @@ func (p *ProxyETHSignTransaction) getRequiredUtxos(from string, neededAmount dec
 	var inputs []qtum.RawTxInputs
 	var balanceReqMet bool
 	for _, utxo := range *qtumresp {
-		balanceToAdd := decimal.NewFromFloat(utxo.Amount)
-		balance = balance.Add(balanceToAdd)
+		balance = balance.Add(decimal.NewFromFloat(utxo.Amount))
 		inputs = append(inputs, qtum.RawTxInputs{TxID: utxo.Txid, Vout: utxo.Vout})
 		if balance.GreaterThanOrEqual(neededAmount) {
 			balanceReqMet = true
@@ -107,7 +100,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		}
 	}
 
-	contractInteractTx := &qtum.SendToContractRequest{
+	contractInteractTx := &qtum.SendToContractRawRequest{
 		ContractAddress: utils.RemoveHexPrefix(ethtx.To),
 		Datahex:         utils.RemoveHexPrefix(ethtx.Data),
 		Amount:          amount,
@@ -130,7 +123,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		return "", errors.Errorf("No such account: %s", fromAddr)
 	}
 
-	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.SendToContractRequest{"contract": contractInteractTx}}}
+	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.SendToContractRawRequest{"contract": contractInteractTx}}}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
 		return "", err
@@ -145,7 +138,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 	if len(resp.Errors) != 0 {
 		var errStr = []string{"List of errors in raw transaction signing: "}
 		for _, i := range resp.Errors {
-			errStr = append(errStr, fmt.Sprint("For txid %v there was an error: %v", i.Txid, i.Error))
+			errStr = append(errStr, fmt.Sprintf("For txid %v there was an error: %v", i.Txid, i.Error))
 		}
 		return "", fmt.Errorf(strings.Join(errStr, "\n"))
 	}
@@ -213,7 +206,7 @@ func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransaction
 			return "", err
 		}
 	}
-	contractDeploymentTx := &qtum.CreateContractRequest{
+	contractDeploymentTx := &qtum.CreateContractRawRequest{
 		ByteCode:      utils.RemoveHexPrefix(req.Data),
 		GasLimit:      gasLimit,
 		GasPrice:      gasPrice,
@@ -227,7 +220,7 @@ func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransaction
 		return "", errors.Errorf("No such account: %s", fromAddr)
 	}
 
-	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.CreateContractRequest{"contract": contractDeploymentTx}}}
+	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.CreateContractRawRequest{"contract": contractDeploymentTx}}}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
 		return "", err

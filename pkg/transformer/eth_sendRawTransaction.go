@@ -18,7 +18,7 @@ func (p *ProxyETHSendRawTransaction) Method() string {
 }
 
 func (p *ProxyETHSendRawTransaction) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
-	var req string
+	var req []string
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err
 	}
@@ -31,10 +31,10 @@ func (p *ProxyETHSendRawTransaction) Request(rawreq *eth.JSONRPCRequest) (interf
 		}()
 	}
 
-	var resp string // tx hash
-	if err := p.Qtum.Request(qtum.MethodSendToContract, &req, &resp); err != nil {
+	var resp [32]byte // tx hash
+	if err := p.Qtum.Request(qtum.MethodSendRawTx, &req, &resp); err != nil {
 		return nil, err
 	}
 
-	return utils.AddHexPrefix(resp), nil
+	return utils.AddHexPrefix(string(resp[:])), nil
 }

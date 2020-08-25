@@ -97,7 +97,6 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 
 	if c.debug {
 		fmt.Printf("=> qtum RPC request\n%s\n", reqBody)
-		l.Log("reqBody", reqBody)
 	}
 
 	respBody, err := c.do(bytes.NewReader(reqBody))
