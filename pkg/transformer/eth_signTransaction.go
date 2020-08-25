@@ -107,7 +107,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		}
 	}
 
-	contractInteractTx := &qtum.SendToContractRawRequest{
+	contractInteractTx := &qtum.SendToContractRequest{
 		ContractAddress: utils.RemoveHexPrefix(ethtx.To),
 		Datahex:         utils.RemoveHexPrefix(ethtx.Data),
 		Amount:          amount,
@@ -130,7 +130,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		return "", errors.Errorf("No such account: %s", fromAddr)
 	}
 
-	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.SendToContractRawRequest{"contract": contractInteractTx}}}
+	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.SendToContractRequest{"contract": contractInteractTx}}}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
 		return "", err
@@ -213,7 +213,7 @@ func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransaction
 			return "", err
 		}
 	}
-	contractDeploymentTx := &qtum.CreateContractRawRequest{
+	contractDeploymentTx := &qtum.CreateContractRequest{
 		ByteCode:      utils.RemoveHexPrefix(req.Data),
 		GasLimit:      gasLimit,
 		GasPrice:      gasPrice,
@@ -227,7 +227,7 @@ func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransaction
 		return "", errors.Errorf("No such account: %s", fromAddr)
 	}
 
-	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.CreateContractRawRequest{"contract": contractDeploymentTx}}}
+	rawtxreq := []interface{}{inputs, []interface{}{map[string]*qtum.CreateContractRequest{"contract": contractDeploymentTx}}}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {
 		return "", err

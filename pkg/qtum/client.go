@@ -117,7 +117,7 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 			fmt.Printf("<= qtum RPC response\n%s\n", formattedBodyStr)
 		}
 
-		l.Log("respBody", "abc")
+		// l.Log("respBody", "abc")
 	}
 
 	res, err := responseBodyToResult(respBody)
@@ -130,9 +130,6 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 
 func (c *Client) NewRPCRequest(method string, params interface{}) (*JSONRPCRequest, error) {
 	paramsJSON, err := json.Marshal(params)
-	l := log.With(level.Debug(c.logger))
-
-	l.Log("params json: %v", paramsJSON)
 	if err != nil {
 		return nil, err
 	}
