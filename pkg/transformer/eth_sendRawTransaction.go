@@ -22,6 +22,7 @@ func (p *ProxyETHSendRawTransaction) Request(rawreq *eth.JSONRPCRequest) (interf
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err
 	}
+	rawTx := utils.RemoveHexPrefix(req[0])
 
 	if p.Chain() == qtum.ChainRegTest {
 		defer func() {
@@ -31,8 +32,8 @@ func (p *ProxyETHSendRawTransaction) Request(rawreq *eth.JSONRPCRequest) (interf
 		}()
 	}
 
-	var resp [32]byte // tx hash
-	if err := p.Qtum.Request(qtum.MethodSendRawTx, &req, &resp); err != nil {
+	var resp string // tx hash
+	if err := p.Qtum.Request(qtum.MethodSendRawTx, []string{rawTx}, &resp); err != nil {
 		return nil, err
 	}
 

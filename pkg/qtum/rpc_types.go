@@ -966,9 +966,8 @@ type (
 		}
 	*/
 	SignRawTxResponse struct {
-		Hex      string         `json:"hex"`
-		Complete bool           `json:"complete"`
-		Errors   []SigningError `json:"errors"`
+		Hex      string `json:"hex"`
+		Complete bool   `json:"complete"`
 	}
 
 	SigningError struct {

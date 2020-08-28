@@ -31,7 +31,7 @@ const (
 	MethodGenerateToAddress     = "generatetoaddress"
 	MethodListUnspent           = "listunspent"
 	MethodCreateRawTx           = "createrawtransaction"
-	MethodSignRawTx             = "signrawtransactionwithkey"
+	MethodSignRawTx             = "signrawtransactionwithwallet"
 	MethodSendRawTx             = "sendrawtransaction"
 )
 
