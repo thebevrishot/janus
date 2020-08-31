@@ -25,26 +25,13 @@ func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest) (interface
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err
 	}
-	/*fixedAmount := 0.0
-	if req.Value != "" {
-		var err error
-		fixedAmount, err = EthValueToQtumAmount(req.Value)
-		if err != nil {
-			return nil, errors.Wrap(err, "EthValueToQtumAmount:")
-		}
-	}
-	// get necessary utxo ids needed for creating raw transaction
-	inputs, err := p.getRequiredUtxos(req.From, decimal.NewFromFloat(fixedAmount))
-	if err != nil {
-		return nil, err
-	}*/
 
 	if req.IsCreateContract() {
-		return p.requestCreateContract(&req /*, inputs*/)
+		return p.requestCreateContract(&req)
 	} else if req.IsSendEther() {
-		return p.requestSendToAddress(&req /*, inputs*/)
+		return p.requestSendToAddress(&req)
 	} else if req.IsCallContract() {
-		return p.requestSendToContract(&req /*, inputs*/)
+		return p.requestSendToContract(&req)
 	}
 
 	return nil, errors.New("Unknown operation")
@@ -94,7 +81,7 @@ func calculateNeededAmount(value, gasLimit, gasPrice decimal.Decimal) decimal.De
 	return value.Add(gasLimit.Mul(gasPrice))
 }
 
-func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransactionRequest /*, inputs []qtum.RawTxInputs*/) (string, error) {
+func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransactionRequest) (string, error) {
 	gasLimit, gasPrice, err := EthGasToQtum(ethtx)
 	if err != nil {
 		return "", err
@@ -164,7 +151,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 	return utils.AddHexPrefix(resp.Hex), nil
 }
 
-func (p *ProxyETHSignTransaction) requestSendToAddress(req *eth.SendTransactionRequest /*, inputs []qtum.RawTxInputs*/) (string, error) {
+func (p *ProxyETHSignTransaction) requestSendToAddress(req *eth.SendTransactionRequest) (string, error) {
 	getQtumWalletAddress := func(addr string) (string, error) {
 		if utils.IsEthHexAddress(addr) {
 			return p.FromHexAddress(utils.RemoveHexPrefix(addr))
@@ -216,7 +203,7 @@ func (p *ProxyETHSignTransaction) requestSendToAddress(req *eth.SendTransactionR
 	return utils.AddHexPrefix(resp.Hex), nil
 }
 
-func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransactionRequest /*, inputs []qtum.RawTxInputs*/) (string, error) {
+func (p *ProxyETHSignTransaction) requestCreateContract(req *eth.SendTransactionRequest) (string, error) {
 	gasLimit, gasPrice, err := EthGasToQtum(req)
 	if err != nil {
 		return "", err
