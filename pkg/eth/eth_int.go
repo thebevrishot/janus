@@ -2,7 +2,7 @@ package eth
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/pkg/errors"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -43,7 +43,7 @@ func (i *ETHInt) UnmarshalJSON(data []byte) (err error) {
 func bigIntFromNumber(data json.RawMessage) (*big.Int, error) {
 	var v *big.Int
 	if err := json.Unmarshal(data, &v); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "json unmarshal")
 	}
 	return v, nil
 }
@@ -52,12 +52,12 @@ func bigIntFromHex(data json.RawMessage) (*big.Int, error) {
 	var val string
 
 	if err := json.Unmarshal(data, &val); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "json unmarshal")
 	}
 
 	i, err := utils.DecodeBig(val)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "decoding error")
 	}
 	return i, nil
 }

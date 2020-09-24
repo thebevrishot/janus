@@ -70,7 +70,6 @@ func (s *Server) Start() error {
 				fmt.Printf("=> ETH request\n%s\n", reqBody)
 				fmt.Printf("<= ETH response\n%s\n", resBody)
 			}
-
 		}
 	}))
 
@@ -126,7 +125,11 @@ func batchRequestsMiddleware(h echo.HandlerFunc) echo.HandlerFunc {
 		// Request
 		reqBody := []byte{}
 		if c.Request().Body != nil { // Read
-			reqBody, _ = ioutil.ReadAll(c.Request().Body)
+			var err error
+			reqBody, err = ioutil.ReadAll(c.Request().Body)
+			if err != nil {
+				panic(fmt.Sprintf("%v", err))
+			}
 		}
 		isBatchRequests := func(msg json.RawMessage) bool {
 			return msg[0] == '['
@@ -139,6 +142,7 @@ func batchRequestsMiddleware(h echo.HandlerFunc) echo.HandlerFunc {
 
 		var rpcReqs []*eth.JSONRPCRequest
 		if err := c.Bind(&rpcReqs); err != nil {
+
 			return err
 		}
 
@@ -174,7 +178,6 @@ func callHttpHandler(cc *myCtx, req *eth.JSONRPCRequest) (*eth.JSONRPCResult, er
 		transformer: cc.transformer,
 	}
 	newCtx.Set("myctx", myCtx)
-
 	if err = httpHandler(myCtx); err != nil {
 		errorHandler(err, myCtx)
 	}

@@ -8,6 +8,25 @@ import (
 	"github.com/qtumproject/janus/pkg/utils"
 )
 
+// TODO: Wipe these out when it comes time to change over from floats to integers, and change SendToContractRequest to not use strings were numerics will do
+// Todo: Go and fix the need for a custom json unmarshall in the non raw versions of these types
+
+type SendToContractRawRequest struct {
+	ContractAddress string   `json:"contractAddress"`
+	Datahex         string   `json:"data"`
+	Amount          float64  `json:"amount"`
+	GasLimit        *big.Int `json:"gasLimit"`
+	GasPrice        string   `json:"gasPrice"`
+	SenderAddress   string   `json:"senderaddress"`
+}
+
+type CreateContractRawRequest struct {
+	ByteCode      string   `json:"bytecode"`
+	GasLimit      *big.Int `json:"gasLimit"`
+	GasPrice      string   `json:"gasPrice"`
+	SenderAddress string   `json:"senderaddress"`
+}
+
 type (
 	Log struct {
 		Address string   `json:"address"`
@@ -159,6 +178,7 @@ type (
 		GasPrice        string
 		SenderAddress   string
 	}
+
 	/*
 		{
 		  "txid": "6b7f70d8520e1ec87ba7f1ee559b491cc3028b77ae166e789be882b5d370eac9",
@@ -875,6 +895,90 @@ func (r *GetBlockRequest) MarshalJSON() ([]byte, error) {
 	})
 }
 
+//========CreateRawTransaction=========//
+type (
+	/*
+				Arguments:
+				1. inputs         (json array, required) A json array of json objects
+				[
+				{                              (json object)
+					"txid": "hex",               (string, required) The transaction id
+					"vout": n,                   (numeric, required) The output number
+					"sequence": n,               (numeric, optional, default=depends on the value of the 'replaceable' and 'locktime' arguments) The sequence number
+				},
+				...
+				]
+				2. outputs   	 (json array, required) a json array with outputs (key-value pairs), where none of the keys are duplicated.
+		                                      That is, each address can only appear once and there can only be one 'data' object.
+		                                      For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also
+		                                      accepted as second parameter.
+		     [
+		       {                              (json object)
+		         "address": amount,           (numeric or string, required) A key-value pair. The key (string) is the qtum address, the value (float or string) is the amount in QTUM
+		       },
+		       {                              (json object)
+		         "data": "hex",               (string, required) A key-value pair. The key must be "data", the value is hex-encoded data
+		       },
+		       {                              (json object) (send to contract)
+		         "contractAddress": "hex",    (string, required) Valid contract address (valid hash160 hex data)
+		         "data": "hex",               (string, required) Hex data to add in the call output
+		         "amount": amount,            (numeric or string, optional, default=0) Value in QTUM to send with the call, should be a valid amount, default 0
+		         "gasLimit": n,               (numeric) The gas limit for the transaction
+		         "gasPrice": n,               (numeric) The gas price for the transaction
+		         "senderaddress": "hex",      (string) The qtum address that will be used to create the contract.
+		       },
+		       {                              (json object) (create contract)
+		         "bytecode": "hex",           (string, required) contract bytcode.
+		         "gasLimit": n,               (numeric) The gas limit for the transaction
+		         "gasPrice": n,               (numeric) The gas price for the transaction
+		         "senderaddress": "hex",      (string) The qtum address that will be used to create the contract.
+		       },
+		       ...
+		     ]
+			3. locktime                           (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs
+			4. replaceable                        (boolean, optional, default=false) Marks this transaction as BIP125-replaceable.
+		                                      Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.
+	*/
+
+	RawTxInputs struct {
+		TxID string `json:"txid"`
+		Vout uint   `json:"vout"`
+	}
+)
+
+//========SignRawTransactionWithKey=========//
+type (
+	/*
+			Result:
+		{
+		  "hex" : "value",                  (string) The hex-encoded raw transaction with signature(s)
+		  "complete" : true|false,          (boolean) If the transaction has a complete set of signatures
+		  "errors" : [                      (json array of objects) Script verification errors (if there are any)
+		    {
+		      "txid" : "hash",              (string) The hash of the referenced, previous transaction
+		      "vout" : n,                   (numeric) The index of the output to spent and used as input
+		      "scriptSig" : "hex",          (string) The hex-encoded signature script
+		      "sequence" : n,               (numeric) Script sequence number
+		      "error" : "text"              (string) Verification or signing error related to the input
+		    }
+		    ,...
+		  ]
+		}
+	*/
+	SignRawTxResponse struct {
+		Hex      string `json:"hex"`
+		Complete bool   `json:"complete"`
+	}
+
+	SigningError struct {
+		Txid      string `json:"txid"`
+		Vout      uint   `json:"vout"`
+		ScriptSig string `json:"scriptSig"`
+		Sequence  uint   `json:"sequence"`
+		Error     error  `json:"error"`
+	}
+)
+
 // ========== ListUnspent ============= //
 type (
 
@@ -940,7 +1044,7 @@ type (
 	*/
 	ListUnspentResponse []struct {
 		Txid          string  `json:"txid"`
-		Vout          int     `json:"vout"`
+		Vout          uint    `json:"vout"`
 		Address       string  `json:"address"`
 		Account       string  `json:"account"`
 		ScriptPubKey  string  `json:"scriptPubKey"`

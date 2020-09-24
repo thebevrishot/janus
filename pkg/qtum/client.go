@@ -97,7 +97,6 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 
 	if c.debug {
 		fmt.Printf("=> qtum RPC request\n%s\n", reqBody)
-		// l.Log("reqBody", reqBody)
 	}
 
 	respBody, err := c.do(bytes.NewReader(reqBody))
@@ -107,7 +106,6 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 
 	if c.debug {
 		maxBodySize := 1024 * 8
-
 		formattedBody, err := ReformatJSON(respBody)
 		formattedBodyStr := string(formattedBody)
 		if len(formattedBodyStr) > maxBodySize {
@@ -164,7 +162,11 @@ func (c *Client) do(body io.Reader) ([]byte, error) {
 		}
 	}()
 
-	return ioutil.ReadAll(resp.Body)
+	reader, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "ioutil error in qtum client package")
+	}
+	return reader, nil
 }
 
 type doer interface {

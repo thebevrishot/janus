@@ -23,6 +23,7 @@ type JSONRPCResult struct {
 	ID        json.RawMessage `json:"id"`
 }
 
+// JSONRPCError contains the message and code for an ETH RPC error
 type JSONRPCError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
