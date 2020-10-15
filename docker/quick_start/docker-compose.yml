@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+  janus:
+    image: qtum/janus:dev
+    build: 
+        context: ../standalone/
+        cache_from:
+          - golang:1.14-alpine
+          - qtum/janus:dev
+    ports:
+      - "23889:23889"
+    depends_on:
+      - qtum
+  qtum:
+    ports:
+      - "3889:3889"
+    image: qtum/qtum:latest
+    container_name: qtum_testchain
+    command: qtumd -regtest  -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole
