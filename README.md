@@ -678,9 +678,13 @@ curl --header 'Content-Type: application/json' --data \
 ## Support ETH methods
 
 - eth_sendTransaction
+- eth_sendRawTransaction
+- eth_signTransaction
 - eth_call
 - eth_getTransactionByHash
 - eth_getTransactionReceipt
+- eth_getTransactionCount
+ - always returns 1 due to the UTXO nature of Qtum
 - eth_blockNumber
 - net_version
   - returns string // current network name as defined in BIP70 (main, test, regtest)
@@ -697,6 +701,8 @@ curl --header 'Content-Type: application/json' --data \
 - eth_getBlockByNumber
 - eth_estimateGas
 - eth_getBalance
+- eth_gasPrice
+- personal_unlockAccount
 
 ## Known issues
 
