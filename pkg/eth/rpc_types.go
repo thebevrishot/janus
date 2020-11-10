@@ -175,7 +175,7 @@ type (
 		FromBlock json.RawMessage `json:"fromBlock"`
 		ToBlock   json.RawMessage `json:"toBlock"`
 		Address   json.RawMessage `json:"address"` // string or []string
-		Topics    []string        `json:"topics"`
+		Topics    []interface{}   `json:"topics"`
 		Blockhash string          `json:"blockhash"`
 	}
 	GetLogsResponse []Log
