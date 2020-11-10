@@ -8,7 +8,7 @@ import (
 	"github.com/qtumproject/janus/pkg/utils"
 )
 
-// TODO: Wipe these out when it comes time to change over from floats to integers, and change SendToContractRequest to not use strings were numerics will do
+// TODO: Wipe these out when it comes time to change over from floats to integers, and change SendToContractRequest to not use strings where numerics will do
 // Todo: Go and fix the need for a custom json unmarshall in the non raw versions of these types
 
 type SendToContractRawRequest struct {
