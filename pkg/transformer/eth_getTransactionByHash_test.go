@@ -12,12 +12,11 @@ import (
 func TestGetTransactionByHashRequest(t *testing.T) {
 	//prepare request
 	id, err := json.Marshal(int64(67))
-	requestParams, err := json.Marshal([]string{"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"})
 	request := &eth.JSONRPCRequest{
 		JSONRPC: "2.0",
 		Method:  "eth_protocolVersion",
 		ID:      id,
-		Params:  requestParams,
+		Params:  json.RawMessage(`["0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"]`),
 	}
 	if err != nil {
 		panic(err)
@@ -55,8 +54,8 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	qtumClient, err := createMockedClient(responseRaw)
+	doer := doerMock{responseRaw}
+	qtumClient, err := createMockedClient(doer)
 	proxyEth := ProxyETHGetTransactionByHash{qtumClient}
 	if err != nil {
 		panic(err)
