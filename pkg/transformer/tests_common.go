@@ -17,11 +17,11 @@ type doer interface {
 
 //type for mocking requests to client for simple requests
 type doerMock struct {
-	Response []byte
+	Response *[]byte
 }
 
 func (d doerMock) Do(*http.Request) (*http.Response, error) {
-	r := ioutil.NopCloser(bytes.NewReader([]byte(d.Response)))
+	r := ioutil.NopCloser(bytes.NewReader([]byte(*d.Response)))
 	return &http.Response{
 		StatusCode: 200,
 		Body:       r,
@@ -46,6 +46,39 @@ func (d doerMappedMock) Do(request *http.Request) (*http.Response, error) {
 	}, nil
 }
 
+func prepareRawResponse(requestID int, responseResult interface{}) (*[]byte, error) {
+	requestIDRaw, err := json.Marshal(requestID)
+	if err != nil {
+		return nil, err
+	}
+
+	responseResultRaw, err := json.Marshal(responseResult)
+	if err != nil {
+		return nil, err
+	}
+
+	responseRPC := &eth.JSONRPCResult{
+		JSONRPC:   "2.0",
+		RawResult: responseResultRaw,
+		Error:     nil,
+		ID:        requestIDRaw,
+	}
+
+	responseRPCRaw, err := json.Marshal(responseRPC)
+
+	return &responseRPCRaw, err
+}
+
+func (d *doerMappedMock) AddResponse(requestID int, requestType string, responseResult interface{}) error {
+	responseRaw, err := prepareRawResponse(requestID, responseResult)
+	if err != nil {
+		return err
+	}
+
+	d.Responses[requestType] = *responseRaw
+	return nil
+}
+
 func parseRequestFromBody(request *http.Request) (*eth.JSONRPCRequest, error) {
 	requestJSON := eth.JSONRPCRequest{}
 	requestBody, err := ioutil.ReadAll(request.Body)
@@ -62,7 +95,9 @@ func parseRequestFromBody(request *http.Request) (*eth.JSONRPCRequest, error) {
 }
 
 func createMockedClient(doerInstance doer) (qtumClient *qtum.Qtum, err error) {
-	qtumJSONRPC, err := qtum.NewClient(true, "http://user:pass@mocked", qtum.SetDoer(doerInstance), qtum.SetDebug(true))
+	qtumJSONRPC, err := qtum.NewClient(true, "http://user:pass@mocked", qtum.SetDoer(doerInstance))
+	//for debugging:
+	//qtumJSONRPC, err := qtum.NewClient(true, "http://user:pass@mocked", qtum.SetDoer(doerInstance), qtum.SetDebug(true))
 	if err != nil {
 		return
 	}

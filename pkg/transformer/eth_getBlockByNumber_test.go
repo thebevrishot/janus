@@ -41,38 +41,24 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 		Params:  []byte(`{"blockNumber": "0x1b4","fullTransaction": true}`),
 	}
 
-	doerInstance := doerMappedMock{make(map[string][]byte)}
-	qtumClient, err := createMockedClient(doerInstance)
+	d := doerMappedMock{make(map[string][]byte)}
+	qtumClient, err := createMockedClient(d)
 
 	//preparing answer to "getblockhash"
 	getBlockHashResponse := qtum.GetBlockHashResponse("0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331")
-	getBlockHashResponseRaw, err := json.Marshal(getBlockHashResponse)
-	getBlockHashResponseRPC := &eth.JSONRPCResult{
-		JSONRPC:   "2.0",
-		RawResult: getBlockHashResponseRaw,
-		Error:     nil,
-		ID:        requestID,
+	err = d.AddResponse(2, qtum.MethodGetBlockHash, getBlockHashResponse)
+	if err != nil {
+		panic(err)
 	}
 
-	getBlockHashResponseRPCRaw, err := json.Marshal(getBlockHashResponseRPC)
-	doerInstance.Responses[qtum.MethodGetBlockHash] = getBlockHashResponseRPCRaw
-
-	//preparing answer to "getblockheader"
 	getBlockHeaderResponse := qtum.GetBlockHeaderResponse{
 		Hash: "0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331",
 	}
-	getBlockHeaderResponseRaw, err := json.Marshal(getBlockHeaderResponse)
-	getBlockHeaderResponseRPC := &eth.JSONRPCResult{
-		JSONRPC:   "2.0",
-		RawResult: getBlockHeaderResponseRaw,
-		Error:     nil,
-		ID:        requestID,
+	err = d.AddResponse(3, qtum.MethodGetBlockHeader, getBlockHeaderResponse)
+	if err != nil {
+		panic(err)
 	}
 
-	getBlockHeaderResponseRPCRaw, err := json.Marshal(getBlockHeaderResponseRPC)
-	doerInstance.Responses[qtum.MethodGetBlockHeader] = getBlockHeaderResponseRPCRaw
-
-	//preparing answer to "getblock"
 	getBlockResponse := qtum.GetBlockResponse{
 		Hash:              "0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331",
 		Previousblockhash: "0x9646252be9520f6e71339a8df9c55e4d7619deeb018d2a3f2d21fc165dde5eb5",
@@ -80,24 +66,13 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 		Difficulty:        0x027f07,
 		Nonce:             0, //?
 	}
-	getBlockResponseRaw, err := json.Marshal(getBlockResponse)
-	getBlockResponseRPC := &eth.JSONRPCResult{
-		JSONRPC:   "2.0",
-		RawResult: getBlockResponseRaw,
-		Error:     nil,
-		ID:        requestID,
-	}
-
-	getBlockResponseRPCRaw, err := json.Marshal(getBlockResponseRPC)
-	doerInstance.Responses[qtum.MethodGetBlock] = getBlockResponseRPCRaw
-
-	//preparing proxy
-	proxyEth := ProxyETHGetBlockByNumber{qtumClient}
+	err = d.AddResponse(4, qtum.MethodGetBlock, getBlockResponse)
 	if err != nil {
 		panic(err)
 	}
 
-	//executing request
+	//preparing proxy & executing request
+	proxyEth := ProxyETHGetBlockByNumber{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
 		panic(err)
