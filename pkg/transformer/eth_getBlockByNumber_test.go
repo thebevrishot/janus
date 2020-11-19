@@ -38,7 +38,8 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 		JSONRPC: "2.0",
 		Method:  "eth_protocolVersion",
 		ID:      requestID,
-		Params:  []byte(`{"blockNumber": "0x1b4","fullTransaction": true}`),
+		//eth.GetBlockByNumberRequest fields:
+		Params: []byte(`["0x1b4",true]`),
 	}
 
 	d := doerMappedMock{make(map[string][]byte)}
