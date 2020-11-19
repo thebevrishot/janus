@@ -372,8 +372,8 @@ type GasPriceResponse *ETHInt
 
 type (
 	GetBlockByNumberRequest struct {
-		BlockNumber     json.RawMessage `json:"blockNumber"`
-		FullTransaction bool            `json:"fullTransaction"`
+		BlockNumber     json.RawMessage
+		FullTransaction bool
 	}
 
 	/*
@@ -419,6 +419,27 @@ type (
 		Uncles           []string `json:"uncles"`
 	}
 )
+
+func (r *GetBlockByNumberRequest) UnmarshalJSON(data []byte) error {
+	var params []json.RawMessage
+	if err := json.Unmarshal(data, &params); err != nil {
+		return errors.Wrap(err, "json unmarshalling")
+	}
+
+	if len(params) == 0 {
+		return errors.New("params must be set")
+	}
+
+	var fullTx bool
+	if err := json.Unmarshal(params[1], &fullTx); err != nil {
+		return err
+	}
+
+	r.BlockNumber = params[0]
+	r.FullTransaction = fullTx
+
+	return nil
+}
 
 // ========== eth_newFilter ============= //
 
