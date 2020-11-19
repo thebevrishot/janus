@@ -17,11 +17,11 @@ type doer interface {
 
 //type for mocking requests to client for simple requests
 type doerMock struct {
-	Response *[]byte
+	Response []byte
 }
 
 func (d doerMock) Do(*http.Request) (*http.Response, error) {
-	r := ioutil.NopCloser(bytes.NewReader([]byte(*d.Response)))
+	r := ioutil.NopCloser(bytes.NewReader([]byte(d.Response)))
 	return &http.Response{
 		StatusCode: 200,
 		Body:       r,
@@ -46,7 +46,7 @@ func (d doerMappedMock) Do(request *http.Request) (*http.Response, error) {
 	}, nil
 }
 
-func prepareRawResponse(requestID int, responseResult interface{}) (*[]byte, error) {
+func prepareRawResponse(requestID int, responseResult interface{}) ([]byte, error) {
 	requestIDRaw, err := json.Marshal(requestID)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func prepareRawResponse(requestID int, responseResult interface{}) (*[]byte, err
 
 	responseRPCRaw, err := json.Marshal(responseRPC)
 
-	return &responseRPCRaw, err
+	return responseRPCRaw, err
 }
 
 func (d *doerMappedMock) AddResponse(requestID int, requestType string, responseResult interface{}) error {
@@ -75,7 +75,7 @@ func (d *doerMappedMock) AddResponse(requestID int, requestType string, response
 		return err
 	}
 
-	d.Responses[requestType] = *responseRaw
+	d.Responses[requestType] = responseRaw
 	return nil
 }
 
@@ -96,8 +96,6 @@ func parseRequestFromBody(request *http.Request) (*eth.JSONRPCRequest, error) {
 
 func createMockedClient(doerInstance doer) (qtumClient *qtum.Qtum, err error) {
 	qtumJSONRPC, err := qtum.NewClient(true, "http://user:pass@mocked", qtum.SetDoer(doerInstance))
-	//for debugging:
-	//qtumJSONRPC, err := qtum.NewClient(true, "http://user:pass@mocked", qtum.SetDoer(doerInstance), qtum.SetDebug(true))
 	if err != nil {
 		return
 	}

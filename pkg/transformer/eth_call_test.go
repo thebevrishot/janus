@@ -9,27 +9,6 @@ import (
 	"github.com/qtumproject/janus/pkg/qtum"
 )
 
-/*
-	{
-	  "address": "1e6f89d7399081b4f8f8aa1ae2805a5efff2f960",
-	  "executionResult": {
-	    "gasUsed": 21678,
-	    "excepted": "None",
-	    "newAddress": "1e6f89d7399081b4f8f8aa1ae2805a5efff2f960",
-	    "output": "0000000000000000000000000000000000000000000000000000000000000001",
-	    "codeDeposit": 0,
-	    "gasRefunded": 0,
-	    "depositSize": 0,
-	    "gasForDeposit": 0
-	  },
-	  "transactionReceipt": {
-	    "stateRoot": "d44fc5ad43bae52f01ff7eb4a7bba904ee52aea6c41f337aa29754e57c73fba6",
-	    "gasUsed": 21678,
-	    "bloom": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-	    "log": []
-	  }
-	}
-*/
 func TestEthCallRequest(t *testing.T) {
 	//prepare request
 	requestID, err := json.Marshal(1)
@@ -54,8 +33,8 @@ func TestEthCallRequest(t *testing.T) {
 		Params:  requestParamsArrayRaw,
 	}
 
-	d := doerMappedMock{make(map[string][]byte)}
-	qtumClient, err := createMockedClient(d)
+	clientDoerMock := doerMappedMock{make(map[string][]byte)}
+	qtumClient, err := createMockedClient(clientDoerMock)
 
 	//preparing response
 	callContractResponse := qtum.CallContractResponse{
@@ -86,13 +65,13 @@ func TestEthCallRequest(t *testing.T) {
 			Bloom:     "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
 		},
 	}
-	err = d.AddResponse(1, qtum.MethodCallContract, callContractResponse)
+	err = clientDoerMock.AddResponse(1, qtum.MethodCallContract, callContractResponse)
 	if err != nil {
 		panic(err)
 	}
 
 	fromHexAddressResponse := qtum.FromHexAddressResponse("0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960")
-	err = d.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
+	err = clientDoerMock.AddResponse(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
 	if err != nil {
 		panic(err)
 	}

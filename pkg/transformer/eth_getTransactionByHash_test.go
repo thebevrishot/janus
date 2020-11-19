@@ -48,8 +48,8 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	doer := doerMock{mockedResponseRaw}
-	qtumClient, err := createMockedClient(doer)
+	mockedClientDoer := doerMock{mockedResponseRaw}
+	qtumClient, err := createMockedClient(mockedClientDoer)
 	proxyEth := ProxyETHGetTransactionByHash{qtumClient}
 	if err != nil {
 		panic(err)
