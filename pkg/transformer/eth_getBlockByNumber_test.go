@@ -10,13 +10,10 @@ import (
 )
 
 func TestGetBlockByNumberRequest(t *testing.T) {
-	requestID, err := json.Marshal(1)
-	request := &eth.JSONRPCRequest{
-		JSONRPC: "2.0",
-		Method:  "eth_protocolVersion",
-		ID:      requestID,
-		//eth.GetBlockByNumberRequest fields:
-		Params: []byte(`["0x1b4",true]`),
+	requestParams := []json.RawMessage{[]byte(`"0x1b4"`), []byte(`true`)}
+	request, err := prepareEthRPCRequest(1, requestParams)
+	if err != nil {
+		panic(err)
 	}
 
 	mockedClientDoer := doerMappedMock{make(map[string][]byte)}

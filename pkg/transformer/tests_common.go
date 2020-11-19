@@ -46,6 +46,27 @@ func (d doerMappedMock) Do(request *http.Request) (*http.Response, error) {
 	}, nil
 }
 
+func prepareEthRPCRequest(id int, params []json.RawMessage) (*eth.JSONRPCRequest, error) {
+	requestID, err := json.Marshal(1)
+	if err != nil {
+		return nil, err
+	}
+
+	paramsArrayRaw, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+
+	requestRPC := eth.JSONRPCRequest{
+		JSONRPC: "2.0",
+		Method:  "eth_protocolVersion",
+		ID:      requestID,
+		Params:  paramsArrayRaw,
+	}
+
+	return &requestRPC, nil
+}
+
 func prepareRawResponse(requestID int, responseResult interface{}) ([]byte, error) {
 	requestIDRaw, err := json.Marshal(requestID)
 	if err != nil {

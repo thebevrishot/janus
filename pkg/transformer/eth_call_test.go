@@ -11,7 +11,6 @@ import (
 
 func TestEthCallRequest(t *testing.T) {
 	//prepare request
-	requestID, err := json.Marshal(1)
 	request := eth.CallRequest{
 		From: "0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960",
 		To:   "0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960",
@@ -21,17 +20,7 @@ func TestEthCallRequest(t *testing.T) {
 		panic(err)
 	}
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestParamsArrayRaw, err := json.Marshal(requestParamsArray)
-	if err != nil {
-		panic(err)
-	}
-
-	requestRPC := &eth.JSONRPCRequest{
-		JSONRPC: "2.0",
-		Method:  "eth_protocolVersion",
-		ID:      requestID,
-		Params:  requestParamsArrayRaw,
-	}
+	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
 
 	clientDoerMock := doerMappedMock{make(map[string][]byte)}
 	qtumClient, err := createMockedClient(clientDoerMock)

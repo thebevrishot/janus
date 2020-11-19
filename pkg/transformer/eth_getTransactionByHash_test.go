@@ -10,14 +10,8 @@ import (
 )
 
 func TestGetTransactionByHashRequest(t *testing.T) {
-	//prepare request
-	id, err := json.Marshal(int64(67))
-	request := &eth.JSONRPCRequest{
-		JSONRPC: "2.0",
-		Method:  "eth_protocolVersion",
-		ID:      id,
-		Params:  json.RawMessage(`["0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"]`),
-	}
+	requestParams := []json.RawMessage{[]byte(`"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"`)}
+	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		panic(err)
 	}
