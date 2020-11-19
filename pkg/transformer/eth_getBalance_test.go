@@ -61,7 +61,7 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 	}
 }
 
-func TestGetBalanceRequestContranct(t *testing.T) {
+func TestGetBalanceRequestContract(t *testing.T) {
 	//prepare request
 	requestParams := []json.RawMessage{[]byte(`"0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960"`), []byte(`"123"`)}
 	requestRPC, err := prepareEthRPCRequest(1, requestParams)

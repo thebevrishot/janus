@@ -7,6 +7,7 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	"github.com/qtumproject/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestAccountRequest(t *testing.T) {
@@ -45,6 +46,58 @@ func TestAccountRequest(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
+			string(mustMarshalIndent(want, "", "  ")),
+			string(mustMarshalIndent(got, "", "  ")),
+		)
+	}
+}
+
+func TestAccountMethod(t *testing.T) {
+	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	qtumClient, err := createMockedClient(mockedClientDoer)
+	if err != nil {
+		panic(err)
+	}
+	//preparing proxy & executing request
+	proxyEth := ProxyETHAccounts{qtumClient}
+	got := proxyEth.Method()
+
+	want := string("eth_accounts")
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf(
+			"error\n\nwant: %s\ngot: %s",
+			string(mustMarshalIndent(want, "", "  ")),
+			string(mustMarshalIndent(got, "", "  ")),
+		)
+	}
+}
+func TestAccountToResponse(t *testing.T) {
+	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	qtumClient, err := createMockedClient(mockedClientDoer)
+	if err != nil {
+		panic(err)
+	}
+	proxyEth := ProxyETHAccounts{qtumClient}
+	callResponse := qtum.CallContractResponse{
+		ExecutionResult: struct {
+			GasUsed       int    "json:\"gasUsed\""
+			Excepted      string "json:\"excepted\""
+			NewAddress    string "json:\"newAddress\""
+			Output        string "json:\"output\""
+			CodeDeposit   int    "json:\"codeDeposit\""
+			GasRefunded   int    "json:\"gasRefunded\""
+			DepositSize   int    "json:\"depositSize\""
+			GasForDeposit int    "json:\"gasForDeposit\""
+		}{
+			Output: "0x0000000000000000000000000000000000000000000000000000000000000002",
+		},
+	}
+
+	got := proxyEth.ToResponse(&callResponse)
+	want := eth.CallResponse("0x0000000000000000000000000000000000000000000000000000000000000002")
+	if !reflect.DeepEqual(got, &want) {
+		t.Errorf(
+			"error\n\nwant: %s\ngot: %s",
 			string(mustMarshalIndent(want, "", "  ")),
 			string(mustMarshalIndent(got, "", "  ")),
 		)
