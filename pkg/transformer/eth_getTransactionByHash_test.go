@@ -18,7 +18,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 
 	//prepare expected response & client
 	mockedResponseResult := qtum.GetTransactionResponse{
-		Amount:            0,
+		Amount:            0.20689141,
 		Fee:               -0.2012,
 		Confirmations:     2,
 		Blockhash:         "ea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
@@ -58,7 +58,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	want := &eth.GetTransactionByHashResponse{
 		Hash:      "0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
 		BlockHash: "0xea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
-		Value:     "0x0",
+		Value:     "0x13bb0f5",
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf(
@@ -66,6 +66,60 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 			request,
 			string(mustMarshalIndent(want, "", "  ")),
 			string(mustMarshalIndent(got, "", "  ")),
+		)
+	}
+}
+
+func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
+	requestParams := []json.RawMessage{[]byte(`"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"`)}
+	request, err := prepareEthRPCRequest(1, requestParams)
+	if err != nil {
+		panic(err)
+	}
+
+	//prepare expected response & client
+	mockedResponseResult := qtum.GetTransactionResponse{
+		Amount:            0.20689141123,
+		Fee:               -0.2012,
+		Confirmations:     2,
+		Blockhash:         "ea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
+		Blockindex:        2,
+		Blocktime:         1533092896,
+		Txid:              "11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
+		Time:              1533092879,
+		Timereceived:      1533092879,
+		Bip125Replaceable: "no",
+		Details: []*qtum.TransactionDetail{{Account: "",
+			Category:  "send",
+			Amount:    0,
+			Vout:      0,
+			Fee:       -0.2012,
+			Abandoned: false}},
+		Hex: "020000000159c0514feea50f915854d9ec45bc6458bb14419c78b17e7be3f7fd5f563475b5010000006a473044022072d64a1f4ea2d54b7b05050fc853ab192c91cc5ca17e23007867f92f2ab59d9202202b8c9ab9348c8edbb3b98b1788382c8f37642ec9bd6a4429817ab79927319200012103520b1500a400483f19b93c4cb277a2f29693ea9d6739daaf6ae6e971d29e3140feffffff02000000000000000063010403400d0301644440c10f190000000000000000000000006b22910b1e302cf74803ffd1691c2ecb858d3712000000000000000000000000000000000000000000000000000000000000000a14be528c8378ff082e4ba43cb1baa363dbf3f577bfc260e66272970100001976a9146b22910b1e302cf74803ffd1691c2ecb858d371288acb00f0000",
+	}
+
+	mockedResponseRaw, err := prepareRawResponse(1, mockedResponseResult)
+
+	if err != nil {
+		panic(err)
+	}
+	mockedClientDoer := doerMock{mockedResponseRaw}
+	qtumClient, err := createMockedClient(mockedClientDoer)
+	proxyEth := ProxyETHGetTransactionByHash{qtumClient}
+	if err != nil {
+		panic(err)
+	}
+
+	//execute request
+	_, err = proxyEth.Request(request)
+
+	want := string("big.Int#SetString is not success")
+	if err.Error() != want {
+		t.Errorf(
+			"error\ninput: %s\nwanted error: %s\ngot: %s",
+			request,
+			string(mustMarshalIndent(want, "", "  ")),
+			string(mustMarshalIndent(err, "", "  ")),
 		)
 	}
 }
