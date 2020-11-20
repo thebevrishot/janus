@@ -80,14 +80,14 @@ func TestAccountToResponse(t *testing.T) {
 	proxyEth := ProxyETHAccounts{qtumClient}
 	callResponse := qtum.CallContractResponse{
 		ExecutionResult: struct {
-			GasUsed       int    "json:\"gasUsed\""
-			Excepted      string "json:\"excepted\""
-			NewAddress    string "json:\"newAddress\""
-			Output        string "json:\"output\""
-			CodeDeposit   int    "json:\"codeDeposit\""
-			GasRefunded   int    "json:\"gasRefunded\""
-			DepositSize   int    "json:\"depositSize\""
-			GasForDeposit int    "json:\"gasForDeposit\""
+			GasUsed       int    `json:"gasUsed"`
+			Excepted      string `json:"excepted"`
+			NewAddress    string `json:"newAddress"`
+			Output        string `json:"output"`
+			CodeDeposit   int    `json:"codeDeposit"`
+			GasRefunded   int    `json:"gasRefunded"`
+			DepositSize   int    `json:"depositSize"`
+			GasForDeposit int    `json:"gasForDeposit"`
 		}{
 			Output: "0x0000000000000000000000000000000000000000000000000000000000000002",
 		},

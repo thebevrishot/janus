@@ -15,20 +15,7 @@ type doer interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-//type for mocking requests to client for simple requests
-type doerMock struct {
-	Response []byte
-}
-
-func (d doerMock) Do(*http.Request) (*http.Response, error) {
-	r := ioutil.NopCloser(bytes.NewReader([]byte(d.Response)))
-	return &http.Response{
-		StatusCode: 200,
-		Body:       r,
-	}, nil
-}
-
-//type for mocking requests to client with request -> responce mapping
+//type for mocking requests to client with request -> response mapping
 type doerMappedMock struct {
 	Responses map[string][]byte
 }

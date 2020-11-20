@@ -41,14 +41,14 @@ func TestEstimateGasRequest(t *testing.T) {
 	callContractResponse := qtum.CallContractResponse{
 		Address: "1e6f89d7399081b4f8f8aa1ae2805a5efff2f960",
 		ExecutionResult: struct {
-			GasUsed       int    "json:\"gasUsed\""
-			Excepted      string "json:\"excepted\""
-			NewAddress    string "json:\"newAddress\""
-			Output        string "json:\"output\""
-			CodeDeposit   int    "json:\"codeDeposit\""
-			GasRefunded   int    "json:\"gasRefunded\""
-			DepositSize   int    "json:\"depositSize\""
-			GasForDeposit int    "json:\"gasForDeposit\""
+			GasUsed       int    `json:"gasUsed"`
+			Excepted      string `json:"excepted"`
+			NewAddress    string `json:"newAddress"`
+			Output        string `json:"output"`
+			CodeDeposit   int    `json:"codeDeposit"`
+			GasRefunded   int    `json:"gasRefunded"`
+			DepositSize   int    `json:"depositSize"`
+			GasForDeposit int    `json:"gasForDeposit"`
 		}{
 			GasUsed:  21678,
 			Excepted: "None",
