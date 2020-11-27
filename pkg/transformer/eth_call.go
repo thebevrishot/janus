@@ -23,7 +23,7 @@ func (p *ProxyETHCall) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) 
 		return nil, err
 	}
 
-	fmt.Println("Call Request in ETH: %v", req)
+	fmt.Printf("Call Request in ETH: %v\n", req)
 
 	return p.request(&req)
 }
