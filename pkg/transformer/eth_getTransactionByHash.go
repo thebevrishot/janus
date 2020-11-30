@@ -54,7 +54,7 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 	ethTx := eth.GetTransactionByHashResponse{
 		Hash:      utils.AddHexPrefix(tx.Txid),
 		BlockHash: utils.AddHexPrefix(tx.Blockhash),
-		Nonce:     "",
+		Nonce:     "0x01",
 		Value:     ethVal,
 
 		// Contract invokation info:
