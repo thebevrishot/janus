@@ -79,7 +79,7 @@ func (p *ProxyETHSendTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		return nil, err
 	}
 
-	ethresp := eth.SendTransactionResponse(resp.Txid)
+	ethresp := eth.SendTransactionResponse(utils.AddHexPrefix(resp.Txid))
 	return &ethresp, nil
 }
 
