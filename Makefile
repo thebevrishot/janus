@@ -23,7 +23,8 @@ docker-dev:
 	
 .PHONY: local-dev
 local-dev:
-	docker run --name qtum_testchain -d -p 3889:3889 qtum:qtum qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole
+	go install github.com/qtumproject/janus/cli/janus
+	docker run --name qtum_testchain -d -p 3889:3889 qtum/qtum qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents=1 -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole | true
 	sleep 3
 	docker cp ${GOPATH}/src/github.com/qtumproject/janus/docker/fill_user_account.sh qtum_testchain:.
 	docker exec qtum_testchain /bin/sh -c ./fill_user_account.sh
@@ -31,7 +32,8 @@ local-dev:
 
 .PHONY: local-dev-logs
 local-dev-logs:
-	docker run --name qtum_testchain -d -p 3889:3889 qtum:qtum qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole
+	go install github.com/qtumproject/janus/cli/janus
+	docker run --name qtum_testchain -d -p 3889:3889 qtum/qtum qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents=1 -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole | true
 	sleep 3
 	docker cp ${GOPATH}/src/github.com/qtumproject/janus/docker/fill_user_account.sh qtum_testchain:.
 	docker exec qtum_testchain /bin/sh -c ./fill_user_account.sh
