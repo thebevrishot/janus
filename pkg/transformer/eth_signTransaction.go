@@ -142,7 +142,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 	}
 
 	var resp *qtum.SignRawTxResponse
-	if err := p.Qtum.Request(qtum.MethodSignRawTx, rawTx, &resp); err != nil {
+	if err := p.Qtum.Request(qtum.MethodSignRawTx, []interface{}{rawTx}, &resp); err != nil {
 		return "", err
 	}
 	if !resp.Complete {
