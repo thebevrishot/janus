@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/qtumproject/janus/pkg/eth"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -16,14 +18,7 @@ type EthGas interface {
 }
 
 func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
-	gasLimit = big.NewInt(40000000)
-	if gas := g.GasHex(); gas != "" {
-		gasLimit, err = utils.DecodeBig(gas)
-		if err != nil {
-			err = errors.Wrap(err, "decode gas")
-			return
-		}
-	}
+	gasLimit = g.(*eth.SendTransactionRequest).Gas.Int
 
 	gasPriceFloat64, err := EthValueToQtumAmount(g.GasPriceHex())
 	if err != nil {
