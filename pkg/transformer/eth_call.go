@@ -23,8 +23,6 @@ func (p *ProxyETHCall) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) 
 		return nil, err
 	}
 
-	fmt.Printf("Call Request in ETH: %v\n", req)
-
 	return p.request(&req)
 }
 
@@ -45,28 +43,20 @@ func (p *ProxyETHCall) request(ethreq *eth.CallRequest) (interface{}, error) {
 }
 
 func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractRequest, error) {
-	gasLimit, _, err := EthGasToQtum(ethreq)
-	if err != nil {
-		return nil, err
-	}
-
 	from := ethreq.From
-
+	var err error
 	if utils.IsEthHexAddress(from) {
 		from, err = p.FromHexAddress(from)
-		fmt.Printf("got from hex address: %v\n", from)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	fmt.Printf("ethreq.To: %v\n", ethreq.To)
-
 	return &qtum.CallContractRequest{
 		To:       ethreq.To,
 		From:     from,
 		Data:     ethreq.Data,
-		GasLimit: gasLimit,
+		GasLimit: ethreq.Gas.Int,
 	}, nil
 }
 
