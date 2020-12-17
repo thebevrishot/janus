@@ -150,8 +150,10 @@ func (r *SendToAddressRequest) MarshalJSON() ([]byte, error) {
 		       "UNSET"
 		       "ECONOMICAL"
 		       "CONSERVATIVE"
-		9. "senderaddress"      (string, optional) The quantum address that will be used to send money from.
-		10."changeToSender"     (bool, optional, default=false) Return the change to the sender.
+		9. "avoid_reuse" 	(boolean, optional, default=true) Avoid spending from dirty addresses; 
+					addresses are considered dirty if they have previously been used in a transaction
+		10. "senderaddress"      (string, optional) The quantum address that will be used to send money from.
+		11."changeToSender"     (bool, optional, default=false) Return the change to the sender.
 	*/
 	return json.Marshal([]interface{}{
 		r.Address,
@@ -162,6 +164,7 @@ func (r *SendToAddressRequest) MarshalJSON() ([]byte, error) {
 		nil,
 		nil,
 		nil,
+		false,
 		r.SenderAddress,
 		true,
 	})
