@@ -50,8 +50,7 @@ func EthValueToQtumAmount(val string) (decimal.Decimal, error) {
 	return amount, nil
 }
 
-func QtumAmountToEthValue(amount decimal.Decimal) (string, error) {
-
+func formatQtumAmount(amount decimal.Decimal) (string, error) {
 	decimalAmount := amount.Mul(decimal.NewFromFloat(float64(1e8)))
 
 	//convert decimal to Integer
@@ -59,7 +58,7 @@ func QtumAmountToEthValue(amount decimal.Decimal) (string, error) {
 
 	if !decimalAmount.Equals(decimal.NewFromBigInt(result, 0)) {
 		return "0x0", errors.New("decimal.BigInt() was not a success")
-	} 
+	}
 
 	return hexutil.EncodeBig(result), nil
 }

@@ -40,7 +40,7 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 		return nil, err
 	}
 
-	ethVal, err := QtumAmountToEthValue(tx.Amount)
+	ethVal, err := formatQtumAmount(tx.Amount)
 	if err != nil {
 
 		return nil, err

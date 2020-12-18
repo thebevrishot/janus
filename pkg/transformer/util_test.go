@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"testing"
+
 	"github.com/shopspring/decimal"
 )
 
@@ -32,7 +33,7 @@ func TestEthValueToQtumAmount(t *testing.T) {
 
 func TestQtumAmountToEthValue(t *testing.T) {
 	in, want := decimal.NewFromFloat(0.000001), "0x64"
-	got, err := QtumAmountToEthValue(in)
+	got, err := formatQtumAmount(in)
 	if err != nil {
 		t.Error(err)
 	}
