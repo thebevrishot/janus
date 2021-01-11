@@ -7,6 +7,7 @@ import (
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
+	"github.com/shopspring/decimal"
 )
 
 // ProxyETHSendTransaction implements ETHProxy
@@ -49,7 +50,7 @@ func (p *ProxyETHSendTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		return nil, err
 	}
 
-	amount := 0.0
+	amount := decimal.NewFromFloat(0.0)
 	if ethtx.Value != "" {
 		var err error
 		amount, err = EthValueToQtumAmount(ethtx.Value)
