@@ -1,13 +1,27 @@
 module.exports = {
-  // See <http://truffleframework.com/docs/advanced/configuration>
-  // to customize your Truffle configuration!
   networks: {
     development: {
-      host: '127.0.0.1',
-      port: 23889, // janus QTUM-ETH RPC bridge
-      network_id: '*', // eslint-disable-line camelcase
-      from: '0x7926223070547d2d15b2ef5e7383e541c338ffe9',
-      gasPrice: '0x64', // minimal gas for qtum
+      host: "127.0.0.1",
+      port: 23889,
+      network_id: "*",
+      gasPrice: "0x64"
     },
+    ganache: {
+      host: "127.0.0.1",
+      port: 8545,
+      network_id: "*"
+    },
+    testnet: {
+      host: "hk1.s.qtum.org",
+      port: 23889,
+      network_id: "*",
+      from: "0x7926223070547d2d15b2ef5e7383e541c338ffe9",
+      gasPrice: "0x64"
+    }
   },
-};
+  compilers: {
+    solc: {
+      version: "^0.4.17",
+    }
+  },
+}
