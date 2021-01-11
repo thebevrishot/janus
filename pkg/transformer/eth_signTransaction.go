@@ -7,6 +7,7 @@ import (
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
+
 	"github.com/shopspring/decimal"
 )
 
@@ -54,7 +55,7 @@ func (p *ProxyETHSignTransaction) getRequiredUtxos(from string, neededAmount dec
 	var inputs []qtum.RawTxInputs
 	var balanceReqMet bool
 	for _, utxo := range *qtumresp {
-		balance = balance.Add(utxo.Amount)
+		balance = balance.Add(decimal.NewFromFloat(utxo.Amount))
 		inputs = append(inputs, qtum.RawTxInputs{TxID: utxo.Txid, Vout: utxo.Vout})
 		if balance.GreaterThanOrEqual(neededAmount) {
 			balanceReqMet = true
@@ -86,7 +87,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 		return "", err
 	}
 
-	amount := decimal.NewFromFloat(0.0)
+	amount := 0.0
 	if ethtx.Value != "" {
 		var err error
 		amount, err = EthValueToQtumAmount(ethtx.Value)
@@ -99,7 +100,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 	if err != nil {
 		return "", err
 	}
-	neededAmount := calculateNeededAmount(amount, decimal.NewFromBigInt(gasLimit, 0), newGasPrice)
+	neededAmount := calculateNeededAmount(decimal.NewFromFloat(amount), decimal.NewFromBigInt(gasLimit, 0), newGasPrice)
 
 	inputs, balance, err := p.getRequiredUtxos(ethtx.From, neededAmount)
 	if err != nil {
@@ -173,17 +174,18 @@ func (p *ProxyETHSignTransaction) requestSendToAddress(req *eth.SendTransactionR
 		return "", err
 	}
 
-	inputs, balance, err := p.getRequiredUtxos(req.From, amount)
+	neededAmount := decimal.NewFromFloat(amount)
+	inputs, balance, err := p.getRequiredUtxos(req.From, neededAmount)
 	if err != nil {
 		return "", err
 	}
 
-	change, err := calculateChange(balance, amount)
+	change, err := calculateChange(balance, neededAmount)
 	if err != nil {
 		return "", err
 	}
 
-	var addressValMap = map[string]decimal.Decimal{to: amount, from: change}
+	var addressValMap = map[string]decimal.Decimal{to: neededAmount, from: change}
 	rawtxreq := []interface{}{inputs, addressValMap}
 	var rawTx string
 	if err := p.Qtum.Request(qtum.MethodCreateRawTx, rawtxreq, &rawTx); err != nil {

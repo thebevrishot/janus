@@ -7,7 +7,6 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	"github.com/qtumproject/janus/pkg/qtum"
-	"github.com/shopspring/decimal"
 )
 
 func TestGetBalanceRequestAccount(t *testing.T) {
@@ -38,7 +37,7 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 		panic(err)
 	}
 
-	listUnspentResponse := qtum.ListUnspentResponse{{Amount: decimal.NewFromInt(100)}, {Amount: decimal.NewFromInt(100000)}}
+	listUnspentResponse := qtum.ListUnspentResponse{{Amount: 100}, {Amount: 100000}}
 	err = mockedClientDoer.AddResponse(3, qtum.MethodListUnspent, listUnspentResponse)
 	if err != nil {
 		panic(err)

@@ -6,7 +6,6 @@ import (
 	"math/big"
 
 	"github.com/qtumproject/janus/pkg/utils"
-	"github.com/shopspring/decimal"
 )
 
 // TODO: Wipe these out when it comes time to change over from floats to integers, and change SendToContractRequest to not use strings where numerics will do
@@ -15,7 +14,7 @@ import (
 type SendToContractRawRequest struct {
 	ContractAddress string   `json:"contractAddress"`
 	Datahex         string   `json:"data"`
-	Amount          decimal.Decimal  `json:"amount"`
+	Amount          float64  `json:"amount"`
 	GasLimit        *big.Int `json:"gasLimit"`
 	GasPrice        string   `json:"gasPrice"`
 	SenderAddress   string   `json:"senderaddress"`
@@ -128,7 +127,7 @@ type (
 type (
 	SendToAddressRequest struct {
 		Address       string
-		Amount        decimal.Decimal
+		Amount        float64
 		SenderAddress string
 	}
 	SendToAddressResponse string
@@ -177,7 +176,7 @@ type (
 	SendToContractRequest struct {
 		ContractAddress string
 		Datahex         string
-		Amount          decimal.Decimal
+		Amount          float64
 		GasLimit        *big.Int
 		GasPrice        string
 		SenderAddress   string
@@ -425,7 +424,7 @@ type (
 	}
 
 	DecodedRawTransactionOutV struct {
-		Value        decimal.Decimal `json:"value"`
+		Value        float64 `json:"value"`
 		N            int64   `json:"n"`
 		ScriptPubKey struct {
 			Asm       string   `json:"asm"`
@@ -569,8 +568,8 @@ type (
 		  }
 	*/
 	GetTransactionResponse struct {
-		Amount            decimal.Decimal              `json:"amount"`
-		Fee               decimal.Decimal              `json:"fee"`
+		Amount            float64              `json:"amount"`
+		Fee               float64              `json:"fee"`
 		Confirmations     int64                `json:"confirmations"`
 		Blockhash         string               `json:"blockhash"`
 		Blockindex        int64                `json:"blockindex"`
@@ -586,10 +585,10 @@ type (
 		Account   string  `json:"account"`
 		Address   string  `json:"address"`
 		Category  string  `json:"category"`
-		Amount    decimal.Decimal `json:"amount"`
+		Amount    float64 `json:"amount"`
 		Label     string  `json:"label"`
 		Vout      int64   `json:"vout"`
-		Fee       decimal.Decimal `json:"fee"`
+		Fee       float64 `json:"fee"`
 		Abandoned bool    `json:"abandoned"`
 	}
 )
@@ -1052,7 +1051,7 @@ type (
 		Address       string  `json:"address"`
 		Account       string  `json:"account"`
 		ScriptPubKey  string  `json:"scriptPubKey"`
-		Amount        decimal.Decimal `json:"amount"`
+		Amount        float64 `json:"amount"`
 		Confirmations int     `json:"confirmations"`
 		Spendable     bool    `json:"spendable"`
 		Solvable      bool    `json:"solvable"`

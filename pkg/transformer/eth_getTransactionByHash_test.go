@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
-	"github.com/shopspring/decimal"
 )
 
 /*
@@ -25,8 +25,8 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 
 	//preparing answer to "getblockhash"
 	getTransactionResponse := qtum.GetTransactionResponse{
-		Amount:            decimal.NewFromFloat(0.20689141),
-		Fee:               decimal.NewFromFloat(-0.2012),
+		Amount:            0.20689141,
+		Fee:               -0.2012,
 		Confirmations:     2,
 		Blockhash:         "ea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
 		Blockindex:        2,
@@ -37,9 +37,9 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 		Bip125Replaceable: "no",
 		Details: []*qtum.TransactionDetail{{Account: "",
 			Category:  "send",
-			Amount:    decimal.NewFromInt(0),
+			Amount:    0,
 			Vout:      0,
-			Fee:       decimal.NewFromFloat(-0.2012),
+			Fee:       -0.2012,
 			Abandoned: false}},
 		Hex: "020000000159c0514feea50f915854d9ec45bc6458bb14419c78b17e7be3f7fd5f563475b5010000006a473044022072d64a1f4ea2d54b7b05050fc853ab192c91cc5ca17e23007867f92f2ab59d9202202b8c9ab9348c8edbb3b98b1788382c8f37642ec9bd6a4429817ab79927319200012103520b1500a400483f19b93c4cb277a2f29693ea9d6739daaf6ae6e971d29e3140feffffff02000000000000000063010403400d0301644440c10f190000000000000000000000006b22910b1e302cf74803ffd1691c2ecb858d3712000000000000000000000000000000000000000000000000000000000000000a14be528c8378ff082e4ba43cb1baa363dbf3f577bfc260e66272970100001976a9146b22910b1e302cf74803ffd1691c2ecb858d371288acb00f0000",
 	}
@@ -90,7 +90,6 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 		Hash:      "0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
 		BlockHash: "0xea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
 		Value:     "0x13bb0f5",
-		Nonce:	   "0x01",
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf(
@@ -114,8 +113,8 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 
 	//preparing answer to "getblockhash"
 	getTransactionResponse := qtum.GetTransactionResponse{
-		Amount:            decimal.NewFromFloat(0.20689141234),
-		Fee:               decimal.NewFromFloat(-0.2012),
+		Amount:            0.20689141234,
+		Fee:               -0.2012,
 		Confirmations:     2,
 		Blockhash:         "ea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
 		Blockindex:        2,
@@ -126,9 +125,9 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 		Bip125Replaceable: "no",
 		Details: []*qtum.TransactionDetail{{Account: "",
 			Category:  "send",
-			Amount:    decimal.NewFromInt(0),
+			Amount:    0,
 			Vout:      0,
-			Fee:       decimal.NewFromFloat(-0.2012),
+			Fee:       -0.2012,
 			Abandoned: false}},
 		Hex: "020000000159c0514feea50f915854d9ec45bc6458bb14419c78b17e7be3f7fd5f563475b5010000006a473044022072d64a1f4ea2d54b7b05050fc853ab192c91cc5ca17e23007867f92f2ab59d9202202b8c9ab9348c8edbb3b98b1788382c8f37642ec9bd6a4429817ab79927319200012103520b1500a400483f19b93c4cb277a2f29693ea9d6739daaf6ae6e971d29e3140feffffff02000000000000000063010403400d0301644440c10f190000000000000000000000006b22910b1e302cf74803ffd1691c2ecb858d3712000000000000000000000000000000000000000000000000000000000000000a14be528c8378ff082e4ba43cb1baa363dbf3f577bfc260e66272970100001976a9146b22910b1e302cf74803ffd1691c2ecb858d371288acb00f0000",
 	}
@@ -141,7 +140,7 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 	proxyEth := ProxyETHGetTransactionByHash{qtumClient}
 	_, err = proxyEth.Request(request)
 
-	want := string("decimal.BigInt() was not a success")
+	want := string("big.Int#SetString is not success")
 	if err.Error() != want {
 		t.Errorf(
 			"error\ninput: %s\nwanted error: %s\ngot: %s",
