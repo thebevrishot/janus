@@ -1,7 +1,9 @@
 package transformer
 
 import (
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -39,6 +41,10 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 				return nil, err
 			}
 
+			nonce := 0
+			var contractAddr common.Address
+			contractAddr = crypto.CreateAddress(common.HexToAddress(ethTx.From), uint64(nonce))
+
 			// TODO: Correct to normal values
 			return &eth.GetTransactionReceiptResponse{
 				TransactionHash:   ethTx.Hash,
@@ -49,7 +55,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 				To:                ethTx.To,
 				CumulativeGasUsed: ethTx.Gas,
 				GasUsed:           ethTx.Gas,
-				ContractAddress:   ethTx.To,
+				ContractAddress:   contractAddr.String(),
 				Logs:              []eth.Log{},
 				LogsBloom:         "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
 				Status:            "0x1",
@@ -66,6 +72,13 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 	r := qtum.TransactionReceiptStruct(*receipt)
 	logs := getEthLogs(&r)
 
+	nonce := 0
+	if receipt.ContractAddress != "" {
+		var contractAddr common.Address
+		contractAddr = crypto.CreateAddress(common.HexToAddress(receipt.From), uint64(nonce))
+		receipt.ContractAddress = contractAddr.String()
+	}
+
 	// TODO: Correct to normal values
 	ethTxReceipt := eth.GetTransactionReceiptResponse{
 		TransactionHash:   utils.AddHexPrefix(receipt.TransactionHash),
@@ -77,6 +90,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 		GasUsed:           hexutil.EncodeUint64(receipt.GasUsed),
 		Logs:              logs,
 		Status:            status,
+		Nonce:             nonce,
 
 		// see Known issues
 		LogsBloom: "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
