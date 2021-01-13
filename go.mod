@@ -20,8 +20,8 @@ require (
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/shopspring/decimal v1.2.0
-	github.com/stamblerre/gocode v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.0.1 // indirect
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	golang.org/x/sys v0.0.0-20190506115046-ca7f33d4116e // indirect
 	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6

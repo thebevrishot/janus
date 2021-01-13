@@ -12,6 +12,16 @@ import (
 // TODO: Wipe these out when it comes time to change over from floats to integers, and change SendToContractRequest to not use strings where numerics will do
 // Todo: Go and fix the need for a custom json unmarshall in the non raw versions of these types
 
+const (
+	genesisBlockHeight = 0
+
+	// Presents hex representation of a 21000 value, which is
+	// the default value to a block
+	//
+	// NOTE: value doesn't have 0x prefix
+	DefaultBlockGasLimit = "5208"
+)
+
 type SendToContractRawRequest struct {
 	ContractAddress string   `json:"contractAddress"`
 	Datahex         string   `json:"data"`
@@ -855,6 +865,10 @@ func (r *GetBlockHeaderRequest) MarshalJSON() ([]byte, error) {
 		r.Hash,
 		!r.NotVerbose,
 	})
+}
+
+func (r *GetBlockHeaderResponse) IsGenesisBlock() bool {
+	return r.Height == genesisBlockHeight
 }
 
 // ========== GetBlock ============= //
