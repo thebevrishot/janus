@@ -142,7 +142,7 @@ func (p *ProxyETHGetFilterChanges) toSearchLogsReq(filter *eth.Filter, from, to 
 	var err error
 	var addresses []string
 	if ethreq.Address != nil {
-		if isString(ethreq.Address) {
+		if isBytesOfString(ethreq.Address) {
 			var addr string
 			if err = json.Unmarshal(ethreq.Address, &addr); err != nil {
 				return nil, err
