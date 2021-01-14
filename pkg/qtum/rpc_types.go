@@ -439,7 +439,7 @@ type (
 		Value        decimal.Decimal `json:"value"`
 		N            int64           `json:"n"`
 		ScriptPubKey struct {
-			Asm       string   `json:"asm"`
+			ASM       string   `json:"asm"`
 			Hex       string   `json:"hex"`
 			ReqSigs   int64    `json:"reqSigs"`
 			Type      string   `json:"type"`
@@ -472,7 +472,7 @@ func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo
 
 	for _, vout := range resp.Vouts {
 		var (
-			script  = strings.Split(vout.ScriptPubKey.Asm, " ")
+			script  = strings.Split(vout.ScriptPubKey.ASM, " ")
 			finalOp = script[len(script)-1]
 		)
 		switch finalOp {
@@ -516,6 +516,15 @@ func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo
 	return ContractInfo{}, false, nil
 }
 
+func (resp *DecodedRawTransactionResponse) IsContractCreation() bool {
+	for _, vout := range resp.Vouts {
+		if strings.HasSuffix(vout.ScriptPubKey.ASM, "OP_CREATE") {
+			return true
+		}
+	}
+	return false
+}
+
 // ========== GetTransactionOut ============= //
 type (
 	GetTransactionOutRequest struct {
@@ -542,7 +551,7 @@ type (
 // ========== GetTransactionReceipt ============= //
 type (
 	GetTransactionReceiptRequest  string
-	GetTransactionReceiptResponse TransactionReceiptStruct
+	GetTransactionReceiptResponse TransactionReceipt
 	/*
 	   {
 	     "blockHash": "975326b65c20d0b8500f00a59f76b08a98513fff7ce0484382534a47b55f8985",
@@ -576,18 +585,29 @@ type (
 	     ]
 	   }
 	*/
-	TransactionReceiptStruct struct {
-		BlockHash         string `json:"blockHash"`
-		BlockNumber       uint64 `json:"blockNumber"`
-		TransactionHash   string `json:"transactionHash"`
-		TransactionIndex  uint64 `json:"transactionIndex"`
-		From              string `json:"from"`
+	TransactionReceipt struct {
+		BlockHash        string `json:"blockHash"`
+		BlockNumber      uint64 `json:"blockNumber"`
+		TransactionHash  string `json:"transactionHash"`
+		TransactionIndex uint64 `json:"transactionIndex"`
+		From             string `json:"from"`
+		// NOTE: will be null for a contract creation transaction
 		To                string `json:"to"`
 		CumulativeGasUsed uint64 `json:"cumulativeGasUsed"`
 		GasUsed           uint64 `json:"gasUsed"`
-		ContractAddress   string `json:"contractAddress"`
-		Excepted          string `json:"excepted"`
-		Log               []Log  `json:"log"`
+
+		// TODO: discuss
+		// 	? May be a contract transaction created by non-contract
+		//
+		// The created contract address. If this tx is created by the contract,
+		// return the contract address, else return null
+		ContractAddress string `json:"contractAddress"`
+
+		// May has "None" value, which means, that transaction is not executed
+		Excepted string `json:"excepted"`
+
+		Log         []Log `json:"log"`
+		OutputIndex int64 `json:"outputIndex"`
 	}
 )
 
@@ -602,19 +622,18 @@ func (r GetTransactionReceiptRequest) MarshalJSON() ([]byte, error) {
 
 var EmptyResponseErr = errors.New("result is empty")
 
-func (r *GetTransactionReceiptResponse) UnmarshalJSON(data []byte) error {
-	type Response GetTransactionReceiptResponse
-	var resp []Response
-	if err := json.Unmarshal(data, &resp); err != nil {
+func (resp *GetTransactionReceiptResponse) UnmarshalJSON(data []byte) error {
+	// NOTE: do not use `GetTransactionReceiptResponse`, 'cause
+	// it may violate to infinite loop, while calling
+	// UnmarshalJSON interface
+	var receipts []TransactionReceipt
+	if err := json.Unmarshal(data, &receipts); err != nil {
 		return err
 	}
-
-	if len(resp) == 0 {
-		return EmptyResponseErr
+	if receiptsNum := len(receipts); receiptsNum != 1 {
+		return errors.Errorf("unexpected receipts number - %d/1", receiptsNum)
 	}
-
-	*r = GetTransactionReceiptResponse(resp[0])
-
+	*resp = GetTransactionReceiptResponse(receipts[0])
 	return nil
 }
 
@@ -818,7 +837,7 @@ type (
 		Topics    []interface{}
 	}
 
-	SearchLogsResponse []TransactionReceiptStruct
+	SearchLogsResponse []TransactionReceipt
 )
 
 func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
