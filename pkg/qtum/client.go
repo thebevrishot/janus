@@ -73,16 +73,19 @@ func (c *Client) IsMain() bool {
 }
 
 func (c *Client) Request(method string, params interface{}, result interface{}) error {
-	r, err := c.NewRPCRequest(method, params)
+	req, err := c.NewRPCRequest(method, params)
+	if err != nil {
+		return errors.WithMessage(err, "couldn't make new rpc request")
+	}
+	resp, err := c.Do(req)
 	if err != nil {
 		return err
 	}
-
-	resp, err := c.Do(r)
+	err = json.Unmarshal(resp.RawResult, result)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "couldn't unmarshal response result field")
 	}
-	return json.Unmarshal(resp.RawResult, result)
+	return nil
 }
 
 func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
@@ -206,7 +209,6 @@ func responseBodyToResult(body []byte) (*SuccessJSONRPCResult, error) {
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
-
 	if res.Error != nil {
 		return nil, res.Error
 	}
