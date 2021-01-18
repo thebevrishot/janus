@@ -753,6 +753,7 @@ type (
 		Bip125Replaceable string               `json:"bip125-replaceable"`
 		Details           []*TransactionDetail `json:"details"`
 		Hex               string               `json:"hex"`
+		Generated         bool                 `json:"generated"`
 	}
 	TransactionDetail struct {
 		// TODO: research/discuss
