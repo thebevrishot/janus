@@ -13,7 +13,6 @@ require (
 	github.com/go-kit/kit v0.8.0
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.2.8 // indirect
 	github.com/mattn/go-colorable v0.1.1 // indirect
