@@ -2,9 +2,10 @@ package qtum
 
 import (
 	"encoding/json"
-	"errors"
 	"math/big"
+	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/shopspring/decimal"
 )
@@ -23,12 +24,12 @@ const (
 )
 
 type SendToContractRawRequest struct {
-	ContractAddress string   `json:"contractAddress"`
-	Datahex         string   `json:"data"`
-	Amount          decimal.Decimal  `json:"amount"`
-	GasLimit        *big.Int `json:"gasLimit"`
-	GasPrice        string   `json:"gasPrice"`
-	SenderAddress   string   `json:"senderaddress"`
+	ContractAddress string          `json:"contractAddress"`
+	Datahex         string          `json:"data"`
+	Amount          decimal.Decimal `json:"amount"`
+	GasLimit        *big.Int        `json:"gasLimit"`
+	GasPrice        string          `json:"gasPrice"`
+	SenderAddress   string          `json:"senderaddress"`
 }
 
 type CreateContractRawRequest struct {
@@ -420,11 +421,11 @@ type (
 		Vsize    int64                        `json:"vsize"`
 		Version  int64                        `json:"version"`
 		Locktime int64                        `json:"locktime"`
-		Vin      []*DecodedRawTransactionInV  `json:"vin"`
-		Vout     []*DecodedRawTransactionOutV `json:"vout"`
+		Vins     []*DecodedRawTransactionInV  `json:"vin"`
+		Vouts    []*DecodedRawTransactionOutV `json:"vout"`
 	}
 	DecodedRawTransactionInV struct {
-		Txid      string `json:"txid"`
+		TxID      string `json:"txid"`
 		Vout      int64  `json:"vout"`
 		ScriptSig struct {
 			Asm string `json:"asm"`
@@ -436,7 +437,7 @@ type (
 
 	DecodedRawTransactionOutV struct {
 		Value        decimal.Decimal `json:"value"`
-		N            int64   `json:"n"`
+		N            int64           `json:"n"`
 		ScriptPubKey struct {
 			Asm       string   `json:"asm"`
 			Hex       string   `json:"hex"`
@@ -444,6 +445,97 @@ type (
 			Type      string   `json:"type"`
 			Addresses []string `json:"addresses"`
 		} `json:"scriptPubKey"`
+	}
+)
+
+// Calculates transaction total amount of Qtum
+func (resp *DecodedRawTransactionResponse) CalcAmount() decimal.Decimal {
+	var amount decimal.Decimal
+	for _, out := range resp.Vouts {
+		amount.Add(out.Value)
+	}
+	return amount
+}
+
+type ContractInfo struct {
+	From      string
+	To        string
+	GasLimit  string
+	GasUsed   string
+	UserInput string
+}
+
+// TODO: complete
+func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo, isContractTx bool, _ error) {
+	// TODO: discuss
+	// ? Can Vouts have several contracts
+
+	for _, vout := range resp.Vouts {
+		var (
+			script  = strings.Split(vout.ScriptPubKey.Asm, " ")
+			finalOp = script[len(script)-1]
+		)
+		switch finalOp {
+		case "OP_CALL":
+			// TODO: complete. qtum.ParseCallSenderASM, probably has errors
+			// info, err := qtum.ParseCallSenderASM(script)
+			// // OP_CALL with OP_SENDER has the script type "nonstandard"
+			// if err != nil {
+			// 	return nil, err
+			// }
+
+			return ContractInfo{}, true, errors.New("contract parsing partially implemented")
+
+		case "OP_CREATE":
+			// OP_CALL with OP_SENDER has the script type "create_sender"
+			// TODO: refine parsing
+			invokeInfo, err := ParseCreateSenderASM(script)
+			if err != nil {
+				return ContractInfo{}, false, errors.WithMessage(err, "couldn't parse create sender ASM")
+			}
+			contractInfo := ContractInfo{
+				From: invokeInfo.From,
+				To:   invokeInfo.To,
+
+				// TODO: discuss
+				// ?! Not really "gas sent by user"
+				GasLimit:  invokeInfo.GasLimit,
+				UserInput: invokeInfo.CallData,
+
+				// TODO: researching
+				GasUsed: "0x0",
+			}
+			return contractInfo, true, nil
+
+		case "OP_SPEND":
+			// TODO: complete
+			return ContractInfo{}, true, errors.New("contract parsing partially implemented")
+		}
+	}
+
+	return ContractInfo{}, false, nil
+}
+
+// ========== GetTransactionOut ============= //
+type (
+	GetTransactionOutRequest struct {
+		Hash            string `json:"txid"`
+		VoutNumber      int    `json:"n"`
+		MempoolIncluded bool   `json:"include_mempool"`
+	}
+	GetTransactionOutResponse struct {
+		BestBlockHash    string  `json:"bestblock"`
+		ConfirmationsNum int     `json:"confirmations"`
+		Amount           float64 `json:"value"`
+		ScriptPubKey     struct {
+			ASM        string   `json:"asm"`
+			Hex        string   `json:"hex"`
+			ReqSigsNum int      `json:"reqSigs"`
+			Type       string   `json:"type"`
+			Addresses  []string `json:"addresses"`
+		} `json:"scriptPubKey"`
+		IsReward    bool `json:"coinbase"`
+		IsCoinstake bool `json:"coinstake"`
 	}
 )
 
@@ -553,18 +645,48 @@ type (
 		Verbose bool
 	}
 	GetRawTransactionResponse struct {
-		TxID          string `json:"txid"`
-		Hash          string `json:"hash"`
-		Version       int64  `json:"version"`
-		Size          int64  `json:"size"`
-		Vsize         int64  `json:"vsize"`
-		Weight        int64  `json:"weight"`
-		Locktime      int64  `json:"locktime"`
-		Hex           string `json:"hex"`
-		Blockhash     string `json:"blockhash"`
+		Hex     string `json:"hex"`
+		ID      string `json:"txid"`
+		Hash    string `json:"hash"`
+		Size    int64  `json:"size"`
+		Vsize   int64  `json:"vsize"`
+		Version int64  `json:"version"`
+		Weight  int64  `json:"weight"`
+
+		BlockHash     string `json:"blockhash"`
 		Confirmations int64  `json:"confirmations"`
 		Time          int64  `json:"time"`
-		Blocktime     int64  `json:"blocktime"`
+		BlockTime     int64  `json:"blocktime"`
+
+		Vins  []RawTransactionVin  `json:"vin"`
+		Vouts []RawTransactionVout `json:"vout"`
+
+		// Unused fields:
+		// - "in_active_chain"
+		// - "locktime"
+
+	}
+	RawTransactionVin struct {
+		ID    string `json:"txid"`
+		VoutN int64  `json:"vout"`
+
+		// Additional fields:
+		// - "scriptSig"
+		// - "sequence"
+		// - "txinwitness"
+	}
+	RawTransactionVout struct {
+		Amount  float64 `json:"value"`
+		Details struct {
+			Addresses []string `json:"addresses"`
+			Asm       string   `json:"asm"`
+			Hex       string   `json:"hex"`
+			// ReqSigs   interface{} `json:"reqSigs"`
+			Type string `json:"type"`
+		} `json:"scriptPubKey"`
+
+		// Additional fields:
+		// - "n"
 	}
 )
 
@@ -579,6 +701,10 @@ func (r *GetRawTransactionRequest) MarshalJSON() ([]byte, error) {
 		r.TxID,
 		r.Verbose,
 	})
+}
+
+func (r *GetRawTransactionResponse) IsPending() bool {
+	return r.BlockHash == ""
 }
 
 // ========== GetTransaction ============= //
@@ -615,28 +741,39 @@ type (
 		  }
 	*/
 	GetTransactionResponse struct {
-		Amount            decimal.Decimal              `json:"amount"`
-		Fee               decimal.Decimal              `json:"fee"`
+		Amount            decimal.Decimal      `json:"amount"`
+		Fee               decimal.Decimal      `json:"fee"`
 		Confirmations     int64                `json:"confirmations"`
-		Blockhash         string               `json:"blockhash"`
-		Blockindex        int64                `json:"blockindex"`
-		Blocktime         int64                `json:"blocktime"`
-		Txid              string               `json:"txid"`
+		BlockHash         string               `json:"blockhash"`
+		BlockIndex        int64                `json:"blockindex"`
+		BlockTime         int64                `json:"blocktime"`
+		ID                string               `json:"txid"`
 		Time              int64                `json:"time"`
-		Timereceived      int64                `json:"timereceived"`
+		ReceivedAt        int64                `json:"timereceived"`
 		Bip125Replaceable string               `json:"bip125-replaceable"`
 		Details           []*TransactionDetail `json:"details"`
 		Hex               string               `json:"hex"`
 	}
 	TransactionDetail struct {
-		Account   string  `json:"account"`
-		Address   string  `json:"address"`
-		Category  string  `json:"category"`
-		Amount    decimal.Decimal `json:"amount"`
-		Label     string  `json:"label"`
-		Vout      int64   `json:"vout"`
-		Fee       decimal.Decimal `json:"fee"`
-		Abandoned bool    `json:"abandoned"`
+		// TODO: research/discuss
+		// 	! Field is deprecated
+		Account string `json:"account"`
+		Address string `json:"address"`
+		// Represents transaction direction: `send` or `receive`
+		Category string          `json:"category"`
+		Amount   decimal.Decimal `json:"amount"`
+		// Comment value
+		Label string `json:"label"`
+		Vout  int64  `json:"vout"`
+		// NOTE:
+		// 	- Negative value
+		// 	- Presetned only for `send` transaction category
+		Fee decimal.Decimal `json:"fee"`
+		// TODO: discuss
+		// 	? What's the meaning
+		//
+		// NOTE: presetned only for `send` transaction category
+		Abandoned bool `json:"abandoned"`
 	}
 )
 
@@ -664,6 +801,10 @@ func (r *GetTransactionResponse) UnmarshalJSON(data []byte) error {
 	*r = GetTransactionResponse(resp)
 
 	return nil
+}
+
+func (r *GetTransactionResponse) IsPending() bool {
+	return r.BlockHash == ""
 }
 
 // ========== SearchLogs ============= //
@@ -921,7 +1062,7 @@ type (
 		Merkleroot        string   `json:"merkleroot"`
 		HashStateRoot     string   `json:"hashStateRoot"`
 		HashUTXORoot      string   `json:"hashUTXORoot"`
-		Tx                []string `json:"tx"`
+		Txs               []string `json:"tx"`
 		Time              int      `json:"time"`
 		Mediantime        int      `json:"mediantime"`
 		Nonce             int      `json:"nonce"`
@@ -1097,16 +1238,16 @@ type (
 		]
 	*/
 	ListUnspentResponse []struct {
-		Txid          string  `json:"txid"`
-		Vout          uint    `json:"vout"`
-		Address       string  `json:"address"`
-		Account       string  `json:"account"`
-		ScriptPubKey  string  `json:"scriptPubKey"`
+		Txid          string          `json:"txid"`
+		Vout          uint            `json:"vout"`
+		Address       string          `json:"address"`
+		Account       string          `json:"account"`
+		ScriptPubKey  string          `json:"scriptPubKey"`
 		Amount        decimal.Decimal `json:"amount"`
-		Confirmations int     `json:"confirmations"`
-		Spendable     bool    `json:"spendable"`
-		Solvable      bool    `json:"solvable"`
-		Safe          bool    `json:"safe"`
+		Confirmations int             `json:"confirmations"`
+		Spendable     bool            `json:"spendable"`
+		Solvable      bool            `json:"solvable"`
+		Safe          bool            `json:"safe"`
 	}
 )
 

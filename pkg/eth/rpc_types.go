@@ -200,35 +200,61 @@ func (r *GetLogsRequest) UnmarshalJSON(data []byte) error {
 
 // ========== GetTransactionByHash ============= //
 type (
+	// Presents transacrion hash value
 	GetTransactionByHashRequest  string
 	GetTransactionByHashResponse struct {
-		Hash             string `json:"hash"`             // DATA, 32 Bytes - hash of the transaction.
-		Nonce            string `json:"nonce"`            // QUANTITY - the number of transactions made by the sender prior to this one.
-		BlockHash        string `json:"blockHash"`        // DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
-		BlockNumber      string `json:"blockNumber"`      // QUANTITY - block number where this transaction was in. null when its pending.
-		TransactionIndex string `json:"transactionIndex"` // QUANTITY - integer of the transactions index position in the block. null when its pending.
-		From             string `json:"from"`             // DATA, 20 Bytes - address of the sender.
-		To               string `json:"to"`               // DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
-		Value            string `json:"value"`            // QUANTITY - value transferred in Wei.
-		GasPrice         string `json:"gasPrice"`         // QUANTITY - gas price provided by the sender in Wei.
-		Gas              string `json:"gas"`              // QUANTITY - gas provided by the sender.
-		Input            string `json:"input"`            // DATA - the data send along with the transaction.
+		// NOTE: must be null when its pending
+		BlockHash string `json:"blockHash"`
+		// NOTE: must be null when its pending
+		BlockNumber string `json:"blockNumber"`
+
+		// Hex representation of an integer - position in the block
+		//
+		// NOTE: must be null when its pending
+		TransactionIndex string `json:"transactionIndex"`
+
+		Hash string `json:"hash"`
+		// The number of transactions made by the sender prior to this one
+		Nonce string `json:"nonce"`
+		// Value transferred in Wei
+		Value string `json:"value"`
+		// The data send along with the transaction
+		Input string `json:"input"`
+
+		From string `json:"from"`
+		// NOTE: must be null, if it's a contract creation transaction
+		To string `json:"to"`
+
+		// Gas provided by the sender
+		Gas string `json:"gas"`
+		// Gas price provided by the sender in Wei
+		GasPrice string `json:"gasPrice"`
+
+		// ECDSA recovery id
+		V string `json:"v"`
+		// ECDSA signature r
+		R string `json:"r"`
+		// ECDSA signature s
+		S string `json:"s"`
 	}
 )
 
 func (r *GetTransactionByHashRequest) UnmarshalJSON(data []byte) error {
-	var params []string
-	err := json.Unmarshal(data, &params)
-	if err != nil {
-		return errors.Wrap(err, "json unmarshalling")
+	var params []interface{}
+	if err := json.Unmarshal(data, &params); err != nil {
+		return err
+	}
+	if paramsNum := len(params); paramsNum != 1 {
+		return fmt.Errorf("invalid parameters number - %d/1", paramsNum)
 	}
 
-	if len(params) == 0 {
-		return errors.New("params must be set")
+	switch t := params[0].(type) {
+	case string:
+		*r = GetTransactionByHashRequest(t)
+		return nil
+	default:
+		return fmt.Errorf("invalid parameter type %T, but %T is expected", t, "")
 	}
-
-	*r = GetTransactionByHashRequest(params[0])
-	return nil
 }
 
 // ========== GetTransactionReceipt ============= //

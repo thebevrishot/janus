@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/shopspring/decimal"
@@ -28,12 +29,12 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 		Amount:            decimal.NewFromFloat(0.20689141),
 		Fee:               decimal.NewFromFloat(-0.2012),
 		Confirmations:     2,
-		Blockhash:         "ea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
-		Blockindex:        2,
-		Blocktime:         1533092896,
-		Txid:              "11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
+		BlockHash:         "ea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
+		BlockIndex:        2,
+		BlockTime:         1533092896,
+		ID:                "11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
 		Time:              1533092879,
-		Timereceived:      1533092879,
+		ReceivedAt:        1533092879,
 		Bip125Replaceable: "no",
 		Details: []*qtum.TransactionDetail{{Account: "",
 			Category:  "send",
@@ -55,8 +56,8 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 		Vsize:    552,
 		Version:  2,
 		Locktime: 608,
-		Vin: []*qtum.DecodedRawTransactionInV{{
-			Txid: "7f5350dc474f2953a3f30282c1afcad2fb61cdcea5bd949c808ecc6f64ce1503",
+		Vins: []*qtum.DecodedRawTransactionInV{{
+			TxID: "7f5350dc474f2953a3f30282c1afcad2fb61cdcea5bd949c808ecc6f64ce1503",
 			Vout: 0,
 			ScriptSig: struct {
 				Asm string `json:"asm"`
@@ -66,7 +67,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 				Hex: "483045022100af4de764705dbd3c0c116d73fe0a2b78c3fab6822096ba2907cfdae2bb28784102206304340a6d260b364ef86d6b19f2b75c5e55b89fb2f93ea72c05e09ee037f60b012103520b1500a400483f19b93c4cb277a2f29693ea9d6739daaf6ae6e971d29e3140",
 			},
 		}},
-		Vout: []*qtum.DecodedRawTransactionOutV{},
+		Vouts: []*qtum.DecodedRawTransactionOutV{},
 	}
 	err = mockedClientDoer.AddResponse(3, qtum.MethodDecodeRawTransaction, decodedRawTransactionResponse)
 	if err != nil {
@@ -90,7 +91,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 		Hash:      "0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
 		BlockHash: "0xea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
 		Value:     "0x13bb0f5",
-		Nonce:	   "0x01",
+		Nonce:     "0x01",
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf(
@@ -117,12 +118,12 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 		Amount:            decimal.NewFromFloat(0.20689141234),
 		Fee:               decimal.NewFromFloat(-0.2012),
 		Confirmations:     2,
-		Blockhash:         "ea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
-		Blockindex:        2,
-		Blocktime:         1533092896,
-		Txid:              "11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
+		BlockHash:         "ea26fd59a2145dcecd0e2f81b701019b51ca754b6c782114825798973d8187d6",
+		BlockIndex:        2,
+		BlockTime:         1533092896,
+		ID:                "11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
 		Time:              1533092879,
-		Timereceived:      1533092879,
+		ReceivedAt:        1533092879,
 		Bip125Replaceable: "no",
 		Details: []*qtum.TransactionDetail{{Account: "",
 			Category:  "send",

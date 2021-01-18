@@ -20,6 +20,7 @@ const (
 	MethodSendToAddress         = "sendtoaddress"
 	MethodCallContract          = "callcontract"
 	MethodDecodeRawTransaction  = "decoderawtransaction"
+	MethodGetTransactionOut     = "gettxout"
 	MethodGetBlockCount         = "getblockcount"
 	MethodGetBlockChainInfo     = "getblockchaininfo"
 	MethodSearchLogs            = "searchlogs"
