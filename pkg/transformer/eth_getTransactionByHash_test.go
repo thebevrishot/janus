@@ -50,7 +50,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	}
 
 	decodedRawTransactionResponse := qtum.DecodedRawTransactionResponse{
-		Txid:     "11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
+		ID:       "11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
 		Hash:     "d0fe0caa1b798c36da37e9118a06a7d151632d670b82d1c7dc3985577a71880f",
 		Size:     552,
 		Vsize:    552,

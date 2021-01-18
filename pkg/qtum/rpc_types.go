@@ -415,7 +415,7 @@ type (
 		}
 	*/
 	DecodedRawTransactionResponse struct {
-		Txid     string                       `json:"txid"`
+		ID       string                       `json:"txid"`
 		Hash     string                       `json:"hash"`
 		Size     int64                        `json:"size"`
 		Vsize    int64                        `json:"vsize"`
