@@ -161,7 +161,7 @@ func (r *SendToAddressRequest) MarshalJSON() ([]byte, error) {
 		       "UNSET"
 		       "ECONOMICAL"
 		       "CONSERVATIVE"
-		9. "avoid_reuse" 	(boolean, optional, default=true) Avoid spending from dirty addresses; 
+		9. "avoid_reuse" 	(boolean, optional, default=true) Avoid spending from dirty addresses;
 					addresses are considered dirty if they have previously been used in a transaction
 		10. "senderaddress"      (string, optional) The quantum address that will be used to send money from.
 		11."changeToSender"     (bool, optional, default=false) Return the change to the sender.
@@ -549,11 +549,11 @@ func (r *GetBlockCountResponse) UnmarshalJSON(data []byte) error {
 
 type (
 	GetRawTransactionRequest struct {
-		Txid    string
+		TxID    string
 		Verbose bool
 	}
 	GetRawTransactionResponse struct {
-		Txid          string `json:"txid"`
+		TxID          string `json:"txid"`
 		Hash          string `json:"hash"`
 		Version       int64  `json:"version"`
 		Size          int64  `json:"size"`
@@ -576,7 +576,7 @@ func (r *GetRawTransactionRequest) MarshalJSON() ([]byte, error) {
 
 	*/
 	return json.Marshal([]interface{}{
-		r.Txid,
+		r.TxID,
 		r.Verbose,
 	})
 }
@@ -585,7 +585,7 @@ func (r *GetRawTransactionRequest) MarshalJSON() ([]byte, error) {
 
 type (
 	GetTransactionRequest struct {
-		Txid string
+		TxID string
 	}
 
 	/*
@@ -647,7 +647,7 @@ func (r *GetTransactionRequest) MarshalJSON() ([]byte, error) {
 		3. "waitconf"              (int, optional, default=0) Wait for enough confirmations before returning
 	*/
 	return json.Marshal([]interface{}{
-		r.Txid,
+		r.TxID,
 	})
 }
 

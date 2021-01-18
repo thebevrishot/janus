@@ -44,30 +44,28 @@ func (m *Method) SignMessage(addr string, msg string) (string, error) {
 	return signature, nil
 }
 
-func (m *Method) GetTransaction(Txid string) (*GetTransactionResponse, error) {
+func (m *Method) GetTransaction(txID string) (*GetTransactionResponse, error) {
 	var resp *GetTransactionResponse
 	req := GetTransactionRequest{
-		Txid: Txid,
+		TxID: txID,
 	}
 	err := m.Request(MethodGetTransaction, &req, &resp)
 	if err != nil {
 		return nil, err
 	}
-
 	return resp, nil
 }
 
-func (m *Method) GetRawTransaction(Txid string) (*GetRawTransactionResponse, error) {
+func (m *Method) GetRawTransaction(txID string) (*GetRawTransactionResponse, error) {
 	var resp *GetRawTransactionResponse
 	req := GetRawTransactionRequest{
-		Txid:    Txid,
+		TxID:    txID,
 		Verbose: true,
 	}
 	err := m.Request(MethodGetRawTransaction, &req, &resp)
 	if err != nil {
 		return nil, err
 	}
-
 	return resp, nil
 }
 
@@ -77,7 +75,6 @@ func (m *Method) GetTransactionReceipt(txHash string) (*GetTransactionReceiptRes
 	if err != nil {
 		return nil, err
 	}
-
 	return resp, nil
 }
 
@@ -87,7 +84,6 @@ func (m *Method) DecodeRawTransaction(hex string) (*DecodedRawTransactionRespons
 	if err != nil {
 		return nil, err
 	}
-
 	return resp, nil
 }
 
@@ -113,12 +109,12 @@ func (m *Method) GetBlockHash(b *big.Int) (resp GetBlockHashResponse, err error)
 		Int: b,
 	}
 	err = m.Request(MethodGetBlockHash, &req, &resp)
-	return
+	return resp, err
 }
 
 func (m *Method) GetBlockChainInfo() (resp GetBlockChainInfoResponse, err error) {
 	err = m.Request(MethodGetBlockChainInfo, nil, &resp)
-	return
+	return resp, err
 }
 
 func (m *Method) GetBlockHeader(hash string) (resp *GetBlockHeaderResponse, err error) {
