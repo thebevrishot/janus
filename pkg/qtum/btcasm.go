@@ -89,18 +89,17 @@ func ParseCreateSenderASM(parts []string) (*ContractInvokeInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	gasPrice, err := stringBase10ToHex(parts[6])
 	if err != nil {
 		return nil, err
 	}
-
-	return &ContractInvokeInfo{
+	info := &ContractInvokeInfo{
 		From:     parts[1],
 		GasPrice: gasPrice,
 		GasLimit: gasLimit,
 		CallData: parts[7],
-	}, nil
+	}
+	return info, nil
 }
 
 func stringBase10ToHex(str string) (string, error) {
