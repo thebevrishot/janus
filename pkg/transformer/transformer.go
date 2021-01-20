@@ -58,22 +58,24 @@ func (t *Transformer) Register(p ETHProxy) error {
 }
 
 // Transform takes a Transformer and transforms the request from ETH request and returns the proxy request
-func (t *Transformer) Transform(rpcReq *eth.JSONRPCRequest) (interface{}, error) {
-	p, err := t.getProxy(rpcReq)
+func (t *Transformer) Transform(req *eth.JSONRPCRequest) (interface{}, error) {
+	proxy, err := t.getProxy(req.Method)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "couldn't get proxy")
 	}
-
-	return p.Request(rpcReq)
+	resp, err := proxy.Request(req)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "couldn't proxy %s request", req.Method)
+	}
+	return resp, nil
 }
 
-func (t *Transformer) getProxy(rpcReq *eth.JSONRPCRequest) (ETHProxy, error) {
-	m := rpcReq.Method
-	p, ok := t.transformers[m]
+func (t *Transformer) getProxy(method string) (ETHProxy, error) {
+	proxy, ok := t.transformers[method]
 	if !ok {
-		return nil, errors.Errorf("Unsupported method %s", m)
+		return nil, errors.Errorf("method %s is unsupported", method)
 	}
-	return p, nil
+	return proxy, nil
 }
 
 // DefaultProxies are the default proxy methods made available
