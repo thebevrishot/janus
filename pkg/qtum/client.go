@@ -210,7 +210,7 @@ func responseBodyToResult(body []byte) (*SuccessJSONRPCResult, error) {
 		return nil, err
 	}
 	if res.Error != nil {
-		return nil, res.Error
+		return nil, res.Error.TryGetKnownError()
 	}
 
 	return &SuccessJSONRPCResult{
