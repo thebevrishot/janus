@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
+	"github.com/shopspring/decimal"
 )
 
 type EthGas interface {
@@ -20,46 +21,45 @@ type EthGas interface {
 func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 	gasLimit = g.(*eth.SendTransactionRequest).Gas.Int
 
-	gasPriceFloat64, err := EthValueToQtumAmount(g.GasPriceHex())
+	gasPriceDecimal, err := EthValueToQtumAmount(g.GasPriceHex())
 	if err != nil {
 		return nil, "0.0", err
 	}
-	gasPrice = fmt.Sprintf("%.8f", gasPriceFloat64)
+	gasPrice = fmt.Sprintf("%v", gasPriceDecimal)
 
 	return
 }
 
-func EthValueToQtumAmount(val string) (float64, error) {
+func EthValueToQtumAmount(val string) (decimal.Decimal, error) {
 	if val == "" {
-		return 0.0000004, nil
+		return decimal.NewFromFloat(0.0000004), nil
 	}
 
 	ethVal, err := utils.DecodeBig(val)
 	if err != nil {
-		return 0.0, err
+		return decimal.NewFromFloat(0.0), err
 	}
 
-	ethValFloat64 := new(big.Float)
-	ethValFloat64, success := ethValFloat64.SetString(ethVal.String())
-	if !success {
-		return 0.0, errors.New("big.Float#SetString is not success")
+	ethValDecimal, err := decimal.NewFromString(ethVal.String())
+	if err != nil {
+		return decimal.NewFromFloat(0.0), errors.New("decimal.NewFromString was not a success")
 	}
 
-	amount := ethValFloat64.Mul(ethValFloat64, big.NewFloat(float64(1e-8)))
-	result, _ := amount.Float64()
+	amount := ethValDecimal.Mul(decimal.NewFromFloat(float64(1e-8)))
 
-	return result, nil
+	return amount, nil
 }
 
-func QtumAmountToEthValue(amount float64) (string, error) {
-	bigAmount := big.NewFloat(amount)
-	bigAmount = bigAmount.Mul(bigAmount, big.NewFloat(float64(1e8)))
+func QtumAmountToEthValue(amount decimal.Decimal) (string, error) {
 
-	result := new(big.Int)
-	result, success := result.SetString(bigAmount.String(), 10)
-	if !success {
-		return "0x0", errors.New("big.Int#SetString is not success")
-	}
+	decimalAmount := amount.Mul(decimal.NewFromFloat(float64(1e8)))
+
+	//convert decimal to Integer
+	result := decimalAmount.BigInt()
+
+	if !decimalAmount.Equals(decimal.NewFromBigInt(result, 0)) {
+		return "0x0", errors.New("decimal.BigInt() was not a success")
+	} 
 
 	return hexutil.EncodeBig(result), nil
 }
