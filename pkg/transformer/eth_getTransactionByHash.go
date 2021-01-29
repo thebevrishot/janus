@@ -106,11 +106,8 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 		}
 		ethTx.From = utils.AddHexPrefix(qtumTxContractInfo.From)
 		ethTx.To = utils.AddHexPrefix(qtumTxContractInfo.To)
-		ethTx.Gas = utils.AddHexPrefix(qtumTxContractInfo.GasUsed)
-		// TODO: discuss, consider values
-		// - gas limit is needed for `eth_getBlockByHash` request (return as a func result?)
-		// ? ethTx.GasPrice
-		ethTx.GasPrice = "0x0" // temporary solution
+		ethTx.Gas = hexutil.Encode([]byte(qtumTxContractInfo.GasLimit))
+		ethTx.GasPrice = hexutil.Encode([]byte(qtumTxContractInfo.GasPrice))
 
 		return ethTx, nil
 	}

@@ -33,8 +33,8 @@ func ParseCallSenderASM(parts []string) (*ContractInvokeInfo, error) {
 	// {signature, pubkey}   //serialized scriptSig
 	// OP_SENDER
 	// 4                     // EVM version
-	// 10                    //gas price
 	// 100000                //gas limit
+	// 10                    //gas price
 	// 1234                  // data to be sent by the contract
 	// Contract Address      // contract address
 	// OP_CALL
@@ -76,8 +76,8 @@ func ParseCreateSenderASM(parts []string) (*ContractInvokeInfo, error) {
 	// {signature, pubkey}   //serialized scriptSig
 	// OP_SENDER
 	// 4                     // EVM version
-	// 10                    //gas price
 	// 100000                //gas limit
+	// 10                    //gas price
 	// 1234                  // data to be sent by the contract
 	// OP_CREATE
 

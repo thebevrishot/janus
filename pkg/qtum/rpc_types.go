@@ -471,6 +471,7 @@ type ContractInfo struct {
 	From      string
 	To        string
 	GasLimit  string
+	GasPrice  string
 	GasUsed   string
 	UserInput string
 }
@@ -487,20 +488,21 @@ func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo
 		)
 		switch finalOp {
 		case "OP_CALL":
-			// TODO: complete. qtum.ParseCallSenderASM, probably has errors
 			callInfo, err := ParseCallSenderASM(script)
 			// OP_CALL with OP_SENDER has the script type "nonstandard"
 			if err != nil {
 				return ContractInfo{}, false, errors.WithMessage(err, "couldn't parse call sender ASM")
 			}
 			info := ContractInfo{
-				From:      callInfo.From,
-				To:        callInfo.To,
-				GasLimit:  callInfo.GasLimit,
-				UserInput: callInfo.CallData,
+				From:     callInfo.From,
+				To:       callInfo.To,
+				GasLimit: callInfo.GasLimit,
+				GasPrice: callInfo.GasPrice,
 
 				// TODO: researching
 				GasUsed: "0x0",
+
+				UserInput: callInfo.CallData,
 			}
 			return info, true, errors.New("contract parsing partially implemented")
 
@@ -516,11 +518,14 @@ func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo
 
 				// TODO: discuss
 				// ?! Not really "gas sent by user"
-				GasLimit:  createInfo.GasLimit,
-				UserInput: createInfo.CallData,
+				GasLimit: createInfo.GasLimit,
+
+				GasPrice: createInfo.GasPrice,
 
 				// TODO: researching
 				GasUsed: "0x0",
+
+				UserInput: createInfo.CallData,
 			}
 			return info, true, nil
 
