@@ -69,10 +69,7 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 	}
 
 	ethTx := &eth.GetTransactionByHashResponse{
-		Hash: utils.AddHexPrefix(qtumDecodedRawTx.ID),
-		// TODO: researching
-		// ? May be don't need this
-		// ! Probably, needs huge quantity requests to calc by hands
+		Hash:  utils.AddHexPrefix(qtumDecodedRawTx.ID),
 		Nonce: "0x0",
 
 		// TODO: researching
@@ -166,11 +163,7 @@ func getRewardTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionB
 	}
 
 	ethTx := &eth.GetTransactionByHashResponse{
-		Hash: utils.AddHexPrefix(hash),
-
-		// TODO: researching
-		// ? May be don't need this
-		// ! Probably, needs huge quantity requests to calc by hands
+		Hash:  utils.AddHexPrefix(hash),
 		Nonce: "0x0",
 
 		// TODO: discuss

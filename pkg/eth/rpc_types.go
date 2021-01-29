@@ -214,8 +214,13 @@ type (
 		TransactionIndex string `json:"transactionIndex"`
 
 		Hash string `json:"hash"`
+
 		// The number of transactions made by the sender prior to this one
+		// NOTE:
+		// 	Unnecessary value, but keep it to be always 0x0, to be
+		// 	graph-node compatible
 		Nonce string `json:"nonce"`
+
 		// Value transferred in Wei
 		Value string `json:"value"`
 		// The data send along with the transaction
