@@ -200,7 +200,7 @@ func (r *GetLogsRequest) UnmarshalJSON(data []byte) error {
 
 // ========== GetTransactionByHash ============= //
 type (
-	// Presents transacrion hash value
+	// Presents transaction hash value
 	GetTransactionByHashRequest  string
 	GetTransactionByHashResponse struct {
 		// NOTE: must be null when its pending
