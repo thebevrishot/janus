@@ -2,7 +2,6 @@ package transformer
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
@@ -47,16 +46,9 @@ func (p *ProxyETHGetTransactionByHash) request(req *qtum.GetTransactionRequest) 
 func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashResponse, error) {
 	qtumTx, err := p.GetTransaction(hash)
 	if err != nil {
-		// TODO: implement typed error at Qtum pkg
-		// * Filter "transaction not found" error
-		//
-		// TODO: researching
-		// ?! Is the case only for reward transactions
-		cause := errors.Cause(err)
-		if !strings.Contains(cause.Error(), "[code: -5]") {
+		if errors.Cause(err) != qtum.ErrInvalidAddress {
 			return nil, err
 		}
-
 		ethTx, err := getRewardTransactionByHash(p, hash)
 		if err != nil {
 			return nil, errors.WithMessage(err, "couldn't get reward transaction by hash")
