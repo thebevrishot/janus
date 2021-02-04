@@ -19,7 +19,7 @@ quick-start:
 
 .PHONY: docker-dev
 docker-dev:
-	docker build --no-cache -f ./docker/standalone/Dockerfile -t qtum/janus:dev .
+	docker build --no-cache -t qtum/janus:dev .
 	
 .PHONY: local-dev
 local-dev:
