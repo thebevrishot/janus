@@ -206,3 +206,10 @@ func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse
 	}
 	return
 }
+
+func (m *Method) SendRawTransaction(req *SendRawTransactionRequest) (resp *SendRawTransactionResposne, err error) {
+	if err := m.Request(MethodSendRawTx, req, &resp); err != nil {
+		return nil, err
+	}
+	return
+}
