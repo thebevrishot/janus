@@ -1216,6 +1216,15 @@ type (
 	}
 )
 
+// ======== sendrawtransaction ========= //
+
+type (
+	// Presents hexed string of a raw transcation
+	SendRawTransactionRequest [1]string
+	// Presents hexed string of a transaction hash
+	SendRawTransactionResposne [1]string
+)
+
 // ========== ListUnspent ============= //
 type (
 
