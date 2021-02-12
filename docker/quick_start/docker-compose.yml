@@ -19,6 +19,6 @@ services:
   qtum:
     ports:
       - "3889:3889"
-    image: qtum/qtum:latest
+    image: qtum/qtum
     container_name: qtum_testchain
     command: qtumd -regtest  -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole
