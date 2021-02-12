@@ -67,6 +67,15 @@ func (t *SendTransactionRequest) GasPriceHex() string {
 	return t.GasPrice.Hex()
 }
 
+// ========== eth_sendRawTransaction ============= //
+
+type (
+	// Presents hexed string of a raw transaction
+	SendRawTransactionRequest [1]string
+	// Presents hexed string of a transaction hash
+	SendRawTransactionResponse [1]string
+)
+
 // CallResponse
 type CallResponse string
 
