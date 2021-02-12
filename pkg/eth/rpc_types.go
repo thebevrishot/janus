@@ -1,13 +1,16 @@
 package eth
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
+	"github.com/shopspring/decimal"
 )
 
 type (
@@ -612,3 +615,56 @@ type (
 		Tag     string
 	}
 )
+
+// ======= qtum_getUTXOs ============= //
+
+// NOTE: there is no response struct definition inside of this package, 'cause
+// it's the same as original Qtum response, which is declared at qtum package
+type GetUTXOsRequest struct {
+	Address      string
+	MinSumAmount decimal.Decimal
+}
+
+func (req *GetUTXOsRequest) UnmarshalJSON(params []byte) error {
+	paramsBytesNum := len(params)
+	if paramsBytesNum < 2 {
+		return fmt.Errorf("bytes number < 2")
+	}
+
+	params = params[1 : paramsBytesNum-1] // drop `[`, `]`
+
+	for i, vByte := range params {
+		if vByte == ',' {
+			req.Address = string(bytes.Trim((params[:i]), " \n\t\""))
+
+			if paramsBytesNum < i+1 {
+				// `,` is the last byte, that is
+				// there are no bytes left
+				return nil
+			}
+
+			var (
+				minAmount = string(bytes.Trim(params[i+1:], " \n\t\""))
+				err       error
+			)
+			req.MinSumAmount, err = decimal.NewFromString(minAmount)
+			if err != nil {
+				return fmt.Errorf("couldn't convert minimum amount from string: %s", err)
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("an array of length 2 - address and minimum amount - is expected")
+}
+
+func (req GetUTXOsRequest) CheckHasValidValues() error {
+	if !common.IsHexAddress(req.Address) {
+		return errors.Errorf("invalid Ethereum address - %q", req.Address)
+	}
+	if req.MinSumAmount.LessThanOrEqual(decimal.NewFromInt(0)) {
+		return errors.Errorf("invalid minimum amount - %q (<= 0)", req.MinSumAmount)
+	}
+	return nil
+}
