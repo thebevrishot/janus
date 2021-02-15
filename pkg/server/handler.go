@@ -34,7 +34,7 @@ func httpHandler(c echo.Context) error {
 	if err != nil {
 		err1 := errors.Cause(err)
 		if err != err1 {
-			level.Error(cc.logger).Log("err", err1.Error())
+			level.Error(cc.logger).Log("err", err.Error())
 			return cc.JSONRPCError(&eth.JSONRPCError{
 				Code:    100,
 				Message: err1.Error(),

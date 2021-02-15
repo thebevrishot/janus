@@ -120,8 +120,8 @@ func (p *ProxyETHGetFilterChanges) doSearchLogs(req *qtum.SearchLogsRequest) (et
 		return nil, err
 	}
 
-	receiptToResult := func(receipt *qtum.TransactionReceiptStruct) []interface{} {
-		logs := getEthLogs(receipt)
+	receiptToResult := func(receipt *qtum.TransactionReceipt) []interface{} {
+		logs := extractETHLogsFromTransactionReceipt(receipt)
 		res := make([]interface{}, len(logs))
 		for i, _ := range res {
 			res[i] = logs[i]
@@ -130,7 +130,7 @@ func (p *ProxyETHGetFilterChanges) doSearchLogs(req *qtum.SearchLogsRequest) (et
 	}
 	results := make(eth.GetFilterChangesResponse, 0)
 	for _, receipt := range resp {
-		r := qtum.TransactionReceiptStruct(receipt)
+		r := qtum.TransactionReceipt(receipt)
 		results = append(results, receiptToResult(&r)...)
 	}
 
@@ -142,7 +142,7 @@ func (p *ProxyETHGetFilterChanges) toSearchLogsReq(filter *eth.Filter, from, to 
 	var err error
 	var addresses []string
 	if ethreq.Address != nil {
-		if isString(ethreq.Address) {
+		if isBytesOfString(ethreq.Address) {
 			var addr string
 			if err = json.Unmarshal(ethreq.Address, &addr); err != nil {
 				return nil, err

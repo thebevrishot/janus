@@ -73,7 +73,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 		Flags:             "proof-of-stake",
 		Proofhash:         "15bd6006ecbab06708f705ecf68664b78b388e4d51416cdafb019d5b90239877",
 		Modifier:          "a79c00d1d570743ca8135a173d535258026d26bafbc5f3d951c3d33486b1f120",
-		Tx: []string{"3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
+		Txs: []string{"3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
 			"8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"},
 		Nextblockhash: "d7758774cfdd6bab7774aa891ae035f1dc5a2ff44240784b5e7bdfd43a7a6ec1",
 		Signature:     "3045022100a6ab6c2b14b1f73e734f1a61d4d22385748e48836492723a6ab37cdf38525aba022014a51ecb9e51f5a7a851641683541fec6f8f20205d0db49e50b2a4e5daed69d2",
@@ -105,7 +105,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 		GasLimit:         "0x0",
 		GasUsed:          "0x0",
 		Timestamp:        "0x5b95ebd0",
-		Transactions: []string{"0x3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
+		Transactions: []interface{}{"0x3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
 			"0x8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"},
 		Uncles: []string{},
 	}

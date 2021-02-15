@@ -1,10 +1,9 @@
 package transformer
 
 import (
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
-	"github.com/qtumproject/janus/pkg/utils"
 )
 
 // ProxyETHGetBlockByNumber implements ETHProxy
@@ -16,57 +15,34 @@ func (p *ProxyETHGetBlockByNumber) Method() string {
 	return "eth_getBlockByNumber"
 }
 
-func (p *ProxyETHGetBlockByNumber) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
-	var req eth.GetBlockByNumberRequest
-	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
-		return nil, err
+func (p *ProxyETHGetBlockByNumber) Request(rpcReq *eth.JSONRPCRequest) (interface{}, error) {
+	req := new(eth.GetBlockByNumberRequest)
+	if err := unmarshalRequest(rpcReq.Params, req); err != nil {
+		return nil, errors.WithMessage(err, "couldn't unmarhsal rpc request")
 	}
-
-	return p.request(&req)
+	return p.request(req)
 }
-func (p *ProxyETHGetBlockByNumber) request(req *eth.GetBlockByNumberRequest) (*eth.GetBlockByNumberResponse, error) {
-	blockNum, err := getQtumBlockNumber(req.BlockNumber, 0)
-	if err != nil {
-		return nil, err
-	}
 
+func (p *ProxyETHGetBlockByNumber) request(req *eth.GetBlockByNumberRequest) (*eth.GetBlockByNumberResponse, error) {
+	blockNum, err := getBlockNumberByParam(p.Qtum, req.BlockNumber, 0)
+	if err != nil {
+		return nil, errors.WithMessage(err, "couldn't get block number by parameter")
+	}
 	blockHash, err := p.GetBlockHash(blockNum)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "couldn't get block hash")
 	}
 
-	blockHeaderResp, err := p.GetBlockHeader(string(blockHash))
+	var (
+		getBlockByHashReq = &eth.GetBlockByHashRequest{
+			BlockHash:       string(blockHash),
+			FullTransaction: req.FullTransaction,
+		}
+		proxy = &ProxyETHGetBlockByHash{Qtum: p.Qtum}
+	)
+	block, err := proxy.request(getBlockByHashReq)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "couldn't get block by hash")
 	}
-
-	blockResp, err := p.GetBlock(string(blockHash))
-	if err != nil {
-		return nil, err
-	}
-
-	txs := make([]string, 0, len(blockResp.Tx))
-	for _, tx := range blockResp.Tx {
-		txs = append(txs, utils.AddHexPrefix(tx))
-	}
-
-	return &eth.GetBlockByNumberResponse{
-		Hash:             utils.AddHexPrefix(blockHeaderResp.Hash),
-		Nonce:            hexutil.EncodeUint64(uint64(blockHeaderResp.Nonce)),
-		Number:           hexutil.EncodeUint64(uint64(blockHeaderResp.Height)),
-		ParentHash:       utils.AddHexPrefix(blockHeaderResp.Previousblockhash),
-		Difficulty:       hexutil.EncodeUint64(uint64(blockHeaderResp.Difficulty)),
-		Timestamp:        hexutil.EncodeUint64(blockHeaderResp.Time),
-		StateRoot:        utils.AddHexPrefix(blockHeaderResp.HashStateRoot),
-		Size:             hexutil.EncodeUint64(uint64(blockResp.Size)),
-		Transactions:     txs,
-		TransactionsRoot: utils.AddHexPrefix(blockResp.Merkleroot),
-
-		ExtraData:       "0x0",
-		Miner:           "0x0000000000000000000000000000000000000000",
-		TotalDifficulty: "0x0",
-		GasLimit:        "0x0",
-		GasUsed:         "0x0",
-		Uncles:          []string{},
-	}, nil
+	return block, nil
 }

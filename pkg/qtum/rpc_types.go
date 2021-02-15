@@ -2,9 +2,10 @@ package qtum
 
 import (
 	"encoding/json"
-	"errors"
 	"math/big"
+	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/shopspring/decimal"
 )
@@ -12,13 +13,33 @@ import (
 // TODO: Wipe these out when it comes time to change over from floats to integers, and change SendToContractRequest to not use strings where numerics will do
 // Todo: Go and fix the need for a custom json unmarshall in the non raw versions of these types
 
+const (
+	genesisBlockHeight = 0
+
+	// Is hex representation of 21000 value, which is default value
+	DefaultBlockGasLimit = "5208"
+
+	// Is a zero wallet address, which is used as a stub, when
+	// original value cannot be defined in such cases as generated
+	// transaction
+	ZeroAddress = "0000000000000000000000000000000000000000"
+
+	// Is a zero user_input/label, that usually may be send along
+	// with a transaction or contract. Primarly usage is as stub,
+	// when original value has not been provided
+	//
+	// This value has the minimum length, which is acceptable by
+	// graph-node
+	ZeroUserInput = "00"
+)
+
 type SendToContractRawRequest struct {
-	ContractAddress string   `json:"contractAddress"`
-	Datahex         string   `json:"data"`
-	Amount          decimal.Decimal  `json:"amount"`
-	GasLimit        *big.Int `json:"gasLimit"`
-	GasPrice        string   `json:"gasPrice"`
-	SenderAddress   string   `json:"senderaddress"`
+	ContractAddress string          `json:"contractAddress"`
+	Datahex         string          `json:"data"`
+	Amount          decimal.Decimal `json:"amount"`
+	GasLimit        *big.Int        `json:"gasLimit"`
+	GasPrice        string          `json:"gasPrice"`
+	SenderAddress   string          `json:"senderaddress"`
 }
 
 type CreateContractRawRequest struct {
@@ -151,7 +172,7 @@ func (r *SendToAddressRequest) MarshalJSON() ([]byte, error) {
 		       "UNSET"
 		       "ECONOMICAL"
 		       "CONSERVATIVE"
-		9. "avoid_reuse" 	(boolean, optional, default=true) Avoid spending from dirty addresses; 
+		9. "avoid_reuse" 	(boolean, optional, default=true) Avoid spending from dirty addresses;
 					addresses are considered dirty if they have previously been used in a transaction
 		10. "senderaddress"      (string, optional) The quantum address that will be used to send money from.
 		11."changeToSender"     (bool, optional, default=false) Return the change to the sender.
@@ -404,17 +425,17 @@ type (
 		}
 	*/
 	DecodedRawTransactionResponse struct {
-		Txid     string                       `json:"txid"`
+		ID       string                       `json:"txid"`
 		Hash     string                       `json:"hash"`
 		Size     int64                        `json:"size"`
 		Vsize    int64                        `json:"vsize"`
 		Version  int64                        `json:"version"`
 		Locktime int64                        `json:"locktime"`
-		Vin      []*DecodedRawTransactionInV  `json:"vin"`
-		Vout     []*DecodedRawTransactionOutV `json:"vout"`
+		Vins     []*DecodedRawTransactionInV  `json:"vin"`
+		Vouts    []*DecodedRawTransactionOutV `json:"vout"`
 	}
 	DecodedRawTransactionInV struct {
-		Txid      string `json:"txid"`
+		TxID      string `json:"txid"`
 		Vout      int64  `json:"vout"`
 		ScriptSig struct {
 			Asm string `json:"asm"`
@@ -426,9 +447,9 @@ type (
 
 	DecodedRawTransactionOutV struct {
 		Value        decimal.Decimal `json:"value"`
-		N            int64   `json:"n"`
+		N            int64           `json:"n"`
 		ScriptPubKey struct {
-			Asm       string   `json:"asm"`
+			ASM       string   `json:"asm"`
 			Hex       string   `json:"hex"`
 			ReqSigs   int64    `json:"reqSigs"`
 			Type      string   `json:"type"`
@@ -437,10 +458,122 @@ type (
 	}
 )
 
+// Calculates transaction total amount of Qtum
+func (resp *DecodedRawTransactionResponse) CalcAmount() decimal.Decimal {
+	var amount decimal.Decimal
+	for _, out := range resp.Vouts {
+		amount.Add(out.Value)
+	}
+	return amount
+}
+
+type ContractInfo struct {
+	From      string
+	To        string
+	GasLimit  string
+	GasPrice  string
+	GasUsed   string
+	UserInput string
+}
+
+// TODO: complete
+func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo, isContractTx bool, _ error) {
+	// TODO: discuss
+	// ? Can Vouts have several contracts
+
+	for _, vout := range resp.Vouts {
+		var (
+			script  = strings.Split(vout.ScriptPubKey.ASM, " ")
+			finalOp = script[len(script)-1]
+		)
+		switch finalOp {
+		case "OP_CALL":
+			callInfo, err := ParseCallSenderASM(script)
+			// OP_CALL with OP_SENDER has the script type "nonstandard"
+			if err != nil {
+				return ContractInfo{}, false, errors.WithMessage(err, "couldn't parse call sender ASM")
+			}
+			info := ContractInfo{
+				From:     callInfo.From,
+				To:       callInfo.To,
+				GasLimit: callInfo.GasLimit,
+				GasPrice: callInfo.GasPrice,
+
+				// TODO: researching
+				GasUsed: "0x0",
+
+				UserInput: callInfo.CallData,
+			}
+			return info, true, errors.New("contract parsing partially implemented")
+
+		case "OP_CREATE":
+			// OP_CALL with OP_SENDER has the script type "create_sender"
+			createInfo, err := ParseCreateSenderASM(script)
+			if err != nil {
+				return ContractInfo{}, false, errors.WithMessage(err, "couldn't parse create sender ASM")
+			}
+			info := ContractInfo{
+				From: createInfo.From,
+				To:   createInfo.To,
+
+				// TODO: discuss
+				// ?! Not really "gas sent by user"
+				GasLimit: createInfo.GasLimit,
+
+				GasPrice: createInfo.GasPrice,
+
+				// TODO: researching
+				GasUsed: "0x0",
+
+				UserInput: createInfo.CallData,
+			}
+			return info, true, nil
+
+		case "OP_SPEND":
+			// TODO: complete
+			return ContractInfo{}, true, errors.New("contract parsing partially implemented")
+		}
+	}
+
+	return ContractInfo{}, false, nil
+}
+
+func (resp *DecodedRawTransactionResponse) IsContractCreation() bool {
+	for _, vout := range resp.Vouts {
+		if strings.HasSuffix(vout.ScriptPubKey.ASM, "OP_CREATE") {
+			return true
+		}
+	}
+	return false
+}
+
+// ========== GetTransactionOut ============= //
+type (
+	GetTransactionOutRequest struct {
+		Hash            string `json:"txid"`
+		VoutNumber      int    `json:"n"`
+		MempoolIncluded bool   `json:"include_mempool"`
+	}
+	GetTransactionOutResponse struct {
+		BestBlockHash    string  `json:"bestblock"`
+		ConfirmationsNum int     `json:"confirmations"`
+		Amount           float64 `json:"value"`
+		ScriptPubKey     struct {
+			ASM        string   `json:"asm"`
+			Hex        string   `json:"hex"`
+			ReqSigsNum int      `json:"reqSigs"`
+			Type       string   `json:"type"`
+			Addresses  []string `json:"addresses"`
+		} `json:"scriptPubKey"`
+		IsReward    bool `json:"coinbase"`
+		IsCoinstake bool `json:"coinstake"`
+	}
+)
+
 // ========== GetTransactionReceipt ============= //
 type (
 	GetTransactionReceiptRequest  string
-	GetTransactionReceiptResponse TransactionReceiptStruct
+	GetTransactionReceiptResponse TransactionReceipt
 	/*
 	   {
 	     "blockHash": "975326b65c20d0b8500f00a59f76b08a98513fff7ce0484382534a47b55f8985",
@@ -474,18 +607,29 @@ type (
 	     ]
 	   }
 	*/
-	TransactionReceiptStruct struct {
-		BlockHash         string `json:"blockHash"`
-		BlockNumber       uint64 `json:"blockNumber"`
-		TransactionHash   string `json:"transactionHash"`
-		TransactionIndex  uint64 `json:"transactionIndex"`
-		From              string `json:"from"`
+	TransactionReceipt struct {
+		BlockHash        string `json:"blockHash"`
+		BlockNumber      uint64 `json:"blockNumber"`
+		TransactionHash  string `json:"transactionHash"`
+		TransactionIndex uint64 `json:"transactionIndex"`
+		From             string `json:"from"`
+		// NOTE: will be null for a contract creation transaction
 		To                string `json:"to"`
 		CumulativeGasUsed uint64 `json:"cumulativeGasUsed"`
 		GasUsed           uint64 `json:"gasUsed"`
-		ContractAddress   string `json:"contractAddress"`
-		Excepted          string `json:"excepted"`
-		Log               []Log  `json:"log"`
+
+		// TODO: discuss
+		// 	? May be a contract transaction created by non-contract
+		//
+		// The created contract address. If this tx is created by the contract,
+		// return the contract address, else return null
+		ContractAddress string `json:"contractAddress"`
+
+		// May has "None" value, which means, that transaction is not executed
+		Excepted string `json:"excepted"`
+
+		Log         []Log `json:"log"`
+		OutputIndex int64 `json:"outputIndex"`
 	}
 )
 
@@ -500,19 +644,18 @@ func (r GetTransactionReceiptRequest) MarshalJSON() ([]byte, error) {
 
 var EmptyResponseErr = errors.New("result is empty")
 
-func (r *GetTransactionReceiptResponse) UnmarshalJSON(data []byte) error {
-	type Response GetTransactionReceiptResponse
-	var resp []Response
-	if err := json.Unmarshal(data, &resp); err != nil {
+func (resp *GetTransactionReceiptResponse) UnmarshalJSON(data []byte) error {
+	// NOTE: do not use `GetTransactionReceiptResponse`, 'cause
+	// it may violate to infinite loop, while calling
+	// UnmarshalJSON interface
+	var receipts []TransactionReceipt
+	if err := json.Unmarshal(data, &receipts); err != nil {
 		return err
 	}
-
-	if len(resp) == 0 {
+	if receiptsNum := len(receipts); receiptsNum != 1 {
 		return EmptyResponseErr
 	}
-
-	*r = GetTransactionReceiptResponse(resp[0])
-
+	*resp = GetTransactionReceiptResponse(receipts[0])
 	return nil
 }
 
@@ -535,11 +678,81 @@ func (r *GetBlockCountResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// ========== GetRawTransaction ============= //
+
+type (
+	GetRawTransactionRequest struct {
+		TxID    string
+		Verbose bool
+	}
+	GetRawTransactionResponse struct {
+		Hex     string `json:"hex"`
+		ID      string `json:"txid"`
+		Hash    string `json:"hash"`
+		Size    int64  `json:"size"`
+		Vsize   int64  `json:"vsize"`
+		Version int64  `json:"version"`
+		Weight  int64  `json:"weight"`
+
+		BlockHash     string `json:"blockhash"`
+		Confirmations int64  `json:"confirmations"`
+		Time          int64  `json:"time"`
+		BlockTime     int64  `json:"blocktime"`
+
+		Vins  []RawTransactionVin  `json:"vin"`
+		Vouts []RawTransactionVout `json:"vout"`
+
+		// Unused fields:
+		// - "in_active_chain"
+		// - "locktime"
+
+	}
+	RawTransactionVin struct {
+		ID    string `json:"txid"`
+		VoutN int64  `json:"vout"`
+
+		// Additional fields:
+		// - "scriptSig"
+		// - "sequence"
+		// - "txinwitness"
+	}
+	RawTransactionVout struct {
+		Amount  float64 `json:"value"`
+		Details struct {
+			Addresses []string `json:"addresses"`
+			Asm       string   `json:"asm"`
+			Hex       string   `json:"hex"`
+			// ReqSigs   interface{} `json:"reqSigs"`
+			Type string `json:"type"`
+		} `json:"scriptPubKey"`
+
+		// Additional fields:
+		// - "n"
+	}
+)
+
+func (r *GetRawTransactionRequest) MarshalJSON() ([]byte, error) {
+	/*
+		1. "txid"      (string, required) The transaction id
+		2. verbose     (bool, optional, default=false) If false, return a string, otherwise return a json object
+		3. "blockhash" (string, optional) The block in which to look for the transaction
+
+	*/
+	return json.Marshal([]interface{}{
+		r.TxID,
+		r.Verbose,
+	})
+}
+
+func (r *GetRawTransactionResponse) IsPending() bool {
+	return r.BlockHash == ""
+}
+
 // ========== GetTransaction ============= //
 
 type (
 	GetTransactionRequest struct {
-		Txid string
+		TxID string
 	}
 
 	/*
@@ -569,28 +782,40 @@ type (
 		  }
 	*/
 	GetTransactionResponse struct {
-		Amount            decimal.Decimal              `json:"amount"`
-		Fee               decimal.Decimal              `json:"fee"`
+		Amount            decimal.Decimal      `json:"amount"`
+		Fee               decimal.Decimal      `json:"fee"`
 		Confirmations     int64                `json:"confirmations"`
-		Blockhash         string               `json:"blockhash"`
-		Blockindex        int64                `json:"blockindex"`
-		Blocktime         int64                `json:"blocktime"`
-		Txid              string               `json:"txid"`
+		BlockHash         string               `json:"blockhash"`
+		BlockIndex        int64                `json:"blockindex"`
+		BlockTime         int64                `json:"blocktime"`
+		ID                string               `json:"txid"`
 		Time              int64                `json:"time"`
-		Timereceived      int64                `json:"timereceived"`
+		ReceivedAt        int64                `json:"timereceived"`
 		Bip125Replaceable string               `json:"bip125-replaceable"`
 		Details           []*TransactionDetail `json:"details"`
 		Hex               string               `json:"hex"`
+		Generated         bool                 `json:"generated"`
 	}
 	TransactionDetail struct {
-		Account   string  `json:"account"`
-		Address   string  `json:"address"`
-		Category  string  `json:"category"`
-		Amount    decimal.Decimal `json:"amount"`
-		Label     string  `json:"label"`
-		Vout      int64   `json:"vout"`
-		Fee       decimal.Decimal `json:"fee"`
-		Abandoned bool    `json:"abandoned"`
+		// TODO: research/discuss
+		// 	! Field is deprecated
+		Account string `json:"account"`
+		Address string `json:"address"`
+		// Represents transaction direction: `send` or `receive`
+		Category string          `json:"category"`
+		Amount   decimal.Decimal `json:"amount"`
+		// Comment value
+		Label string `json:"label"`
+		Vout  int64  `json:"vout"`
+		// NOTE:
+		// 	- Negative value
+		// 	- Presetned only for `send` transaction category
+		Fee decimal.Decimal `json:"fee"`
+		// TODO: discuss
+		// 	? What's the meaning
+		//
+		// NOTE: presetned only for `send` transaction category
+		Abandoned bool `json:"abandoned"`
 	}
 )
 
@@ -601,7 +826,7 @@ func (r *GetTransactionRequest) MarshalJSON() ([]byte, error) {
 		3. "waitconf"              (int, optional, default=0) Wait for enough confirmations before returning
 	*/
 	return json.Marshal([]interface{}{
-		r.Txid,
+		r.TxID,
 	})
 }
 
@@ -620,6 +845,10 @@ func (r *GetTransactionResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (r *GetTransactionResponse) IsPending() bool {
+	return r.BlockHash == ""
+}
+
 // ========== SearchLogs ============= //
 
 type (
@@ -630,7 +859,7 @@ type (
 		Topics    []interface{}
 	}
 
-	SearchLogsResponse []TransactionReceiptStruct
+	SearchLogsResponse []TransactionReceipt
 )
 
 func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
@@ -821,6 +1050,10 @@ func (r *GetBlockHeaderRequest) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func (r *GetBlockHeaderResponse) IsGenesisBlock() bool {
+	return r.Height == genesisBlockHeight
+}
+
 // ========== GetBlock ============= //
 type (
 	GetBlockRequest struct {
@@ -871,7 +1104,7 @@ type (
 		Merkleroot        string   `json:"merkleroot"`
 		HashStateRoot     string   `json:"hashStateRoot"`
 		HashUTXORoot      string   `json:"hashUTXORoot"`
-		Tx                []string `json:"tx"`
+		Txs               []string `json:"tx"`
 		Time              int      `json:"time"`
 		Mediantime        int      `json:"mediantime"`
 		Nonce             int      `json:"nonce"`
@@ -1047,16 +1280,16 @@ type (
 		]
 	*/
 	ListUnspentResponse []struct {
-		Txid          string  `json:"txid"`
-		Vout          uint    `json:"vout"`
-		Address       string  `json:"address"`
-		Account       string  `json:"account"`
-		ScriptPubKey  string  `json:"scriptPubKey"`
+		Txid          string          `json:"txid"`
+		Vout          uint            `json:"vout"`
+		Address       string          `json:"address"`
+		Account       string          `json:"account"`
+		ScriptPubKey  string          `json:"scriptPubKey"`
 		Amount        decimal.Decimal `json:"amount"`
-		Confirmations int     `json:"confirmations"`
-		Spendable     bool    `json:"spendable"`
-		Solvable      bool    `json:"solvable"`
-		Safe          bool    `json:"safe"`
+		Confirmations int             `json:"confirmations"`
+		Spendable     bool            `json:"spendable"`
+		Solvable      bool            `json:"solvable"`
+		Safe          bool            `json:"safe"`
 	}
 )
 
