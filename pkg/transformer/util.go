@@ -241,7 +241,11 @@ func translateTopics(ethTopics []interface{})  ([]interface{}, error) {
 	for _, topic := range ethTopics {
 		switch topic.(type) {
 		case []interface{}:
-			topics = append(topics, convertTopics(topic.([]interface{})))
+			topic, err := translateTopics(topic.([]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			topics = append(topics, topic)
 		case string:
 			topics = append(topics, utils.RemoveHexPrefix(topic.(string)))
 		case nil:
@@ -251,4 +255,24 @@ func translateTopics(ethTopics []interface{})  ([]interface{}, error) {
 
 	return topics, nil
 
+}
+
+func processFilter(p *ProxyETHGetFilterChanges, rawreq *eth.JSONRPCRequest) (*eth.Filter, error) {
+	var req eth.GetFilterChangesRequest
+	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
+		return nil, err
+	}
+
+	filterID, err := hexutil.DecodeUint64(string(req))
+	if err != nil {
+		return nil, err
+	}
+
+	_filter, ok := p.filter.Filter(filterID)
+	if !ok {
+		return nil, errors.New("Invalid filter id")
+	}
+	filter := _filter.(*eth.Filter)
+
+	return filter, nil
 }
