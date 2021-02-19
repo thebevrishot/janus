@@ -232,14 +232,14 @@ func convertETHAddress(address string, chain string) (qtumAddress string, _ erro
 	var prefix []byte
 	switch chain {
 	case qtum.ChainMain:
-		chainPrefix, err := qtum.MainChainAddressPrefix.AsBytes()
+		chainPrefix, err := qtum.PrefixMainChainAddress.AsBytes()
 		if err != nil {
 			return "", errors.WithMessagef(err, "couldn't convert %q Qtum chain prefix to slice of bytes", chain)
 		}
 		prefix = chainPrefix
 
-	case qtum.ChainTest:
-		chainPrefix, err := qtum.TestChainAddressPrefix.AsBytes()
+	case qtum.ChainTest, qtum.ChainRegTest:
+		chainPrefix, err := qtum.PrefixTestChainAddress.AsBytes()
 		if err != nil {
 			return "", errors.WithMessagef(err, "couldn't convert %q Qtum chain prefix to slice of bytes", chain)
 		}

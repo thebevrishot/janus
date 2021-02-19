@@ -43,8 +43,9 @@ func (c *Qtum) Chain() string {
 type HexAddressPrefix string
 
 const (
-	MainChainAddressPrefix HexAddressPrefix = "3a"
-	TestChainAddressPrefix HexAddressPrefix = "78"
+	PrefixMainChainAddress    HexAddressPrefix = "3a"
+	PrefixTestChainAddress    HexAddressPrefix = "78"
+	PrefixRegTestChainAddress HexAddressPrefix = PrefixTestChainAddress
 )
 
 // Returns decoded hexed string prefix, as ready to use slice of bytes
