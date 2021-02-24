@@ -22,7 +22,7 @@ func (p *ProxyETHGetFilterChanges) Method() string {
 }
 
 func (p *ProxyETHGetFilterChanges) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
-	
+
 	filter, err := processFilter(p, rawreq)
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func (p *ProxyETHGetFilterChanges) toSearchLogsReq(filter *eth.Filter, from, to 
 			addresses[i] = utils.RemoveHexPrefix(addresses[i])
 		}
 	}
-	
+
 	qtumreq := &qtum.SearchLogsRequest{
 		Addresses: addresses,
 		FromBlock: from,
