@@ -50,6 +50,7 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest) (interface{}, e
 			return nil, err
 		}
 
+
 		balance := decimal.NewFromFloat(0)
 		for _, utxo := range *qtumresp {
 			balance = balance.Add(utxo.Amount)

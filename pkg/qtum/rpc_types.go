@@ -318,6 +318,7 @@ type (
 		ExecutionResult struct {
 			GasUsed       int    `json:"gasUsed"`
 			Excepted      string `json:"excepted"`
+			ExceptedMessage string `json:"exceptedMessage"`
 			NewAddress    string `json:"newAddress"`
 			Output        string `json:"output"`
 			CodeDeposit   int    `json:"codeDeposit"`
