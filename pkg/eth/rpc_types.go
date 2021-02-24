@@ -603,3 +603,6 @@ type (
 		Tag     string
 	}
 )
+
+// =======GetTransactionCount ============= //
+type ChainIdResponse string
