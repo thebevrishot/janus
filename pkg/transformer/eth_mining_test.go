@@ -2,7 +2,6 @@ package transformer
 
 import (
 	"encoding/json"
-	"math/big"
 	"reflect"
 	"testing"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/qtumproject/janus/pkg/qtum"
 )
 
-func TestHashrateRequest(t *testing.T) {
+func TestMiningRequest(t *testing.T) {
 	//preparing the request
 	requestParams := []json.RawMessage{} //eth_hashrate has no params
 	request, err := prepareEthRPCRequest(1, requestParams)
@@ -24,25 +23,26 @@ func TestHashrateRequest(t *testing.T) {
 		panic(err)
 	}
 
-	getHashrateResponse := qtum.GetHashrateResponse{Difficulty: big.NewInt(457134700)}
-	err = mockedClientDoer.AddResponse(2, qtum.MethodGetStakingInfo, getHashrateResponse)
+	getMiningResponse := qtum.GetMiningResponse{Staking: true}
+	err = mockedClientDoer.AddResponse(2, qtum.MethodGetStakingInfo, getMiningResponse)
 	if err != nil {
 		panic(err)
 	}
 
-	proxyEth := ProxyETHHashrate{qtumClient}
+	proxyEth := ProxyETHMining{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
 		panic(err)
 	}
 
-	want := eth.HashrateResponse("0x1b3f526c")
+	want := eth.MiningResponse(true)
 	if !reflect.DeepEqual(got, &want) {
 		t.Errorf(
-			"error\ninput: %s\nwant: %s\ngot: %s",
+			"error\ninput: %s\nwant: %t\ngot: %t",
 			request,
 			want,
 			got,
 		)
 	}
+	
 }

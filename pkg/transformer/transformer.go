@@ -90,6 +90,8 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		&ProxyETHPersonalUnlockAccount{},
 		&ProxyETHChainId{},
 		&ProxyETHBlockNumber{Qtum: qtumRPCClient},
+		&ProxyETHHashrate{Qtum: qtumRPCClient},
+		&ProxyETHMining{Qtum: qtumRPCClient},
 		&ProxyETHNetVersion{Qtum: qtumRPCClient},
 		&ProxyETHGetTransactionByHash{Qtum: qtumRPCClient},
 		&ProxyETHGetLogs{Qtum: qtumRPCClient},
