@@ -112,6 +112,16 @@ func (m *Method) GetBlockCount() (resp *GetBlockCountResponse, err error) {
 	return
 }
 
+func (m *Method) GetHashrate() (resp *GetHashrateResponse, err error) {
+	err = m.Request(MethodGetStakingInfo, nil, &resp)
+	return
+}
+
+func (m *Method) GetMining() (resp *GetMiningResponse, err error) {
+	err = m.Request(MethodGetStakingInfo, nil, &resp)
+	return
+}
+
 // hard coded for now as there is only the minimum gas price
 func (m *Method) GetGasPrice() (*big.Int, error) {
 	return big.NewInt(0x28), nil

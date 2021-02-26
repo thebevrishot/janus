@@ -57,7 +57,6 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest) (interface{}, e
 		}
 
 		// 1 QTUM = 10 ^ 8 Satoshi
-
 		floatBalance, exact := balance.Float64()
 
 		if exact != true {
