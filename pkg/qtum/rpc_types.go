@@ -3,6 +3,7 @@ package qtum
 import (
 	"encoding/json"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -1261,6 +1262,15 @@ type (
 	}
 )
 
+// ======== sendrawtransaction ========= //
+
+type (
+	// Presents hexed string of a raw transcation
+	SendRawTransactionRequest [1]string
+	// Presents hexed string of a transaction hash
+	SendRawTransactionResposne [1]string
+)
+
 // ========== ListUnspent ============= //
 type (
 
@@ -1284,9 +1294,24 @@ type (
 		    }
 	*/
 	ListUnspentRequest struct {
-		MinConf   int
-		MaxConf   int
-		Addresses []string
+		MinConf      int
+		MaxConf      int
+		Addresses    []string
+		QueryOptions ListUnspentQueryOptions
+	}
+	ListUnspentQueryOptions struct {
+		// Applies to each UTXO
+		MinAmount decimal.Decimal
+		// Applies to each UTXO
+		MaxAmount      decimal.Decimal
+		MaxNumToReturn int
+		// Returns only those UTXOs, which total amount
+		// is greater than or equal `MinSumAmount`
+		//
+		// NOTE: it doesn't consider amount of all
+		// UTXOs, that is not all UTXOs may be
+		// returned, but a limited number of UTXOs
+		MinSumAmount decimal.Decimal
 	}
 
 	/*
@@ -1325,31 +1350,54 @@ type (
 		]
 	*/
 	ListUnspentResponse []struct {
+		Address       string          `json:"address"`
 		Txid          string          `json:"txid"`
 		Vout          uint            `json:"vout"`
-		Address       string          `json:"address"`
-		Account       string          `json:"account"`
-		ScriptPubKey  string          `json:"scriptPubKey"`
 		Amount        decimal.Decimal `json:"amount"`
-		Confirmations int             `json:"confirmations"`
+		Safe          bool            `json:"safe"`
 		Spendable     bool            `json:"spendable"`
 		Solvable      bool            `json:"solvable"`
-		Safe          bool            `json:"safe"`
+		Label         string          `json:"label"`
+		Confirmations int             `json:"confirmations"`
+		ScriptPubKey  string          `json:"scriptPubKey"`
+		RedeemScript  string          `json:"redeemScript"`
 	}
 )
 
-func NewListUnspentRequest(addresses ...string) *ListUnspentRequest {
+func NewListUnspentRequest(options ListUnspentQueryOptions, addresses ...string) *ListUnspentRequest {
 	return &ListUnspentRequest{
-		MinConf:   1,
-		MaxConf:   99999999,
-		Addresses: addresses,
+		MinConf:      1,
+		MaxConf:      99999999,
+		Addresses:    addresses,
+		QueryOptions: options,
 	}
 }
 
 func (r *ListUnspentRequest) MarshalJSON() ([]byte, error) {
-	return json.Marshal([]interface{}{
+	params := []interface{}{
 		r.MinConf,
 		r.MaxConf,
 		r.Addresses,
-	})
+		true, // `include_unsafe`
+		r.QueryOptions,
+	}
+	return json.Marshal(params)
+}
+
+func (options ListUnspentQueryOptions) MarshalJSON() ([]byte, error) {
+	optionsObj := map[string]string{}
+
+	if !options.MinAmount.IsZero() {
+		optionsObj["minimumAmount"] = options.MinAmount.String()
+	}
+	if !options.MaxAmount.IsZero() {
+		optionsObj["maximumAmount"] = options.MaxAmount.String()
+	}
+	if options.MaxNumToReturn > 1 {
+		optionsObj["maximumCount"] = strconv.Itoa(options.MaxNumToReturn)
+	}
+	if !options.MinSumAmount.IsZero() {
+		optionsObj["minimumSumAmount"] = options.MinSumAmount.String()
+	}
+	return json.Marshal(optionsObj)
 }

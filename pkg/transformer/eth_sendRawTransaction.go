@@ -3,6 +3,7 @@ package transformer
 import (
 	"log"
 
+	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -13,29 +14,41 @@ type ProxyETHSendRawTransaction struct {
 	*qtum.Qtum
 }
 
+var _ ETHProxy = (*ProxyETHSendRawTransaction)(nil)
+
 func (p *ProxyETHSendRawTransaction) Method() string {
 	return "eth_sendRawTransaction"
 }
 
-func (p *ProxyETHSendRawTransaction) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
-	var req []string
-	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
+func (p *ProxyETHSendRawTransaction) Request(req *eth.JSONRPCRequest) (interface{}, error) {
+	var params eth.SendRawTransactionRequest
+	if err := unmarshalRequest(req.Params, &params); err != nil {
 		return nil, err
 	}
-	rawTx := utils.RemoveHexPrefix(req[0])
+	if params[0] == "" {
+		return nil, errors.Errorf("invalid parameter: raw transaction hexed string is empty")
+	}
+
+	return p.request(params)
+}
+
+func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionRequest) (eth.SendRawTransactionResponse, error) {
+	var (
+		qtumHexedRawTx = utils.RemoveHexPrefix(params[0])
+		req            = qtum.SendRawTransactionRequest([1]string{qtumHexedRawTx})
+	)
+
+	resp, err := p.Qtum.SendRawTransaction(&req)
+	if err != nil {
+		return eth.SendRawTransactionResponse{}, err
+	}
 
 	if p.Chain() == qtum.ChainRegTest {
-		defer func() {
-			if _, generateErr := p.Generate(1, nil); generateErr != nil {
-				log.Println("generate block err: ", generateErr)
-			}
-		}()
+		if _, err = p.Generate(1, nil); err != nil {
+			log.Println("generate block err: ", err)
+		}
 	}
 
-	var resp string // tx hash
-	if err := p.Qtum.Request(qtum.MethodSendRawTx, []string{rawTx}, &resp); err != nil {
-		return nil, err
-	}
-
-	return utils.AddHexPrefix(string(resp[:])), nil
+	ethHexedTxHash := utils.AddHexPrefix(resp[0])
+	return eth.SendRawTransactionResponse([1]string{ethHexedTxHash}), nil
 }

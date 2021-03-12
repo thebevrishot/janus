@@ -117,7 +117,7 @@ func (m *Method) GetHashrate() (resp *GetHashrateResponse, err error) {
 	return
 }
 
-func (m* Method) GetMining() (resp *GetMiningResponse, err error) {
+func (m *Method) GetMining() (resp *GetMiningResponse, err error) {
 	err = m.Request(MethodGetStakingInfo, nil, &resp)
 	return
 }
@@ -217,3 +217,9 @@ func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse
 	return
 }
 
+func (m *Method) SendRawTransaction(req *SendRawTransactionRequest) (resp *SendRawTransactionResposne, err error) {
+	if err := m.Request(MethodSendRawTx, req, &resp); err != nil {
+		return nil, err
+	}
+	return
+}

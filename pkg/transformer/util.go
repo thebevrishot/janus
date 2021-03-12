@@ -2,11 +2,13 @@ package transformer
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
 	"strconv"
 
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 
@@ -150,7 +152,7 @@ func formatQtumNonce(nonce int) string {
 // Uses defaultVal to differntiate from a eth_getBlockByNumber req and eth_getLogs/eth_newFilter
 func getBlockNumberByParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bool) (*big.Int, error) {
 	if len(rawParam) < 1 {
-		if (defaultVal) {
+		if defaultVal {
 			res, err := p.GetBlockChainInfo()
 			if err != nil {
 				return nil, err
@@ -159,7 +161,7 @@ func getBlockNumberByParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bo
 		} else {
 			return nil, errors.Errorf("empty parameter value")
 		}
-		
+
 	}
 	if !isBytesOfString(rawParam) {
 		return nil, errors.Errorf("invalid parameter format - string is expected")
@@ -228,9 +230,58 @@ func extractETHLogsFromTransactionReceipt(receipt *qtum.TransactionReceipt) []et
 	return logs
 }
 
+// Converts Ethereum address to a Qtum address, where `address` represents
+// Ethereum address without `0x` prefix and `chain` represents target Qtum
+// chain
+func convertETHAddress(address string, chain string) (qtumAddress string, _ error) {
+	addrBytes, err := hex.DecodeString(address)
+	if err != nil {
+		return "", errors.Wrapf(err, "couldn't decode hexed address - %q", address)
+	}
+
+	var prefix []byte
+	switch chain {
+	case qtum.ChainMain:
+		chainPrefix, err := qtum.PrefixMainChainAddress.AsBytes()
+		if err != nil {
+			return "", errors.WithMessagef(err, "couldn't convert %q Qtum chain prefix to slice of bytes", chain)
+		}
+		prefix = chainPrefix
+
+	case qtum.ChainTest, qtum.ChainRegTest:
+		chainPrefix, err := qtum.PrefixTestChainAddress.AsBytes()
+		if err != nil {
+			return "", errors.WithMessagef(err, "couldn't convert %q Qtum chain prefix to slice of bytes", chain)
+		}
+		prefix = chainPrefix
+
+	default:
+		return "", errors.Errorf("unsupported %q Qtum chain", chain)
+	}
+
+	var (
+		prefixedAddrBytes = append(prefix, addrBytes...)
+		checksum          = qtum.CalcAddressChecksum(prefixedAddrBytes)
+		qtumAddressBytes  = append(prefixedAddrBytes, checksum...)
+	)
+	return base58.Encode(qtumAddressBytes), nil
+}
+
+// Converts Qtum address to an Ethereum address
+func convertQtumAddress(address string) (ethAddress string, _ error) {
+	if n := len(address); n < 22 {
+		return "", errors.Errorf("invalid address: length is less than 22 bytes - %d", n)
+	}
+
+	// Drop Qtum chain prefix and checksum suffix
+	ethAddrBytes := base58.Decode(address)[1:21]
+
+	return hex.EncodeToString(ethAddrBytes), nil
+}
+
 // translateTopics takes in an ethReq's topics field and translates it to a it's equivalent QtumReq
 // topics (optional) has a max lenght of 4
-func translateTopics(ethTopics []interface{})  ([]interface{}, error) {
+func translateTopics(ethTopics []interface{}) ([]interface{}, error) {
 
 	var topics []interface{}
 
