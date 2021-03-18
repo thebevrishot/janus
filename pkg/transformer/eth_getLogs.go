@@ -80,7 +80,7 @@ func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLog
 				return nil, err
 			}
 		}
-		for i, _ := range addresses {
+		for i := range addresses {
 			addresses[i] = utils.RemoveHexPrefix(addresses[i])
 		}
 	}
