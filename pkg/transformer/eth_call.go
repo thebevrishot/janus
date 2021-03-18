@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -52,11 +53,16 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 		}
 	}
 
+	var gasLimit *big.Int
+	if ethreq.Gas != nil {
+		gasLimit = ethreq.Gas.Int
+	}
+
 	return &qtum.CallContractRequest{
 		To:       ethreq.To,
 		From:     from,
 		Data:     ethreq.Data,
-		GasLimit: ethreq.Gas.Int,
+		GasLimit: gasLimit,
 	}, nil
 }
 
