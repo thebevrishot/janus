@@ -44,5 +44,5 @@ func TestMiningRequest(t *testing.T) {
 			got,
 		)
 	}
-	
+
 }

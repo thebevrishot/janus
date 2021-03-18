@@ -14,7 +14,7 @@ func (p *ProxyETHMining) Method() string {
 	return "eth_mining"
 }
 
-func (p *ProxyETHMining) Request(_ *eth.JSONRPCRequest) (interface{}, error){
+func (p *ProxyETHMining) Request(_ *eth.JSONRPCRequest) (interface{}, error) {
 	return p.request()
 }
 
