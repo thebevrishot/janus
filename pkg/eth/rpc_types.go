@@ -618,6 +618,10 @@ type (
 	}
 )
 
+
+// ======= eth_chainId ============= //
+type ChainIdResponse string
+
 // ======= qtum_getUTXOs ============= //
 
 // NOTE: there is no response struct definition inside of this package, 'cause

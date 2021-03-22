@@ -317,15 +317,15 @@ type (
 	CallContractResponse struct {
 		Address         string `json:"address"`
 		ExecutionResult struct {
-			GasUsed       int    `json:"gasUsed"`
-			Excepted      string `json:"excepted"`
+			GasUsed         int    `json:"gasUsed"`
+			Excepted        string `json:"excepted"`
 			ExceptedMessage string `json:"exceptedMessage"`
-			NewAddress    string `json:"newAddress"`
-			Output        string `json:"output"`
-			CodeDeposit   int    `json:"codeDeposit"`
-			GasRefunded   int    `json:"gasRefunded"`
-			DepositSize   int    `json:"depositSize"`
-			GasForDeposit int    `json:"gasForDeposit"`
+			NewAddress      string `json:"newAddress"`
+			Output          string `json:"output"`
+			CodeDeposit     int    `json:"codeDeposit"`
+			GasRefunded     int    `json:"gasRefunded"`
+			DepositSize     int    `json:"depositSize"`
+			GasForDeposit   int    `json:"gasForDeposit"`
 		} `json:"executionResult"`
 		TransactionReceipt struct {
 			StateRoot string        `json:"stateRoot"`
@@ -506,7 +506,7 @@ func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo
 
 				UserInput: callInfo.CallData,
 			}
-			return info, true, errors.New("contract parsing partially implemented")
+			return info, true, nil
 
 		case "OP_CREATE":
 			// OP_CALL with OP_SENDER has the script type "create_sender"
@@ -533,7 +533,7 @@ func (resp *DecodedRawTransactionResponse) ExtractContractInfo() (_ ContractInfo
 
 		case "OP_SPEND":
 			// TODO: complete
-			return ContractInfo{}, true, errors.New("contract parsing partially implemented")
+			return ContractInfo{}, true, errors.New("OP_SPEND contract parsing partially implemented")
 		}
 	}
 
@@ -685,29 +685,28 @@ func (r *GetBlockCountResponse) UnmarshalJSON(data []byte) error {
 type (
 	//Switch things up to use Staking infor only
 	//Pass the reponse to their respective calls
-	GetHashrateResponse StakingInfo 
-	GetMiningResponse	StakingInfo
+	GetHashrateResponse StakingInfo
+	GetMiningResponse   StakingInfo
 
 	StakingInfo struct {
-		Enabled			bool `json:"enabled"`
-		Staking			bool `json:"staking"`
-		Errors			string `json:"errors"`
-		CurrentBlockTx	*big.Int `json:"currentblocktx"`
-		PooledTx		*big.Int `json:"pooledtx"`
-		Difficulty		float64 `json:"difficulty"`
-		SearchInterval	*big.Int `json:"search-interval"`
-		Weight			*big.Int `json:"weight"`
-		NetSakeWeight	*big.Int `json:"netstakeweight"`
-		ExpectedTime	*big.Int `json:"expectedtime"`
+		Enabled        bool     `json:"enabled"`
+		Staking        bool     `json:"staking"`
+		Errors         string   `json:"errors"`
+		CurrentBlockTx *big.Int `json:"currentblocktx"`
+		PooledTx       *big.Int `json:"pooledtx"`
+		Difficulty     float64  `json:"difficulty"`
+		SearchInterval *big.Int `json:"search-interval"`
+		Weight         *big.Int `json:"weight"`
+		NetSakeWeight  *big.Int `json:"netstakeweight"`
+		ExpectedTime   *big.Int `json:"expectedtime"`
 	}
 )
 
 func (resp *GetHashrateResponse) UnmarshalJSON(data []byte) error {
 
-
 	var stakingInfo StakingInfo
 	if err := json.Unmarshal(data, &stakingInfo); err != nil {
-		return  err
+		return err
 	}
 
 	resp.Difficulty = stakingInfo.Difficulty
@@ -716,10 +715,9 @@ func (resp *GetHashrateResponse) UnmarshalJSON(data []byte) error {
 
 func (resp *GetMiningResponse) UnmarshalJSON(data []byte) error {
 
-
 	var stakingInfo StakingInfo
 	if err := json.Unmarshal(data, &stakingInfo); err != nil {
-		return  err
+		return err
 	}
 
 	resp.Staking = stakingInfo.Staking
