@@ -1,6 +1,5 @@
 #Test openzeppelin integration
-cd openzeppelin
-truffle test
+make openzeppelin
 #Test Aave integration
-cd ../aave
+cd aave
 npm run test

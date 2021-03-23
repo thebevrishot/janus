@@ -28,7 +28,7 @@ func (p *ProxyETHNewFilter) Request(rawreq *eth.JSONRPCRequest) (interface{}, er
 }
 
 func (p *ProxyETHNewFilter) request(ethreq *eth.NewFilterRequest) (*eth.NewFilterResponse, error) {
-	
+
 	from, err := getBlockNumberByParam(p.Qtum, ethreq.FromBlock, true)
 	if err != nil {
 		return nil, err

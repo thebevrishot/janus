@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -52,20 +53,25 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 		}
 	}
 
+	var gasLimit *big.Int
+	if ethreq.Gas != nil {
+		gasLimit = ethreq.Gas.Int
+	}
+
 	return &qtum.CallContractRequest{
-		To:   ethreq.To,
-		From: from,
-		Data: ethreq.Data,
-		GasLimit: ethreq.Gas.Int,
+		To:       ethreq.To,
+		From:     from,
+		Data:     ethreq.Data,
+		GasLimit: gasLimit,
 	}, nil
 }
 
 func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} {
 	excepted := qresp.ExecutionResult.Excepted
 	exceptedMessage := qresp.ExecutionResult.ExceptedMessage
-	
+
 	if excepted != "None" {
-		
+
 		if exceptedMessage != "" {
 			return &eth.JSONRPCError{
 				Message: fmt.Sprintf("%s", exceptedMessage),
@@ -82,9 +88,7 @@ func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} 
 			//
 			// Data: ...
 		}
-		
-		
-		
+
 	}
 
 	data := utils.AddHexPrefix(qresp.ExecutionResult.Output)

@@ -13,7 +13,6 @@ type ProxyETHGetLogs struct {
 	*qtum.Qtum
 }
 
-
 func (p *ProxyETHGetLogs) Method() string {
 	return "eth_getLogs"
 }
@@ -81,7 +80,7 @@ func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLog
 				return nil, err
 			}
 		}
-		for i, _ := range addresses {
+		for i := range addresses {
 			addresses[i] = utils.RemoveHexPrefix(addresses[i])
 		}
 	}
@@ -96,6 +95,6 @@ func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLog
 		Addresses: addresses,
 		FromBlock: from,
 		ToBlock:   to,
-		Topics: topics,
+		Topics:    topics,
 	}, nil
 }

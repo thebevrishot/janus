@@ -1,9 +1,9 @@
 package transformer
 
 import (
-	"math/big"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
+	"math/big"
 )
 
 // ProxyETHGetFilterLogs implements ETHProxy
@@ -16,17 +16,17 @@ func (p *ProxyETHGetFilterLogs) Method() string {
 }
 
 func (p *ProxyETHGetFilterLogs) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
-	
+
 	filter, err := processFilter(p.ProxyETHGetFilterChanges, rawreq)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	switch filter.Type {
-		case eth.NewFilterTy:
-			return p.request(filter)
-		default:
-			return nil, errors.New("filter not found")
+	case eth.NewFilterTy:
+		return p.request(filter)
+	default:
+		return nil, errors.New("filter not found")
 	}
 }
 
@@ -45,12 +45,11 @@ func (p *ProxyETHGetFilterLogs) request(filter *eth.Filter) (qtumresp eth.GetFil
 	}
 	toBlock := _toBlock.(uint64)
 
-	searchLogsReq, err := p.ProxyETHGetFilterChanges.toSearchLogsReq(filter,big.NewInt(int64(lastBlockNumber)), big.NewInt(int64(toBlock)))
+	searchLogsReq, err := p.ProxyETHGetFilterChanges.toSearchLogsReq(filter, big.NewInt(int64(lastBlockNumber)), big.NewInt(int64(toBlock)))
 	if err != nil {
 		return nil, err
 	}
 
 	return p.ProxyETHGetFilterChanges.doSearchLogs(searchLogsReq)
-
 
 }

@@ -1,3 +1,18 @@
+ifndef GOBIN
+GOBIN := $(GOPATH)/bin
+endif
+
+ifdef JANUS_PORT
+JANUS_PORT := $(JANUS_PORT)
+else
+JANUS_PORT := 23889
+endif
+
+check-env:
+ifndef GOPATH
+	$(error GOPATH is undefined)
+endif
+
 .PHONY: install
 install: 
 	go install github.com/qtumproject/janus/cli/janus
@@ -22,22 +37,22 @@ docker-dev:
 	docker build --no-cache -t qtum/janus:dev .
 	
 .PHONY: local-dev
-local-dev:
+local-dev: check-env
 	go install github.com/qtumproject/janus/cli/janus
-	docker run --name qtum_testchain -d -p 3889:3889 qtum/qtum qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents=1 -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole | true
+	docker run --rm --name qtum_testchain -d -p 3889:3889 qtum/qtum qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents=1 -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole | true
 	sleep 3
 	docker cp ${GOPATH}/src/github.com/qtumproject/janus/docker/fill_user_account.sh qtum_testchain:.
 	docker exec qtum_testchain /bin/sh -c ./fill_user_account.sh
-	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=regtest janus --accounts ./docker/standalone/myaccounts.txt --dev
+	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=regtest $(GOBIN)/janus --port $(JANUS_PORT) --accounts ./docker/standalone/myaccounts.txt --dev
 
 .PHONY: local-dev-logs
-local-dev-logs:
+local-dev-logs: check-env
 	go install github.com/qtumproject/janus/cli/janus
-	docker run --name qtum_testchain -d -p 3889:3889 qtum/qtum:dev qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents=1 -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole | true
+	docker run --rm --name qtum_testchain -d -p 3889:3889 qtum/qtum:dev qtumd -regtest -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents=1 -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole | true
 	sleep 3
 	docker cp ${GOPATH}/src/github.com/qtumproject/janus/docker/fill_user_account.sh qtum_testchain:.
 	docker exec qtum_testchain /bin/sh -c ./fill_user_account.sh
-	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=regtest janus --accounts ./docker/standalone/myaccounts.txt --dev > janus_dev_logs.txt
+	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=regtest $(GOBIN)/janus --port $(JANUS_PORT) --accounts ./docker/standalone/myaccounts.txt --dev > janus_dev_logs.txt
 
 # -------------------------------------------------------------------------------------------------------------------
 # NOTE:
@@ -68,15 +83,15 @@ test_user_passwd = testpasswd
 # Runs docker container of qtum locally and starts qtumd inside of it
 run-qtum:
 	@ printf "\nRunning qtum...\n\n"
-		@ printf "\n(1) Starting container...\n\n"
-			docker run ${qtum_container_flags} qtum/qtum qtumd ${qtumd_flags} > /dev/null
+	@ printf "\n(1) Starting container...\n\n"
+	docker run ${qtum_container_flags} qtum/qtum qtumd ${qtumd_flags} > /dev/null
 
-		@ printf "\n(2) Importing test accounts...\n\n"
-			@ sleep 3
-			docker cp ${shell pwd}/docker/fill_user_account.sh ${qtum_container_name}:.
+	@ printf "\n(2) Importing test accounts...\n\n"
+	@ sleep 3
+	docker cp ${shell pwd}/docker/fill_user_account.sh ${qtum_container_name}:.
 
-		@ printf "\n(3) Filling test accounts wallets...\n\n"
-			docker exec ${qtum_container_name} /bin/sh -c ./fill_user_account.sh > /dev/null
+	@ printf "\n(3) Filling test accounts wallets...\n\n"
+	docker exec ${qtum_container_name} /bin/sh -c ./fill_user_account.sh > /dev/null
 	@ printf "\n... Done\n\n"
 
 qtum_container_name = test-chain
@@ -116,3 +131,19 @@ stop-qtum:
 	@ printf "\n... Done\n\n"
 
 restart-qtum: stop-qtum run-qtum
+
+submodules:
+	git submodules init
+
+# Run openzeppelin tests, Janus/QTUM needs to already be running
+openzeppelin:
+	cd testing && make openzeppelin
+
+# Run openzeppelin tests in docker
+# Janus and QTUM need to already be running
+openzeppelin-docker:
+	cd testing && make openzeppelin-docker
+
+# Run openzeppelin tests in docker-compose
+openzeppelin-docker-compose:
+	cd testing && make openzeppelin-docker-compose

@@ -59,7 +59,7 @@ func (p *ProxyETHGetFilterChanges) requestBlockFilter(filter *eth.Filter) (qtumr
 	differ := blockCount - lastBlockNumber
 
 	hashes := make(eth.GetFilterChangesResponse, differ)
-	for i, _ := range hashes {
+	for i := range hashes {
 		blockNumber := new(big.Int).SetUint64(lastBlockNumber + uint64(i) + 1)
 
 		resp, err := p.GetBlockHash(blockNumber)
@@ -112,7 +112,7 @@ func (p *ProxyETHGetFilterChanges) doSearchLogs(req *qtum.SearchLogsRequest) (et
 	receiptToResult := func(receipt *qtum.TransactionReceipt) []interface{} {
 		logs := extractETHLogsFromTransactionReceipt(receipt)
 		res := make([]interface{}, len(logs))
-		for i, _ := range res {
+		for i := range res {
 			res[i] = logs[i]
 		}
 		return res
@@ -142,7 +142,7 @@ func (p *ProxyETHGetFilterChanges) toSearchLogsReq(filter *eth.Filter, from, to 
 				return nil, err
 			}
 		}
-		for i, _ := range addresses {
+		for i := range addresses {
 			addresses[i] = utils.RemoveHexPrefix(addresses[i])
 		}
 	}

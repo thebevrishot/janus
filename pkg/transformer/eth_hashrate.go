@@ -1,10 +1,10 @@
 package transformer
 
 import (
-	"math"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"math"
 )
 
 //ProxyETHGetHashrate implements ETHProxy
@@ -16,7 +16,7 @@ func (p *ProxyETHHashrate) Method() string {
 	return "eth_hashrate"
 }
 
-func (p *ProxyETHHashrate) Request(_ *eth.JSONRPCRequest) (interface{}, error){
+func (p *ProxyETHHashrate) Request(_ *eth.JSONRPCRequest) (interface{}, error) {
 	return p.request()
 }
 

@@ -78,6 +78,12 @@ it will init qtum wallet:
   - qLn9vqbr2Gx3TsVR9QyTVB5mrMoh4x43Uf (hex 0x2352be3db3177f0a07efbe6da5857615b8c9901d )
 - fund two addresses above with uxtos
 
+## Integration tests
+
+```
+make openzeppelin-docker-compose
+```
+
 ## Truffle
 
 ### Migration
@@ -497,20 +503,21 @@ Assumed that you have a **contract** like this:
 pragma solidity ^0.4.18;
 
 contract SimpleStore {
-  constructor(uint _value) public {
+  constructor(uint256 _value) public {
     value = _value;
   }
 
-  function set(uint newValue) public {
+  function set(uint256 newValue) public {
     value = newValue;
   }
 
-  function get() public constant returns (uint) {
+  function get() public constant returns (uint256) {
     return value;
   }
 
-  uint value;
+  uint256 value;
 }
+
 ```
 
 so that the **bytecode** is
@@ -684,7 +691,7 @@ curl --header 'Content-Type: application/json' --data \
 - eth_getTransactionByHash
 - eth_getTransactionReceipt
 - eth_getTransactionCount
- - always returns 1 due to the UTXO nature of Qtum
+- always returns 1 due to the UTXO nature of Qtum
 - eth_blockNumber
 - net_version
   - returns string // current network name as defined in BIP70 (main, test, regtest)
