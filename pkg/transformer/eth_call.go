@@ -66,31 +66,9 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 }
 
 func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} {
-	/*excepted := qresp.ExecutionResult.Excepted
-	exceptedMessage := qresp.ExecutionResult.ExceptedMessage
-
-	if excepted != "None" {
-
-		if exceptedMessage != "" {
-			return &eth.JSONRPCError{
-				Message: fmt.Sprintf("%s", exceptedMessage),
-				Code:    -32000,
-			}
-		}
-
-		//This will most likely occur due to OutOfGasIntrinsic
-		return &eth.JSONRPCError{
-			Message: fmt.Sprintf("VM exception: %s", excepted),
-			Code:    -32000,
-			// To see how eth_call supports revert reason, see:
-			// https://gist.github.com/hayeah/795bc18a683053218fb3ff5032d31144
-			//
-			// Data: ...
-		}
-
-	}*/
 
 	data := utils.AddHexPrefix(qresp.ExecutionResult.Output)
 	qtumresp := eth.CallResponse(data)
 	return &qtumresp
+
 }
