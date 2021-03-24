@@ -1,7 +1,6 @@
 package transformer
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/qtumproject/janus/pkg/eth"
@@ -67,7 +66,7 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 }
 
 func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} {
-	excepted := qresp.ExecutionResult.Excepted
+	/*excepted := qresp.ExecutionResult.Excepted
 	exceptedMessage := qresp.ExecutionResult.ExceptedMessage
 
 	if excepted != "None" {
@@ -89,7 +88,7 @@ func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} 
 			// Data: ...
 		}
 
-	}
+	}*/
 
 	data := utils.AddHexPrefix(qresp.ExecutionResult.Output)
 	qtumresp := eth.CallResponse(data)
