@@ -3,7 +3,7 @@ services:
   janus:
     image: qtum/janus:dev
     build:
-      context: ../
+      context: ../../
       dockerfile: ./Dockerfile
       cache_from:
         - golang:1.14-alpine
@@ -22,7 +22,7 @@ services:
       - "3889:3889"
     image: qtum/qtum-seeded
     build:
-      context: ../docker
+      context: ../../docker
       dockerfile: ./qtum-seeded.Dockerfile
       cache_from:
         - qtum/qtum-seeded
