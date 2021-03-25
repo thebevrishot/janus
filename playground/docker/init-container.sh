@@ -1,3 +1,4 @@
+#!/bin/sh
 while
      qcli help &> /dev/null
      rc=$?; if [[ $rc == 0 ]]; then break; fi
