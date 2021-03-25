@@ -78,6 +78,16 @@ it will init qtum wallet:
   - qLn9vqbr2Gx3TsVR9QyTVB5mrMoh4x43Uf (hex 0x2352be3db3177f0a07efbe6da5857615b8c9901d )
 - fund two addresses above with uxtos
 
+## Unit tests
+
+```
+# Run unit tests within docker
+make docker-build-unit-tests
+make docker-unit-tests
+# Run without docker
+make unit-tests
+```
+
 ## Integration tests
 
 ```
