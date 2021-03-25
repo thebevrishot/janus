@@ -54,6 +54,9 @@ local-dev-logs: check-env
 	docker exec qtum_testchain /bin/sh -c ./fill_user_account.sh
 	QTUM_RPC=http://qtum:testpasswd@localhost:3889 QTUM_NETWORK=regtest $(GOBIN)/janus --port $(JANUS_PORT) --accounts ./docker/standalone/myaccounts.txt --dev > janus_dev_logs.txt
 
+unit-tests: check-env
+	go test -v ./...
+
 # -------------------------------------------------------------------------------------------------------------------
 # NOTE:
 # 	The following make rules are only for local test purposes

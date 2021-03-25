@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/qtumproject/janus/pkg/eth"
@@ -24,6 +25,10 @@ func (d doerMappedMock) Do(request *http.Request) (*http.Response, error) {
 	requestJSON, err := parseRequestFromBody(request)
 	if err != nil {
 		return nil, err
+	}
+
+	if d.Responses[requestJSON.Method] == nil {
+		log.Printf("No mocked response for %s\n", requestJSON.Method)
 	}
 
 	responseWriter := ioutil.NopCloser(bytes.NewReader(d.Responses[requestJSON.Method]))
