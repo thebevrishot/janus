@@ -1,4 +1,8 @@
 module.exports = {
+  test_directory: "./openzeppelin-contracts/test",
+  migrations: "./openzeppelin-contracts/migrations",
+  contracts_directory: "./openzeppelin-contracts/contracts",
+  contracts_build_directory: "./openzeppelin-contracts/build/output",
   networks: {
     development: {
       host: "127.0.0.1",

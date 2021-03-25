@@ -1,3 +1,4 @@
+#!/bin/sh
 repeat_until_success () {
     echo Running command - "$@"
     i=0

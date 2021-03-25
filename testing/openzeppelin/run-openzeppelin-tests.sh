@@ -7,7 +7,7 @@ trap 'cleanupDocker ; echo "Tests Failed For Unexpected Reasons"' HUP INT QUIT P
 docker-compose -p ci -f docker-compose-openzeppelin.yml build && docker-compose -p ci -f docker-compose-openzeppelin.yml up -d
 if [ $? -ne 0 ] ; then
   echo "Docker Compose Failed"
-  exit -1
+  exit 1
 fi
 docker logs ci_openzeppelin_1 -f&
 EXIT_CODE=`docker wait ci_openzeppelin_1`

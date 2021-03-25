@@ -44,6 +44,10 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 		panic(err)
 	}
 
+	// TODO: Need getaccountinfo to return an account for unit test
+	// if getaccountinfo returns nil
+	// then address is contract, else account
+
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetBalance{qtumClient}
 	got, err := proxyEth.Request(requestRPC)

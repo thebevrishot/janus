@@ -124,6 +124,12 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 
 	res, err := responseBodyToResult(respBody)
 	if err != nil {
+		if respBody == nil || len(respBody) == 0 {
+			if c.debug {
+				level.Debug(l).Log("Empty response")
+			}
+			return nil, errors.Wrap(err, "responseBodyToResult empty response")
+		}
 		return nil, errors.Wrap(err, "responseBodyToResult")
 	}
 

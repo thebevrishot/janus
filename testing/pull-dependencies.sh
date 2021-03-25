@@ -1,3 +1,4 @@
+make init
 #Change directories and pull a different dependency
 cd aave/
 # Initialize git repo for sparsecheckout
