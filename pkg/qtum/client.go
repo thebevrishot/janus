@@ -94,11 +94,11 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 		return nil, err
 	}
 
-	l := log.With(level.Debug(c.logger))
+	debugLogger := c.GetDebugLogger()
 
-	l.Log("method", req.Method)
+	debugLogger.Log("method", req.Method)
 
-	if c.debug {
+	if c.IsDebugEnabled() {
 		fmt.Printf("=> qtum RPC request\n%s\n", reqBody)
 	}
 
@@ -107,7 +107,7 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 		return nil, errors.Wrap(err, "Client#do")
 	}
 
-	if c.debug {
+	if c.IsDebugEnabled() {
 		maxBodySize := 1024 * 8
 		formattedBody, err := ReformatJSON(respBody)
 		formattedBodyStr := string(formattedBody)
@@ -125,8 +125,8 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 	res, err := responseBodyToResult(respBody)
 	if err != nil {
 		if respBody == nil || len(respBody) == 0 {
-			if c.debug {
-				level.Debug(l).Log("Empty response")
+			if c.IsDebugEnabled() {
+				debugLogger.Log("Empty response")
 			}
 			return nil, errors.Wrap(err, "responseBodyToResult empty response")
 		}
@@ -208,6 +208,25 @@ func SetAccounts(accounts Accounts) func(*Client) error {
 		c.Accounts = accounts
 		return nil
 	}
+}
+
+func (c *Client) GetLogger() log.Logger {
+	return c.logger
+}
+
+func (c *Client) GetDebugLogger() log.Logger {
+	if !c.IsDebugEnabled() {
+		return log.NewNopLogger()
+	}
+	return log.With(level.Debug(c.logger))
+}
+
+func (c *Client) GetErrorLogger() log.Logger {
+	return log.With(level.Error(c.logger))
+}
+
+func (c *Client) IsDebugEnabled() bool {
+	return c.debug
 }
 
 func responseBodyToResult(body []byte) (*SuccessJSONRPCResult, error) {

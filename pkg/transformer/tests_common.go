@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -108,13 +110,22 @@ func parseRequestFromBody(request *http.Request) (*eth.JSONRPCRequest, error) {
 }
 
 func createMockedClient(doerInstance doer) (qtumClient *qtum.Qtum, err error) {
-	qtumJSONRPC, err := qtum.NewClient(true, "http://user:pass@mocked", qtum.SetDoer(doerInstance))
+	qtumJSONRPC, err := qtum.NewClient(
+		true,
+		"http://user:pass@mocked",
+		qtum.SetDoer(doerInstance),
+		qtum.SetDebug(isDebugEnvironmentVariableSet()),
+	)
 	if err != nil {
 		return
 	}
 
 	qtumClient, err = qtum.New(qtumJSONRPC, "test")
 	return
+}
+
+func isDebugEnvironmentVariableSet() bool {
+	return strings.ToLower(os.Getenv("DEBUG")) == "true"
 }
 
 func mustMarshalIndent(v interface{}, prefix, indent string) []byte {

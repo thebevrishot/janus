@@ -53,6 +53,9 @@ func (m *Method) GetTransaction(txID string) (*GetTransactionResponse, error) {
 	)
 	err := m.Request(MethodGetTransaction, &req, resp)
 	if err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("GetTransaction", txID, err)
+		}
 		return nil, err
 	}
 	return resp, nil
@@ -68,6 +71,9 @@ func (m *Method) GetRawTransaction(txID string, hexEncoded bool) (*GetRawTransac
 	)
 	err := m.Request(MethodGetRawTransaction, &req, resp)
 	if err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("GetRawTransaction", txID, hexEncoded, err)
+		}
 		return nil, err
 	}
 	return resp, nil
@@ -77,6 +83,9 @@ func (m *Method) GetTransactionReceipt(txHash string) (*GetTransactionReceiptRes
 	resp := new(GetTransactionReceiptResponse)
 	err := m.Request(MethodGetTransactionReceipt, GetTransactionReceiptRequest(txHash), resp)
 	if err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("GetTransactionReceipt", txHash, err)
+		}
 		return nil, err
 	}
 	return resp, nil
@@ -86,6 +95,9 @@ func (m *Method) DecodeRawTransaction(hex string) (*DecodedRawTransactionRespons
 	var resp *DecodedRawTransactionResponse
 	err := m.Request(MethodDecodeRawTransaction, DecodeRawTransactionRequest(hex), &resp)
 	if err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("DecodeRawTransaction", hex, err)
+		}
 		return nil, err
 	}
 	return resp, nil
@@ -102,6 +114,9 @@ func (m *Method) GetTransactionOut(hash string, voutNumber int, mempoolIncluded 
 	)
 	err := m.Request(MethodGetTransactionOut, req, resp)
 	if err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("GetTransactionOut", hash, voutNumber, mempoolIncluded, err)
+		}
 		return nil, err
 	}
 	return resp, nil
