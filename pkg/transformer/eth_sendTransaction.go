@@ -108,9 +108,9 @@ func (p *ProxyETHSendTransaction) requestSendToAddress(req *eth.SendTransactionR
 	}
 
 	qtumreq := qtum.SendToAddressRequest{
-		Address:       from,
+		Address:       to,
 		Amount:        amount,
-		SenderAddress: to,
+		SenderAddress: from,
 	}
 
 	var qtumresp qtum.SendToAddressResponse
