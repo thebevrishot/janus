@@ -4,10 +4,9 @@ services:
   janus:
     image: qtum/janus:dev
     build: 
-        context: ../standalone/
+        context: ../../
         cache_from:
           - golang:1.14-alpine
-          - qtum/janus:dev
     ports:
         - "23889:23889"
     environment: 
