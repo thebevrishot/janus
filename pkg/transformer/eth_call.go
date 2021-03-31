@@ -67,6 +67,15 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 
 func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} {
 
+	if qresp.ExecutionResult.Output = "" {
+
+		return &eth.JSONRPCError{
+			Message: fmt.Println("Revert: executionResult output is empty"),
+			Code:    -32000,
+		}
+
+	}
+
 	data := utils.AddHexPrefix(qresp.ExecutionResult.Output)
 	qtumresp := eth.CallResponse(data)
 	return &qtumresp
