@@ -44,5 +44,6 @@ func (p *ProxyETHGetBlockByNumber) request(req *eth.GetBlockByNumberRequest) (*e
 	if err != nil {
 		return nil, errors.WithMessage(err, "couldn't get block by hash")
 	}
+	p.GetDebugLogger().Log("function", p.Method(), "request", string(req.BlockNumber), "msg", "Successfully got block by number")
 	return block, nil
 }

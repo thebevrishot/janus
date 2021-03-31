@@ -83,6 +83,10 @@ func (c *Client) Request(method string, params interface{}, result interface{}) 
 	}
 	err = json.Unmarshal(resp.RawResult, result)
 	if err != nil {
+		if c.IsDebugEnabled() {
+			c.GetDebugLogger().Log("method", method, "params", params, "result", result, "error", err)
+		}
+
 		return errors.Wrap(err, "couldn't unmarshal response result field")
 	}
 	return nil

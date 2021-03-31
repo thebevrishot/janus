@@ -1,8 +1,6 @@
 package transformer
 
 import (
-	"log"
-
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -45,7 +43,7 @@ func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionReques
 
 	if p.Chain() == qtum.ChainRegTest {
 		if _, err = p.Generate(1, nil); err != nil {
-			log.Println("generate block err: ", err)
+			p.GetErrorLogger().Log("Error generating new block", err)
 		}
 	}
 

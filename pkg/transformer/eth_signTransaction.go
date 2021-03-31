@@ -26,11 +26,16 @@ func (p *ProxyETHSignTransaction) Request(rawreq *eth.JSONRPCRequest) (interface
 	}
 
 	if req.IsCreateContract() {
+		p.GetDebugLogger().Log("method", p.Method(), "msg", "transaction is a create contract request")
 		return p.requestCreateContract(&req)
 	} else if req.IsSendEther() {
+		p.GetDebugLogger().Log("method", p.Method(), "msg", "transaction is a send ether request")
 		return p.requestSendToAddress(&req)
 	} else if req.IsCallContract() {
+		p.GetDebugLogger().Log("method", p.Method(), "msg", "transaction is a call contract request")
 		return p.requestSendToContract(&req)
+	} else {
+		p.GetDebugLogger().Log("method", p.Method(), "msg", "transaction is an unknown request")
 	}
 
 	return nil, errors.New("Unknown operation")

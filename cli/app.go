@@ -19,17 +19,17 @@ import (
 var (
 	app = kingpin.New("janus", "Qtum adapter to Ethereum JSON RPC")
 
-	accountsFile = app.Flag("accounts", "account private keys (in WIF) returned by eth_accounts").File()
+	accountsFile = app.Flag("accounts", "account private keys (in WIF) returned by eth_accounts").Envar("ACCOUNTS").File()
 
 	qtumRPC     = app.Flag("qtum-rpc", "URL of qtum RPC service").Envar("QTUM_RPC").Default("").String()
 	qtumNetwork = app.Flag("qtum-network", "").Envar("QTUM_NETWORK").Default("regtest").String()
 	bind        = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
 	port        = app.Flag("port", "port to serve proxy").Default("23889").Int()
 
-	devMode = app.Flag("dev", "[Insecure] Developer mode").Default("false").Bool()
+	devMode = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
 )
 
-func loadAccounts(r io.Reader) qtum.Accounts {
+func loadAccounts(r io.Reader, l log.Logger) qtum.Accounts {
 	var accounts qtum.Accounts
 
 	if accountsFile != nil {
@@ -39,13 +39,18 @@ func loadAccounts(r io.Reader) qtum.Accounts {
 
 			wif, err := btcutil.DecodeWIF(line)
 			if err != nil {
-				// log.lev
-				// FIXME: log error
+				level.Error(l).Log("msg", "Failed to parse account", "err", err.Error())
 				continue
 			}
 
 			accounts = append(accounts, wif)
 		}
+	}
+
+	if len(accounts) > 0 {
+		level.Info(l).Log("msg", fmt.Sprintf("Loaded %d accounts", len(accounts)))
+	} else {
+		level.Warn(l).Log("msg", "No accounts loaded from account file")
 	}
 
 	return accounts
@@ -61,7 +66,7 @@ func action(pc *kingpin.ParseContext) error {
 
 	var accounts qtum.Accounts
 	if *accountsFile != nil {
-		accounts = loadAccounts(*accountsFile)
+		accounts = loadAccounts(*accountsFile, logger)
 		(*accountsFile).Close()
 	}
 

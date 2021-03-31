@@ -33,8 +33,10 @@ func (p *ProxyETHNetVersion) request() (*eth.NetVersionResponse, error) {
 	default:
 		// TODO: discuss policy? NetworkID has to be an integer, can't just return qtumresp.Chain.
 		networkID = "0x1024"
+		p.GetDebugLogger().Log("method", p.Method(), "msg", "Unknown chain "+qtumresp.Chain)
 	}
 
 	resp := eth.NetVersionResponse(networkID)
+	p.GetDebugLogger().Log("method", p.Method(), "result", networkID)
 	return &resp, nil
 }
