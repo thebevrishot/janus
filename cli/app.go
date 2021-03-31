@@ -26,7 +26,8 @@ var (
 	bind        = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
 	port        = app.Flag("port", "port to serve proxy").Default("23889").Int()
 
-	devMode = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
+	devMode        = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
+	singleThreaded = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
 )
 
 func loadAccounts(r io.Reader, l log.Logger) qtum.Accounts {
@@ -87,7 +88,7 @@ func action(pc *kingpin.ParseContext) error {
 		return errors.Wrap(err, "transformer#New")
 	}
 
-	s, err := server.New(qtumClient, t, addr, server.SetLogger(logger), server.SetDebug(*devMode))
+	s, err := server.New(qtumClient, t, addr, server.SetLogger(logger), server.SetDebug(*devMode), server.SetSingleThreaded(*singleThreaded))
 	if err != nil {
 		return errors.Wrap(err, "server#New")
 	}
