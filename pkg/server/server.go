@@ -127,7 +127,11 @@ func SetDebug(debug bool) Option {
 
 func SetSingleThreaded(singleThreaded bool) Option {
 	return func(p *Server) error {
-		p.mutex = &sync.Mutex{}
+		if singleThreaded {
+			p.mutex = &sync.Mutex{}
+		} else {
+			p.mutex = nil
+		}
 		return nil
 	}
 }
