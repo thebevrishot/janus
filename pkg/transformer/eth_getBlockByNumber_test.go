@@ -17,7 +17,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 		panic(err)
 	}
 
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 
 	//preparing answer to "getblockhash"
@@ -194,6 +194,40 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
 			string(mustMarshalIndent(want, "", "  ")),
+			string(mustMarshalIndent(got, "", "  ")),
+		)
+	}
+}
+
+func TestGetBlockByNumberUnknownBlockRequest(t *testing.T) {
+
+	requestParams := []json.RawMessage{[]byte(`"0x1b4"`), []byte(`true`)}
+	request, err := prepareEthRPCRequest(1, requestParams)
+	if err != nil {
+		panic(err)
+	}
+
+	mockedClientDoer := newDoerMappedMock()
+	qtumClient, err := createMockedClient(mockedClientDoer)
+
+	unknownBlockResponse := qtum.GetErrorResponse(qtum.ErrInvalidParameter)
+	err = mockedClientDoer.AddError(4, qtum.MethodGetBlockHash, unknownBlockResponse)
+	if err != nil {
+		panic(err)
+	}
+
+	//preparing proxy & executing request
+	proxyEth := ProxyETHGetBlockByNumber{qtumClient}
+	got, err := proxyEth.Request(request)
+	if err != nil {
+		panic(err)
+	}
+
+	if got != (*eth.GetBlockByNumberResponse)(nil) {
+		t.Errorf(
+			"error\ninput: %s\nwant: %s\ngot: %s",
+			request,
+			string("nil"),
 			string(mustMarshalIndent(got, "", "  ")),
 		)
 	}

@@ -18,7 +18,7 @@ func TestGetAccountInfoRequest(t *testing.T) {
 		panic(err)
 	}
 	//prepare client
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)
@@ -51,6 +51,48 @@ func TestGetAccountInfoRequest(t *testing.T) {
 	}
 
 	want := eth.GetCodeResponse("0x606060405236156100ad576000357c0100000000000000000...")
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf(
+			"error\ninput: %s\nwant: %s\ngot: %s",
+			requestRPC,
+			string(mustMarshalIndent(want, "", "  ")),
+			string(mustMarshalIndent(got, "", "  ")),
+		)
+	}
+}
+
+func TestGetCodeInvalidAddressRequest(t *testing.T) {
+	//prepare request
+	requestParams := []json.RawMessage{[]byte(`"0x0000000000000000000000000000000000000000"`), []byte(`"123"`)}
+	requestRPC, err := prepareEthRPCRequest(1, requestParams)
+	if err != nil {
+		panic(err)
+	}
+	//prepare client
+	mockedClientDoer := newDoerMappedMock()
+	qtumClient, err := createMockedClient(mockedClientDoer)
+	if err != nil {
+		panic(err)
+	}
+
+	//prepare responses
+	getAccountInfoErrorResponse := qtum.GetErrorResponse(qtum.ErrInvalidAddress)
+	if getAccountInfoErrorResponse == nil {
+		panic("mocked error response is nil")
+	}
+	err = mockedClientDoer.AddError(3, qtum.MethodGetAccountInfo, getAccountInfoErrorResponse)
+	if err != nil {
+		panic(err)
+	}
+
+	//preparing proxy & executing request
+	proxyEth := ProxyETHGetCode{qtumClient}
+	got, err := proxyEth.Request(requestRPC)
+	if err != nil {
+		panic(err)
+	}
+
+	want := eth.GetCodeResponse("0x")
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",

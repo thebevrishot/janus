@@ -8,7 +8,10 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
+	kitLog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
@@ -18,12 +21,21 @@ type doer interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
+func newDoerMappedMock() *doerMappedMock {
+	return &doerMappedMock{
+		Responses: make(map[string][]byte),
+	}
+}
+
 //type for mocking requests to client with request -> response mapping
 type doerMappedMock struct {
+	mutex     sync.Mutex
 	Responses map[string][]byte
 }
 
 func (d doerMappedMock) Do(request *http.Request) (*http.Response, error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
 	requestJSON, err := parseRequestFromBody(request)
 	if err != nil {
 		return nil, err
@@ -61,21 +73,24 @@ func prepareEthRPCRequest(id int, params []json.RawMessage) (*eth.JSONRPCRequest
 	return &requestRPC, nil
 }
 
-func prepareRawResponse(requestID int, responseResult interface{}) ([]byte, error) {
+func prepareRawResponse(requestID int, responseResult interface{}, responseError *eth.JSONRPCError) ([]byte, error) {
 	requestIDRaw, err := json.Marshal(requestID)
 	if err != nil {
 		return nil, err
 	}
 
-	responseResultRaw, err := json.Marshal(responseResult)
-	if err != nil {
-		return nil, err
+	var responseResultRaw json.RawMessage
+	if responseResult != nil {
+		responseResultRaw, err = json.Marshal(responseResult)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	responseRPC := &eth.JSONRPCResult{
 		JSONRPC:   "2.0",
 		RawResult: responseResultRaw,
-		Error:     nil,
+		Error:     responseError,
 		ID:        requestIDRaw,
 	}
 
@@ -84,8 +99,28 @@ func prepareRawResponse(requestID int, responseResult interface{}) ([]byte, erro
 	return responseRPCRaw, err
 }
 
+func (d *doerMappedMock) AddRawResponse(requestType string, rawResponse []byte) {
+	d.mutex.Lock()
+	d.Responses[requestType] = rawResponse
+	d.mutex.Unlock()
+}
+
 func (d *doerMappedMock) AddResponse(requestID int, requestType string, responseResult interface{}) error {
-	responseRaw, err := prepareRawResponse(requestID, responseResult)
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	responseRaw, err := prepareRawResponse(requestID, responseResult, nil)
+	if err != nil {
+		return err
+	}
+
+	d.Responses[requestType] = responseRaw
+	return nil
+}
+
+func (d *doerMappedMock) AddError(requestID int, requestType string, responseError *eth.JSONRPCError) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	responseRaw, err := prepareRawResponse(requestID, nil, responseError)
 	if err != nil {
 		return err
 	}
@@ -110,11 +145,16 @@ func parseRequestFromBody(request *http.Request) (*eth.JSONRPCRequest, error) {
 }
 
 func createMockedClient(doerInstance doer) (qtumClient *qtum.Qtum, err error) {
+	logger := kitLog.NewLogfmtLogger(os.Stdout)
+	if !isDebugEnvironmentVariableSet() {
+		logger = level.NewFilter(logger, level.AllowWarn())
+	}
 	qtumJSONRPC, err := qtum.NewClient(
 		true,
 		"http://user:pass@mocked",
 		qtum.SetDoer(doerInstance),
 		qtum.SetDebug(isDebugEnvironmentVariableSet()),
+		qtum.SetLogger(logger),
 	)
 	if err != nil {
 		return

@@ -30,6 +30,18 @@ func (p *ProxyETHGetBlockByNumber) request(req *eth.GetBlockByNumberRequest) (*e
 	}
 	blockHash, err := p.GetBlockHash(blockNum)
 	if err != nil {
+		if err == qtum.ErrInvalidParameter {
+			// block doesn't exist, ETH rpc returns null
+			/**
+			{
+				"jsonrpc": "2.0",
+				"id": 1234,
+				"result": null
+			}
+			**/
+			p.GetDebugLogger().Log("function", p.Method(), "request", string(req.BlockNumber), "msg", "Unknown block")
+			return nil, nil
+		}
 		return nil, errors.WithMessage(err, "couldn't get block hash")
 	}
 
@@ -44,6 +56,8 @@ func (p *ProxyETHGetBlockByNumber) request(req *eth.GetBlockByNumberRequest) (*e
 	if err != nil {
 		return nil, errors.WithMessage(err, "couldn't get block by hash")
 	}
-	p.GetDebugLogger().Log("function", p.Method(), "request", string(req.BlockNumber), "msg", "Successfully got block by number")
+	if blockNum != nil {
+		p.GetDebugLogger().Log("function", p.Method(), "request", string(req.BlockNumber), "msg", "Successfully got block by number", "result", blockNum.String())
+	}
 	return block, nil
 }

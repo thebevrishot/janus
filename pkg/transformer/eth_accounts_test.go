@@ -17,7 +17,7 @@ func TestAccountRequest(t *testing.T) {
 		panic(err)
 	}
 
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)
@@ -53,7 +53,7 @@ func TestAccountRequest(t *testing.T) {
 }
 
 func TestAccountMethod(t *testing.T) {
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)
@@ -72,7 +72,7 @@ func TestAccountMethod(t *testing.T) {
 	}
 }
 func TestAccountToResponse(t *testing.T) {
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)

@@ -178,6 +178,7 @@ func getBlockNumberByParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bo
 		if err != nil {
 			return nil, err
 		}
+		p.GetDebugLogger().Log("latest", res.Blocks, "msg", "Got latest block")
 		return big.NewInt(res.Blocks), nil
 
 	case "earliest":

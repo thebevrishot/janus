@@ -18,7 +18,7 @@ func TestBlockNumberRequest(t *testing.T) {
 		panic(err)
 	}
 
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)
