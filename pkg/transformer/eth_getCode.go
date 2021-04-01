@@ -29,7 +29,19 @@ func (p *ProxyETHGetCode) request(ethreq *eth.GetCodeRequest) (eth.GetCodeRespon
 
 	qtumresp, err := p.GetAccountInfo(&qtumreq)
 	if err != nil {
-		return "", err
+		if err == qtum.ErrInvalidAddress {
+			/**
+			// correct response for an invalid address
+			{
+				"jsonrpc": "2.0",
+				"id": 123,
+				"result": "0x"
+			}
+			**/
+			return "0x", nil
+		} else {
+			return "", err
+		}
 	}
 
 	// qtum res -> eth res

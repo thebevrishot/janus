@@ -36,7 +36,7 @@ func TestGetLogs(t *testing.T) {
 		panic(err)
 	}
 
-	clientDoerMock := doerMappedMock{make(map[string][]byte)}
+	clientDoerMock := newDoerMappedMock()
 	qtumClient, err := createMockedClient(clientDoerMock)
 	if err != nil {
 		panic(err)

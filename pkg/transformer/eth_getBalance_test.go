@@ -18,7 +18,7 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 		panic(err)
 	}
 	//prepare client
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)
@@ -74,7 +74,7 @@ func TestGetBalanceRequestContract(t *testing.T) {
 		panic(err)
 	}
 	//prepare client
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)

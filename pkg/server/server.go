@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -24,6 +25,7 @@ type Server struct {
 	qtumRPCClient *qtum.Qtum
 	logger        log.Logger
 	debug         bool
+	mutex         *sync.Mutex
 	echo          *echo.Echo
 }
 
@@ -92,7 +94,16 @@ func (s *Server) Start() error {
 
 	e.HTTPErrorHandler = errorHandler
 	e.HideBanner = true
-	e.POST("/*", httpHandler)
+	if s.mutex == nil {
+		e.POST("/*", httpHandler)
+	} else {
+		level.Info(s.logger).Log("msg", "Processing RPC requests single threaded")
+		e.POST("/*", func(c echo.Context) error {
+			s.mutex.Lock()
+			defer s.mutex.Unlock()
+			return httpHandler(c)
+		})
+	}
 
 	level.Warn(s.logger).Log("listen", s.address, "qtum_rpc", s.qtumRPCClient.URL, "msg", "proxy started")
 	return e.Start(s.address)
@@ -110,6 +121,17 @@ func SetLogger(l log.Logger) Option {
 func SetDebug(debug bool) Option {
 	return func(p *Server) error {
 		p.debug = debug
+		return nil
+	}
+}
+
+func SetSingleThreaded(singleThreaded bool) Option {
+	return func(p *Server) error {
+		if singleThreaded {
+			p.mutex = &sync.Mutex{}
+		} else {
+			p.mutex = nil
+		}
 		return nil
 	}
 }

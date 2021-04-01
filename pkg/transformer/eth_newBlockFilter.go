@@ -1,8 +1,6 @@
 package transformer
 
 import (
-	"log"
-
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
@@ -31,7 +29,7 @@ func (p *ProxyETHNewBlockFilter) request() (eth.NewBlockFilterResponse, error) {
 	if p.Chain() == qtum.ChainRegTest {
 		defer func() {
 			if _, generateErr := p.Generate(1, nil); generateErr != nil {
-				log.Println("generate block err: ", generateErr)
+				p.GetErrorLogger().Log("Error generating new block", generateErr)
 			}
 		}()
 	}

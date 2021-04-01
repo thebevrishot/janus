@@ -21,7 +21,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 
 	//preparing answer to "getblockhash"
@@ -169,7 +169,7 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 
 	//preparing answer to "getblockhash"

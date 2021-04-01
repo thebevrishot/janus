@@ -38,5 +38,6 @@ func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest) (interface{}, 
 
 func (p *ProxyETHEstimateGas) toResp(qtumresp *qtum.CallContractResponse) (*eth.EstimateGasResponse, error) {
 	gas := eth.EstimateGasResponse(hexutil.EncodeUint64(uint64(qtumresp.ExecutionResult.GasUsed)))
+	p.GetDebugLogger().Log(p.Method(), gas)
 	return &gas, nil
 }

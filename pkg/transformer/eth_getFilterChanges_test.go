@@ -18,7 +18,7 @@ func TestGetFilterChangesRequest_EmptyResult(t *testing.T) {
 		panic(err)
 	}
 	//prepare client
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)
@@ -73,7 +73,7 @@ func TestGetFilterChangesRequest_NoNewBlocks(t *testing.T) {
 		panic(err)
 	}
 	//prepare client
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)
@@ -119,7 +119,7 @@ func TestGetFilterChangesRequest_NoSuchFilter(t *testing.T) {
 		panic(err)
 	}
 	//prepare client
-	mockedClientDoer := doerMappedMock{make(map[string][]byte)}
+	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
 	if err != nil {
 		panic(err)

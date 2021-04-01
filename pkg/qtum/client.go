@@ -6,15 +6,22 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"math/big"
+	"math/rand"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 )
+
+var maximumRequestTime = 10000
+var maximumBackoff = (2 * time.Second).Milliseconds()
 
 type Client struct {
 	URL  string
@@ -77,12 +84,30 @@ func (c *Client) Request(method string, params interface{}, result interface{}) 
 	if err != nil {
 		return errors.WithMessage(err, "couldn't make new rpc request")
 	}
-	resp, err := c.Do(req)
-	if err != nil {
-		return err
+
+	var resp *SuccessJSONRPCResult
+	max := int(math.Floor(math.Max(float64(maximumRequestTime/int(maximumBackoff)), 1)))
+	for i := 0; i < max; i++ {
+		resp, err = c.Do(req)
+		if err != nil {
+			if strings.Contains(err.Error(), ErrQtumWorkQueueDepth.Error()) && i != max-1 {
+				requestString := marshalToString(req)
+				backoffTime := computeBackoff(i, true)
+				c.GetLogger().Log("msg", fmt.Sprintf("QTUM process busy, backing off for %f seconds", backoffTime.Seconds()), "request", requestString)
+				time.Sleep(backoffTime)
+				c.GetLogger().Log("msg", "Retrying QTUM command")
+			} else {
+				if i != 0 {
+					c.GetLogger().Log("msg", fmt.Sprintf("Giving up on QTUM RPC call after %d tries since its busy", i+1))
+				}
+				return err
+			}
+		}
 	}
+
 	err = json.Unmarshal(resp.RawResult, result)
 	if err != nil {
+		c.GetDebugLogger().Log("method", method, "params", params, "result", result, "error", err)
 		return errors.Wrap(err, "couldn't unmarshal response result field")
 	}
 	return nil
@@ -94,11 +119,11 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 		return nil, err
 	}
 
-	l := log.With(level.Debug(c.logger))
+	debugLogger := c.GetDebugLogger()
 
-	l.Log("method", req.Method)
+	debugLogger.Log("method", req.Method)
 
-	if c.debug {
+	if c.IsDebugEnabled() {
 		fmt.Printf("=> qtum RPC request\n%s\n", reqBody)
 	}
 
@@ -107,7 +132,7 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 		return nil, errors.Wrap(err, "Client#do")
 	}
 
-	if c.debug {
+	if c.IsDebugEnabled() {
 		maxBodySize := 1024 * 8
 		formattedBody, err := ReformatJSON(respBody)
 		formattedBodyStr := string(formattedBody)
@@ -118,18 +143,22 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 		if err == nil {
 			fmt.Printf("<= qtum RPC response\n%s\n", formattedBodyStr)
 		}
-
-		// l.Log("respBody", "abc")
 	}
 
-	res, err := responseBodyToResult(respBody)
+	res, err := c.responseBodyToResult(respBody)
 	if err != nil {
 		if respBody == nil || len(respBody) == 0 {
-			if c.debug {
-				level.Debug(l).Log("Empty response")
-			}
+			debugLogger.Log("Empty response")
 			return nil, errors.Wrap(err, "responseBodyToResult empty response")
 		}
+		if IsKnownError(err) {
+			return nil, err
+		}
+		if string(respBody) == ErrQtumWorkQueueDepth.Error() {
+			// QTUM http server queue depth reached, need to retry
+			return nil, ErrQtumWorkQueueDepth
+		}
+		debugLogger.Log("msg", "Failed to parse response body", "body", string(respBody), "error", err)
 		return nil, errors.Wrap(err, "responseBodyToResult")
 	}
 
@@ -210,13 +239,36 @@ func SetAccounts(accounts Accounts) func(*Client) error {
 	}
 }
 
-func responseBodyToResult(body []byte) (*SuccessJSONRPCResult, error) {
+func (c *Client) GetLogger() log.Logger {
+	return c.logger
+}
+
+func (c *Client) GetDebugLogger() log.Logger {
+	if !c.IsDebugEnabled() {
+		return log.NewNopLogger()
+	}
+	return log.With(level.Debug(c.logger))
+}
+
+func (c *Client) GetErrorLogger() log.Logger {
+	return log.With(level.Error(c.logger))
+}
+
+func (c *Client) IsDebugEnabled() bool {
+	return c.debug
+}
+
+func (c *Client) responseBodyToResult(body []byte) (*SuccessJSONRPCResult, error) {
 	var res *JSONRPCResult
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err
 	}
 	if res.Error != nil {
-		return nil, res.Error.TryGetKnownError()
+		knownError := res.Error.TryGetKnownError()
+		if knownError != res.Error {
+			c.GetDebugLogger().Log("msg", fmt.Sprintf("Got error code %d with message '%s' mapped to %s", res.Error.Code, res.Error.Message, knownError.Error()))
+		}
+		return nil, knownError
 	}
 
 	return &SuccessJSONRPCResult{
@@ -224,6 +276,18 @@ func responseBodyToResult(body []byte) (*SuccessJSONRPCResult, error) {
 		RawResult: res.RawResult,
 		JSONRPC:   res.JSONRPC,
 	}, nil
+}
+
+func computeBackoff(i int, random bool) time.Duration {
+	i = int(math.Min(float64(i), 10))
+	randomNumberMilliseconds := 0
+	if random {
+		randomNumberMilliseconds = rand.Intn(500) - 250
+	}
+	exponentialBase := math.Pow(2, float64(i)) * 0.25
+	exponentialBaseInSeconds := time.Duration(exponentialBase*float64(time.Second)) + time.Duration(randomNumberMilliseconds)*time.Millisecond
+	backoffTimeInMilliseconds := math.Min(float64(exponentialBaseInSeconds.Milliseconds()), float64(maximumBackoff))
+	return time.Duration(backoffTimeInMilliseconds * float64(time.Millisecond))
 }
 
 func checkRPCURL(u string) error {

@@ -116,6 +116,7 @@ func getBlockNumberByHash(p *qtum.Qtum, hash string) (uint64, error) {
 	if err != nil {
 		return 0, errors.WithMessage(err, "couldn't get block")
 	}
+	p.GetDebugLogger().Log("function", "getBlockNumberByHash", "hash", hash, "block", block.Height)
 	return uint64(block.Height), nil
 }
 
@@ -126,9 +127,11 @@ func getTransactionIndexInBlock(p *qtum.Qtum, txHash string, blockHash string) (
 	}
 	for i, blockTx := range block.Txs {
 		if txHash == blockTx {
+			p.GetDebugLogger().Log("function", "getTransactionIndexInBlock", "msg", "Found transaction index in block", "txHash", txHash, "blockHash", blockHash, "index", i)
 			return int64(i), nil
 		}
 	}
+	p.GetDebugLogger().Log("function", "getTransactionIndexInBlock", "msg", "Could not find transaction index for hash in block", "txHash", txHash, "blockHash", blockHash)
 	return -1, errors.New("not found")
 }
 
@@ -157,6 +160,7 @@ func getBlockNumberByParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bo
 			if err != nil {
 				return nil, err
 			}
+			p.GetDebugLogger().Log("function", "getBlockNumberByParam", "msg", "returning default value ("+strconv.Itoa(int(res.Blocks))+")")
 			return big.NewInt(res.Blocks), nil
 		} else {
 			return nil, errors.Errorf("empty parameter value")
@@ -174,6 +178,7 @@ func getBlockNumberByParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bo
 		if err != nil {
 			return nil, err
 		}
+		p.GetDebugLogger().Log("latest", res.Blocks, "msg", "Got latest block")
 		return big.NewInt(res.Blocks), nil
 
 	case "earliest":

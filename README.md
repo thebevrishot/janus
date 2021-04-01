@@ -86,6 +86,8 @@ make docker-build-unit-tests
 make docker-unit-tests
 # Run without docker
 make unit-tests
+# Run with debug logs
+DEBUG=true make unit-tests
 ```
 
 ## Integration tests

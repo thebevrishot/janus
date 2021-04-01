@@ -34,6 +34,7 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest) (interface{}, e
 		// the address is a contract
 		if err == nil {
 			// the unit of the balance Satoshi
+			p.GetDebugLogger().Log("method", p.Method(), "address", req.Address, "msg", "is a contract")
 			return hexutil.EncodeUint64(uint64(qtumresp.Balance)), nil
 		}
 	}
@@ -42,6 +43,7 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest) (interface{}, e
 		// try account
 		base58Addr, err := p.FromHexAddress(addr)
 		if err != nil {
+			p.GetDebugLogger().Log("method", p.Method(), "address", req.Address, "msg", "error parsing address", "error", err)
 			return nil, err
 		}
 
@@ -61,9 +63,9 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest) (interface{}, e
 		floatBalance, exact := balance.Float64()
 
 		if exact != true {
+			p.GetDebugLogger().Log("method", p.Method(), "address", req.Address, "msg", "precision loss", "original", balance.String(), "after", floatBalance)
 			return exact, errors.New("precision error:  float64 value does not represent the original decimal precisely")
 		}
-
 
 		return hexutil.EncodeUint64(uint64(floatBalance)), nil
 

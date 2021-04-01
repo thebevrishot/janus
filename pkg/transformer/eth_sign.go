@@ -25,6 +25,7 @@ func (p *ProxyETHSign) Method() string {
 func (p *ProxyETHSign) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
 	var req eth.SignRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
+		p.GetDebugLogger().Log("method", p.Method(), "error", err)
 		return nil, err
 	}
 
@@ -32,13 +33,17 @@ func (p *ProxyETHSign) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) 
 
 	acc := p.Qtum.Accounts.FindByHexAddress(addr)
 	if acc == nil {
+		p.GetDebugLogger().Log("method", p.Method(), "account", addr, "msg", "Unknown account")
 		return nil, errors.Errorf("No such account: %s", addr)
 	}
 
 	sig, err := signMessage(acc.PrivKey, req.Message)
 	if err != nil {
+		p.GetDebugLogger().Log("method", p.Method(), "msg", "Failed to sign message", "error", err)
 		return nil, err
 	}
+
+	p.GetDebugLogger().Log("method", p.Method(), "msg", "Successfully signed message")
 
 	return eth.SignResponse("0x" + hex.EncodeToString(sig)), nil
 }
