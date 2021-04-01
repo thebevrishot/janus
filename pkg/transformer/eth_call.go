@@ -2,7 +2,7 @@ package transformer
 
 import (
 	"math/big"
-	"fmt"
+
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -70,7 +70,7 @@ func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} 
 	if qresp.ExecutionResult.Output == "" {
 
 		return &eth.JSONRPCError{
-			Message: fmt.Println("Revert: executionResult output is empty"),
+			Message: "Revert: executionResult output is empty",
 			Code:    -32000,
 		}
 
