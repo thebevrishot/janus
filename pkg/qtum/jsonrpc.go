@@ -35,6 +35,7 @@ const (
 	MethodGetAccountInfo        = "getaccountinfo"
 	MethodGenerateToAddress     = "generatetoaddress"
 	MethodListUnspent           = "listunspent"
+	MethodGetStorage            = "getstorage"
 	MethodCreateRawTx           = "createrawtransaction"
 	MethodSignRawTx             = "signrawtransactionwithwallet"
 	MethodSendRawTx             = "sendrawtransaction"
