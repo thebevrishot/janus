@@ -342,7 +342,7 @@ func (m *Method) GetAddressBalance(req *GetAddressBalanceRequest) (resp *GetAddr
 	return
 }
 
-func (m *Method) SendRawTransaction(req *SendRawTransactionRequest) (resp *SendRawTransactionResposne, err error) {
+func (m *Method) SendRawTransaction(req *SendRawTransactionRequest) (resp *SendRawTransactionResponse, err error) {
 	if err := m.Request(MethodSendRawTx, req, &resp); err != nil {
 		if m.IsDebugEnabled() {
 			m.GetDebugLogger().Log("function", "SendRawTransaction", "error", err)

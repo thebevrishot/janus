@@ -1268,8 +1268,21 @@ type (
 	// Presents hexed string of a raw transcation
 	SendRawTransactionRequest [1]string
 	// Presents hexed string of a transaction hash
-	SendRawTransactionResposne [1]string
+	SendRawTransactionResponse struct {
+		Result string `json:"result"`
+	}
 )
+
+func (r *SendRawTransactionResponse) UnmarshalJSON(data []byte) error {
+	var result string
+	err := json.Unmarshal(data, &result)
+	if err != nil {
+		return err
+	}
+
+	r.Result = result
+	return nil
+}
 
 // ========== ListUnspent ============= //
 type (
