@@ -14,7 +14,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x1b4"`), []byte(`true`)}
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	mockedClientDoer := newDoerMappedMock()
@@ -24,7 +24,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 	getBlockHashResponse := qtum.GetBlockHashResponse("0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331")
 	err = mockedClientDoer.AddResponse(2, qtum.MethodGetBlockHash, getBlockHashResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	getBlockHeaderResponse := qtum.GetBlockHeaderResponse{
@@ -49,7 +49,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(3, qtum.MethodGetBlockHeader, getBlockHeaderResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	getBlockResponse := qtum.GetBlockResponse{
@@ -81,7 +81,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(4, qtum.MethodGetBlock, getBlockResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	getTransactionResponse := qtum.GetTransactionResponse{
@@ -105,7 +105,7 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(2, qtum.MethodGetTransaction, getTransactionResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	decodedRawTransactionResponse := qtum.DecodedRawTransactionResponse{
@@ -130,13 +130,13 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(3, qtum.MethodDecodeRawTransaction, decodedRawTransactionResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	getTransactionReceiptResponse := qtum.GetTransactionReceiptResponse{}
 	err = mockedClientDoer.AddResponse(4, qtum.MethodGetTransactionReceipt, &getTransactionReceiptResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	// TODO: Get an actual response for this (only addresses are used in this test though)
@@ -159,14 +159,14 @@ func TestGetBlockByNumberRequest(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(4, qtum.MethodGetRawTransaction, &getRawTransactionResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetBlockByNumber{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := &eth.GetBlockByNumberResponse{
@@ -204,7 +204,7 @@ func TestGetBlockByNumberUnknownBlockRequest(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x1b4"`), []byte(`true`)}
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	mockedClientDoer := newDoerMappedMock()
@@ -213,14 +213,14 @@ func TestGetBlockByNumberUnknownBlockRequest(t *testing.T) {
 	unknownBlockResponse := qtum.GetErrorResponse(qtum.ErrInvalidParameter)
 	err = mockedClientDoer.AddError(4, qtum.MethodGetBlockHash, unknownBlockResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetBlockByNumber{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	if got != (*eth.GetBlockByNumberResponse)(nil) {
