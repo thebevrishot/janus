@@ -19,7 +19,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"`)}
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
@@ -46,7 +46,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(2, qtum.MethodGetTransaction, getTransactionResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	decodedRawTransactionResponse := qtum.DecodedRawTransactionResponse{
@@ -71,13 +71,13 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(3, qtum.MethodDecodeRawTransaction, decodedRawTransactionResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	getTransactionReceiptResponse := qtum.GetTransactionReceiptResponse{}
 	err = mockedClientDoer.AddResponse(4, qtum.MethodGetTransactionReceipt, &getTransactionReceiptResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	getBlockResponse := qtum.GetBlockResponse{
@@ -109,7 +109,7 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(4, qtum.MethodGetBlock, getBlockResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	// TODO: Get an actual response for this (only addresses are used in this test though)
@@ -132,14 +132,14 @@ func TestGetTransactionByHashRequest(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(4, qtum.MethodGetRawTransaction, &getRawTransactionResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request
 	proxyEth := ProxyETHGetTransactionByHash{qtumClient}
 	got, err := proxyEth.Request(request)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	want := &eth.GetTransactionByHashResponse{
@@ -167,7 +167,7 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 	requestParams := []json.RawMessage{[]byte(`"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"`)}
 	request, err := prepareEthRPCRequest(1, requestParams)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	mockedClientDoer := newDoerMappedMock()
 	qtumClient, err := createMockedClient(mockedClientDoer)
@@ -194,7 +194,7 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(2, qtum.MethodGetTransaction, getTransactionResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	decodedRawTransactionResponse := qtum.DecodedRawTransactionResponse{
@@ -219,7 +219,7 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(3, qtum.MethodDecodeRawTransaction, decodedRawTransactionResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	getBlockResponse := qtum.GetBlockResponse{
@@ -251,7 +251,7 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(4, qtum.MethodGetBlock, getBlockResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	// TODO: Get an actual response for this (only addresses are used in this test though)
@@ -274,7 +274,7 @@ func TestGetTransactionByHashRequest_PrecisionOverflow(t *testing.T) {
 	}
 	err = mockedClientDoer.AddResponse(4, qtum.MethodGetRawTransaction, &getRawTransactionResponse)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	//preparing proxy & executing request

@@ -201,7 +201,6 @@ func getBlockNumberByParam(p *qtum.Qtum, rawParam json.RawMessage, defaultVal bo
 }
 
 func isBytesOfString(v json.RawMessage) bool {
-	println(string(v))
 	dQuote := []byte{'"'}
 	if !bytes.HasPrefix(v, dQuote) && !bytes.HasSuffix(v, dQuote) {
 		return false

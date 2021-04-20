@@ -1415,6 +1415,27 @@ func (options ListUnspentQueryOptions) MarshalJSON() ([]byte, error) {
 	return json.Marshal(optionsObj)
 }
 
+// ======== getstorage ======== //
+type (
+	GetStorageRequest struct {
+		Address     string   `json:"address"`
+		BlockNumber *big.Int `json:"blockNumber"`
+		Index       *big.Int `json:"index"`
+	}
+	GetStorageResponse map[string]map[string]string
+)
+
+func (request *GetStorageRequest) MarshalJSON() ([]byte, error) {
+	params := []interface{}{request.Address}
+	if request.BlockNumber != nil {
+		params = append(params, request.BlockNumber)
+	}
+	if request.Index != nil {
+		params = append(params, request.Index)
+	}
+	return json.Marshal(params)
+}
+
 // ======== getaddressbalance ========= //
 type (
 

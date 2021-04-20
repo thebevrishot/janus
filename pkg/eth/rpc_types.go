@@ -618,6 +618,20 @@ type (
 	}
 )
 
+// ========== getstorage ============= //
+type (
+	GetStorageRequest struct {
+		Address     string
+		Index       string
+		BlockNumber string
+	}
+	GetStorageResponse string
+)
+
+func (r *GetStorageRequest) UnmarshalJSON(data []byte) error {
+	tmp := []interface{}{&r.Address, &r.Index, &r.BlockNumber}
+	return json.Unmarshal(data, &tmp)
+}
 
 // ======= eth_chainId ============= //
 type ChainIdResponse string

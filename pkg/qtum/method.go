@@ -329,6 +329,19 @@ func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse
 	return
 }
 
+func (m *Method) GetStorage(req *GetStorageRequest) (resp *GetStorageResponse, err error) {
+	if err := m.Request(MethodGetStorage, req, &resp); err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("function", "GetStorage", "error", err)
+		}
+		return nil, err
+	}
+	if m.IsDebugEnabled() {
+		m.GetDebugLogger().Log("function", "GetStorage", "request", marshalToString(req), "msg", "Successfully got storage")
+	}
+	return
+}
+
 func (m *Method) GetAddressBalance(req *GetAddressBalanceRequest) (resp *GetAddressBalanceResponse, err error) {
 	if err := m.Request(MethodGetAddressBalance, req, &resp); err != nil {
 		if m.IsDebugEnabled() {
