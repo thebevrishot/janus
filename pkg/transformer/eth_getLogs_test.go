@@ -106,3 +106,61 @@ func TestGetLogs(t *testing.T) {
 		)
 	}
 }
+
+func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
+	fromBlock, err := json.Marshal("0xfde")
+	toBlock, err := json.Marshal("0xfde")
+	address, err := json.Marshal("0xdb46f738bf32cdafb9a4a70eb8b44c76646bcaf0")
+
+	request := eth.GetLogsRequest{
+		FromBlock: fromBlock,
+		ToBlock:   toBlock,
+		Address:   address,
+		Topics: []interface{}{
+			"0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885",
+			nil,
+		},
+	}
+
+	translatedTopics, err := translateTopics(request.Topics)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(translatedTopics) != 2 {
+		t.Fatalf("Unexpected translated topic length: %d", len(translatedTopics))
+	}
+	if translatedTopics[1] != nil {
+		t.Fatalf("Expected nil for topic 2, got: %v", translatedTopics[1])
+	}
+
+	clientDoerMock := newDoerMappedMock()
+	qtumClient, err := createMockedClient(clientDoerMock)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//Prepare proxy & execute
+	//preparing proxy & executing
+	proxyEth := ProxyETHGetLogs{qtumClient}
+
+	qtumRequest, err := proxyEth.ToRequest(&request)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	qtumRawRequest, err := json.Marshal(qtumRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedRawRequest := `[4062,4062,{"addresses":["db46f738bf32cdafb9a4a70eb8b44c76646bcaf0"]},{"topics":["0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885",null]}]`
+
+	if expectedRawRequest != string(qtumRawRequest) {
+		t.Errorf(
+			"error\ninput: %s\nwant: %s\ngot: %s",
+			qtumRawRequest,
+			string(mustMarshalIndent(expectedRawRequest, "", "  ")),
+			string(mustMarshalIndent(string(qtumRawRequest), "", "  ")),
+		)
+	}
+}
