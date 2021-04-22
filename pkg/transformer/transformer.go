@@ -88,7 +88,7 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
 		ethCall,
 		&ProxyNetListening{Qtum: qtumRPCClient},
 		&ProxyETHPersonalUnlockAccount{},
-		&ProxyETHChainId{},
+		&ProxyETHChainId{Qtum: qtumRPCClient},
 		&ProxyETHBlockNumber{Qtum: qtumRPCClient},
 		&ProxyETHHashrate{Qtum: qtumRPCClient},
 		&ProxyETHMining{Qtum: qtumRPCClient},

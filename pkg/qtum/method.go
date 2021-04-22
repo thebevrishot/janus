@@ -329,6 +329,7 @@ func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse
 	return
 }
 
+
 func (m *Method) GetStorage(req *GetStorageRequest) (resp *GetStorageResponse, err error) {
 	if err := m.Request(MethodGetStorage, req, &resp); err != nil {
 		if m.IsDebugEnabled() {

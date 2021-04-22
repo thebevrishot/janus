@@ -1415,6 +1415,7 @@ func (options ListUnspentQueryOptions) MarshalJSON() ([]byte, error) {
 	return json.Marshal(optionsObj)
 }
 
+
 // ======== getstorage ======== //
 type (
 	GetStorageRequest struct {
