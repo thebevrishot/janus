@@ -29,10 +29,10 @@ func (p *ProxyETHNetVersion) request() (*eth.NetVersionResponse, error) {
 	case "regtest":
 		// See: https://github.com/trufflesuite/ganache/issues/112 for an idea on how to generate an ID.
 		// https://github.com/ethereum/wiki/wiki/JSON-RPC#net_version
-		networkID = "0x1024"
+		networkID = "113"
 	default:
 		// TODO: discuss policy? NetworkID has to be an integer, can't just return qtumresp.Chain.
-		networkID = "0x1024"
+		networkID = "81"
 		p.GetDebugLogger().Log("method", p.Method(), "msg", "Unknown chain "+qtumresp.Chain)
 	}
 
