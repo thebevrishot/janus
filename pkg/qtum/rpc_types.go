@@ -1423,9 +1423,9 @@ type (
 	}
 
 	GetAddressBalanceResponse struct {
-		Balance  decimal.Decimal `json:"balance"`
-		Received decimal.Decimal `json:"received"`
-		Immature decimal.Decimal `json:"immature"`
+		Balance  uint64 `json:"balance"`
+		Received uint64 `json:"received"`
+		Immature uint64 `json:"immature"`
 	}
 )
 
