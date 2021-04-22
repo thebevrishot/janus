@@ -102,6 +102,8 @@ func (c *Client) Request(method string, params interface{}, result interface{}) 
 				}
 				return err
 			}
+		} else {
+			break
 		}
 	}
 

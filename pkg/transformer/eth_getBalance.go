@@ -47,11 +47,14 @@ func (p *ProxyETHGetBalance) Request(rawreq *eth.JSONRPCRequest) (interface{}, e
 		qtumreq := qtum.GetAddressBalanceRequest{Address: base58Addr}
 		qtumresp, err := p.GetAddressBalance(&qtumreq)
 		if err != nil {
+			if err == qtum.ErrInvalidAddress {
+				// invalid address should return 0x0
+				return "0x0", nil
+			}
 			return nil, err
 		}
 
 		// 1 QTUM = 10 ^ 8 Satoshi
 		return hexutil.EncodeUint64(qtumresp.Balance), nil
-
 	}
 }
