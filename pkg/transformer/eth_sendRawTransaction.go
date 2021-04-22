@@ -36,7 +36,7 @@ func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionReques
 		req            = qtum.SendRawTransactionRequest([1]string{qtumHexedRawTx})
 	)
 
-	resp, err := p.Qtum.SendRawTransaction(&req)
+	qtumresp, err := p.Qtum.SendRawTransaction(&req)
 	if err != nil {
 		return eth.SendRawTransactionResponse{}, err
 	}
@@ -47,6 +47,7 @@ func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionReques
 		}
 	}
 
-	ethHexedTxHash := utils.AddHexPrefix(resp[0])
+	resp := *qtumresp
+	ethHexedTxHash := utils.AddHexPrefix(resp.Result)
 	return eth.SendRawTransactionResponse([1]string{ethHexedTxHash}), nil
 }

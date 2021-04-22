@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
@@ -134,7 +135,7 @@ func (p *ProxyETHSignTransaction) requestSendToContract(ethtx *eth.SendTransacti
 
 	fromAddr := utils.RemoveHexPrefix(ethtx.From)
 
-	acc := p.Qtum.Accounts.FindByHexAddress(fromAddr)
+	acc := p.Qtum.Accounts.FindByHexAddress(strings.ToLower(fromAddr))
 	if acc == nil {
 		return "", errors.Errorf("No such account: %s", fromAddr)
 	}
