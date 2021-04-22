@@ -97,7 +97,6 @@
       "hardhat": "^2.0.2",
       "hardhat-gas-reporter": "^1.0.0",
       "hardhat-typechain": "^0.3.3",
-      "husky": "^4.2.5",
       "lowdb": "1.0.0",
       "prettier": "^2.0.5",
       "prettier-plugin-solidity": "^1.0.0-alpha.53",
@@ -111,11 +110,6 @@
       "tslint-plugin-prettier": "^2.3.0",
       "typechain": "^4.0.0",
       "typescript": "^4.0.5"
-    },
-    "husky": {
-      "hooks": {
-        "pre-commit": "pretty-quick --staged"
-      }
     },
     "author": "Aave",
     "contributors": [
