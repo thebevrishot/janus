@@ -1459,7 +1459,7 @@ type (
 	GetAddressBalanceResponse struct {
 		Balance  uint64 `json:"balance"`
 		Received uint64 `json:"received"`
-		Immature uint64 `json:"immature"`
+		Immature int64 `json:"immature"`
 	}
 )
 
