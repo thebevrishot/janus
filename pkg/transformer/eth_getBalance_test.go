@@ -7,7 +7,6 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	"github.com/qtumproject/janus/pkg/qtum"
-	"github.com/shopspring/decimal"
 )
 
 func TestGetBalanceRequestAccount(t *testing.T) {
@@ -38,7 +37,7 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	getAddressBalanceResponse := qtum.GetAddressBalanceResponse{Balance: decimal.NewFromInt(10010000000000)}
+	getAddressBalanceResponse := qtum.GetAddressBalanceResponse{Balance: 10010000000000}
 	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodGetAddressBalance, getAddressBalanceResponse)
 	if err != nil {
 		t.Fatal(err)
