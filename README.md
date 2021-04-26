@@ -5,7 +5,7 @@ Janus is and old school ETH web3 HTTP provider that translates Ethereum JSON RPC
 
 - [Requirements](#requirements)
 - [Installation](#installation)
-- [How to use it](#how-to-use-it)
+- [How to use Janus as a Web3 provider](#how-to-use-janus-as-a-web3-provider)
 - [Support ETH methods](#support-eth-methods)
 - [Try to interact with contract](#try-to-interact-with-contract)
   - [Assumption parameters](#assumption-parameters)
