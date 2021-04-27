@@ -2,9 +2,9 @@
  "stats": {
   "suites": 893,
   "tests": 1515,
-  "passes": 1346,
+  "passes": 1342,
   "pending": 4,
-  "failures": 174
+  "failures": 179
  },
  "failures": [
   {
@@ -190,6 +190,14 @@
   {
    "fullTitle": "mod reverts with a 0 divisor",
    "title": "reverts with a 0 divisor"
+  },
+  {
+   "fullTitle": "msgData returns the relayed transaction original data",
+   "title": "returns the relayed transaction original data"
+  },
+  {
+   "fullTitle": "msgSender returns the relayed transaction original sender",
+   "title": "returns the relayed transaction original sender"
   },
   {
    "fullTitle": "mul reverts on multiplication overflow, positive operands",
@@ -486,6 +494,18 @@
   {
    "fullTitle": "usage scenario call",
    "title": "call"
+  },
+  {
+   "fullTitle": "valid signature \"after each\" hook for \"success\"",
+   "title": "\"after each\" hook for \"success\""
+  },
+  {
+   "fullTitle": "valid signature success",
+   "title": "success"
+  },
+  {
+   "fullTitle": "valid signature success",
+   "title": "success"
   },
   {
    "fullTitle": "when not sending balance initializes the proxy",
@@ -2298,10 +2318,6 @@
    "title": "when the dividend is smaller than the divisor"
   },
   {
-   "fullTitle": "msgData returns the relayed transaction original data",
-   "title": "returns the relayed transaction original data"
-  },
-  {
    "fullTitle": "msgData returns the transaction data when called from an EOA",
    "title": "returns the transaction data when called from an EOA"
   },
@@ -2316,10 +2332,6 @@
   {
    "fullTitle": "msgData returns the transaction sender when from another contract",
    "title": "returns the transaction sender when from another contract"
-  },
-  {
-   "fullTitle": "msgSender returns the relayed transaction original sender",
-   "title": "returns the relayed transaction original sender"
   },
   {
    "fullTitle": "msgSender returns the transaction sender when called from an EOA",
@@ -3384,14 +3396,6 @@
   {
    "fullTitle": "usage scenario call throw",
    "title": "call throw"
-  },
-  {
-   "fullTitle": "valid signature success",
-   "title": "success"
-  },
-  {
-   "fullTitle": "valid signature success",
-   "title": "success"
   },
   {
    "fullTitle": "verify returns false for a Merkle proof of invalid length",
