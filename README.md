@@ -14,6 +14,7 @@ Janus is and old school ETH web3 HTTP provider that translates Ethereum JSON RPC
   - [Get the transaction receipt](#get-the-transaction-receipt)
   - [Calling the set method](#calling-the-set-method)
   - [Calling the get method](#calling-the-get-method)
+- [Known issues](#known-issues)
 
 
 ## Requirements
@@ -250,3 +251,7 @@ $ curl --header 'Content-Type: application/json' --data \
   "id": "10"
 }
 ```
+
+## Known issues
+- Sending coins with the creation of a contract will cause a loss of coins
+- On a transfer of Qtum to a Qtum address, there is no receipt generated for such a transfer
