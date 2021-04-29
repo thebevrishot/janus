@@ -50,13 +50,15 @@ func EthValueToQtumAmount(val string) (decimal.Decimal, error) {
 		return decimal.NewFromFloat(0.0), errors.New("decimal.NewFromString was not a success")
 	}
 
-	amount := ethValDecimal.Mul(decimal.NewFromFloat(float64(1e-8)))
+	//Convert Wei to Qtum
+	//10000000000
+	amount := ethValDecimal.Mul(decimal.NewFromFloat(float64(1e-18)))
 
 	return amount, nil
 }
 
 func formatQtumAmount(amount decimal.Decimal) (string, error) {
-	decimalAmount := amount.Mul(decimal.NewFromFloat(float64(1e8)))
+	decimalAmount := amount.Mul(decimal.NewFromFloat(float64(1e18)))
 
 	//convert decimal to Integer
 	result := decimalAmount.BigInt()
