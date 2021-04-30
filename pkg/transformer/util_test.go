@@ -12,13 +12,13 @@ import (
 func TestEthValueToQtumAmount(t *testing.T) {
 	cases := []map[string]interface{}{
 		{
-			"in":   "0x64",
-			"want": decimal.NewFromFloat(0.000001),
+			"in":   "0xde0b6b3a7640000",
+			"want": decimal.NewFromFloat(1),
 		},
 		{
 
-			"in":   "0x1",
-			"want": decimal.NewFromFloat(0.00000001),
+			"in":   "0x6f05b59d3b20000",
+			"want": decimal.NewFromFloat(0.5),
 		},
 	}
 	for _, c := range cases {
@@ -35,7 +35,7 @@ func TestEthValueToQtumAmount(t *testing.T) {
 }
 
 func TestQtumAmountToEthValue(t *testing.T) {
-	in, want := decimal.NewFromFloat(0.000001), "0x64"
+	in, want := decimal.NewFromFloat(0.1), "0x16345785d8a0000"
 	got, err := formatQtumAmount(in)
 	if err != nil {
 		t.Error(err)
