@@ -310,7 +310,7 @@ func translateTopics(ethTopics []interface{}) ([]interface{}, error) {
 		case string:
 			topics = append(topics, utils.RemoveHexPrefix(topic.(string)))
 		case nil:
-			topics = append(topics, "null")
+			topics = append(topics, nil)
 		}
 	}
 
