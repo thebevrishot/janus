@@ -316,6 +316,20 @@ func (m *Method) GetAccountInfo(req *GetAccountInfoRequest) (resp *GetAccountInf
 	return
 }
 
+func (m *Method) GetAddressUTXOs(req *GetAddressUTXOsRequest) (*GetAddressUTXOsResponse, error) {
+	resp := new(GetAddressUTXOsResponse)
+	if err := m.Request(MethodGetAddressUTXOs, req, resp); err != nil {
+		if m.IsDebugEnabled() {
+			m.GetDebugLogger().Log("function", "GetAddressUTXOs", "error", err)
+		}
+		return nil, err
+	}
+	if m.IsDebugEnabled() {
+		m.GetDebugLogger().Log("function", "GetAddressUTXOs", "request", marshalToString(req), "msg", "Successfully got address UTXOs")
+	}
+	return resp, nil
+}
+
 func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse, err error) {
 	if err := m.Request(MethodListUnspent, req, &resp); err != nil {
 		if m.IsDebugEnabled() {
@@ -328,7 +342,6 @@ func (m *Method) ListUnspent(req *ListUnspentRequest) (resp *ListUnspentResponse
 	}
 	return
 }
-
 
 func (m *Method) GetStorage(req *GetStorageRequest) (resp *GetStorageResponse, err error) {
 	if err := m.Request(MethodGetStorage, req, &resp); err != nil {
@@ -355,7 +368,6 @@ func (m *Method) GetAddressBalance(req *GetAddressBalanceRequest) (resp *GetAddr
 	}
 	return
 }
-
 
 func (m *Method) SendRawTransaction(req *SendRawTransactionRequest) (resp *SendRawTransactionResponse, err error) {
 	if err := m.Request(MethodSendRawTx, req, &resp); err != nil {
