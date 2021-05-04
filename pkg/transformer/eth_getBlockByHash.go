@@ -1,6 +1,8 @@
 package transformer
 
 import (
+	"fmt"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
@@ -40,6 +42,9 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 	if err != nil {
 		return nil, errors.WithMessage(err, "couldn't get block")
 	}
+	nonce := hexutil.EncodeUint64(uint64(block.Nonce))
+	// left pad nonce with 0 to length 16, eg: 0x0000000000000042
+	nonce = utils.AddHexPrefix(fmt.Sprintf("%016v", utils.RemoveHexPrefix(nonce)))
 	resp := &eth.GetBlockByHashResponse{
 		// TODO: researching
 		// * If ETH block has pending status, then the following values must be null
@@ -75,7 +80,7 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 		// - Temporary set this value to be always zero
 		ExtraData: "0x0",
 
-		Nonce:            hexutil.EncodeUint64(uint64(block.Nonce)),
+		Nonce:            nonce,
 		Size:             hexutil.EncodeUint64(uint64(block.Size)),
 		Difficulty:       hexutil.EncodeUint64(uint64(blockHeader.Difficulty)),
 		StateRoot:        utils.AddHexPrefix(blockHeader.HashStateRoot),
