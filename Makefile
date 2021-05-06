@@ -120,6 +120,8 @@ qtumd_flags = \
 	-rpcbind=0.0.0.0:3889 \
 	-rpcallowip=0.0.0.0/0 \
 	-logevents \
+	-addrindex \
+	-reindex \
 	-txindex \
 	-rpcuser=${test_user} \
 	-rpcpassword=${test_user_passwd} \
