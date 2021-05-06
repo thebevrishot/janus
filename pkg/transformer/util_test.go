@@ -20,11 +20,19 @@ func TestEthValueToQtumAmount(t *testing.T) {
 			"in":   "0x6f05b59d3b20000",
 			"want": decimal.NewFromFloat(0.5),
 		},
+		{
+			"in":   "0x2540be400",
+			"want": decimal.NewFromFloat(0.00000001),
+		},
+		{
+			"in":   "0x1",
+			"want": decimal.NewFromInt(0),
+		},
 	}
 	for _, c := range cases {
 		in := c["in"].(string)
 		want := c["want"].(decimal.Decimal)
-		got, err := EthValueToQtumAmount(in)
+		got, err := EthValueToQtumAmount(in, MinimumGas)
 		if err != nil {
 			t.Error(err)
 		}
@@ -36,6 +44,17 @@ func TestEthValueToQtumAmount(t *testing.T) {
 
 func TestQtumAmountToEthValue(t *testing.T) {
 	in, want := decimal.NewFromFloat(0.1), "0x16345785d8a0000"
+	got, err := formatQtumAmount(in)
+	if err != nil {
+		t.Error(err)
+	}
+	if got != want {
+		t.Errorf("in: %v, want: %s, got: %s", in, want, got)
+	}
+}
+
+func TestLowestQtumAmountToEthValue(t *testing.T) {
+	in, want := decimal.NewFromFloat(0.00000001), "0x2540be400"
 	got, err := formatQtumAmount(in)
 	if err != nil {
 		t.Error(err)

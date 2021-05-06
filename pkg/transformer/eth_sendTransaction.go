@@ -56,7 +56,7 @@ func (p *ProxyETHSendTransaction) requestSendToContract(ethtx *eth.SendTransacti
 	amount := decimal.NewFromFloat(0.0)
 	if ethtx.Value != "" {
 		var err error
-		amount, err = EthValueToQtumAmount(ethtx.Value)
+		amount, err = EthValueToQtumAmount(ethtx.Value, ZeroSatoshi)
 		if err != nil {
 			return nil, errors.Wrap(err, "EthValueToQtumAmount:")
 		}
@@ -105,7 +105,7 @@ func (p *ProxyETHSendTransaction) requestSendToAddress(req *eth.SendTransactionR
 		return nil, err
 	}
 
-	amount, err := EthValueToQtumAmount(req.Value)
+	amount, err := EthValueToQtumAmount(req.Value, ZeroSatoshi)
 	if err != nil {
 		return nil, err
 	}
