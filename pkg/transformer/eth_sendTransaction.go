@@ -107,7 +107,7 @@ func (p *ProxyETHSendTransaction) requestSendToAddress(req *eth.SendTransactionR
 
 	amount, err := EthValueToQtumAmount(req.Value, ZeroSatoshi)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "EthValueToQtumAmount:")
 	}
 
 	p.GetDebugLogger().Log("msg", "successfully converted from wei to QTUM", "wei", req.Value, "qtum", amount)

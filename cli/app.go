@@ -28,6 +28,8 @@ var (
 
 	devMode        = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
 	singleThreaded = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
+
+	generateToAddressTo = app.Flag("generateToAddressTo", "[regtest only] configure address to mine blocks to when mining new transactions in blocks").Envar("GENERATE_TO_ADDRESS").Default("").String()
 )
 
 func loadAccounts(r io.Reader, l log.Logger) qtum.Accounts {
@@ -73,7 +75,14 @@ func action(pc *kingpin.ParseContext) error {
 
 	isMain := *qtumNetwork == qtum.ChainMain
 
-	qtumJSONRPC, err := qtum.NewClient(isMain, *qtumRPC, qtum.SetDebug(*devMode), qtum.SetLogger(logger), qtum.SetAccounts(accounts))
+	qtumJSONRPC, err := qtum.NewClient(
+		isMain,
+		*qtumRPC,
+		qtum.SetDebug(*devMode),
+		qtum.SetLogger(logger),
+		qtum.SetAccounts(accounts),
+		qtum.SetGenerateToAddress(*generateToAddressTo),
+	)
 	if err != nil {
 		return errors.Wrap(err, "jsonrpc#New")
 	}
@@ -83,12 +92,24 @@ func action(pc *kingpin.ParseContext) error {
 		return errors.Wrap(err, "qtum#New")
 	}
 
-	t, err := transformer.New(qtumClient, transformer.DefaultProxies(qtumClient), transformer.SetDebug(*devMode), transformer.SetLogger(logger))
+	t, err := transformer.New(
+		qtumClient,
+		transformer.DefaultProxies(qtumClient),
+		transformer.SetDebug(*devMode),
+		transformer.SetLogger(logger),
+	)
 	if err != nil {
 		return errors.Wrap(err, "transformer#New")
 	}
 
-	s, err := server.New(qtumClient, t, addr, server.SetLogger(logger), server.SetDebug(*devMode), server.SetSingleThreaded(*singleThreaded))
+	s, err := server.New(
+		qtumClient,
+		t,
+		addr,
+		server.SetLogger(logger),
+		server.SetDebug(*devMode),
+		server.SetSingleThreaded(*singleThreaded),
+	)
 	if err != nil {
 		return errors.Wrap(err, "server#New")
 	}
