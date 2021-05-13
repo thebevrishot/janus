@@ -18,6 +18,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+var ZeroSatoshi = decimal.NewFromInt(0)
+var OneSatoshi = decimal.NewFromFloat(0.00000001)
+var MinimumGas = decimal.NewFromFloat(0.0000004)
+
 type EthGas interface {
 	GasHex() string
 	GasPriceHex() string
@@ -26,37 +30,45 @@ type EthGas interface {
 func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 	gasLimit = g.(*eth.SendTransactionRequest).Gas.Int
 
-	gasPriceDecimal, err := EthValueToQtumAmount(g.GasPriceHex())
+	gasPriceDecimal, err := EthValueToQtumAmount(g.GasPriceHex(), MinimumGas)
 	if err != nil {
 		return nil, "0.0", err
+	}
+	if gasPriceDecimal.LessThan(MinimumGas) {
+		gasPriceDecimal = MinimumGas
 	}
 	gasPrice = fmt.Sprintf("%v", gasPriceDecimal)
 
 	return
 }
 
-func EthValueToQtumAmount(val string) (decimal.Decimal, error) {
+func EthValueToQtumAmount(val string, defaultValue decimal.Decimal) (decimal.Decimal, error) {
 	if val == "" {
-		return decimal.NewFromFloat(0.0000004), nil
+		return defaultValue, nil
 	}
 
 	ethVal, err := utils.DecodeBig(val)
 	if err != nil {
-		return decimal.NewFromFloat(0.0), err
+		return ZeroSatoshi, err
 	}
 
 	ethValDecimal, err := decimal.NewFromString(ethVal.String())
 	if err != nil {
-		return decimal.NewFromFloat(0.0), errors.New("decimal.NewFromString was not a success")
+		return ZeroSatoshi, errors.New("decimal.NewFromString was not a success")
 	}
 
-	amount := ethValDecimal.Mul(decimal.NewFromFloat(float64(1e-8)))
+	// Convert Wei to Qtum
+	// 10000000000
+	// one satoshi is 0.00000001
+	// we need to drop precision for values smaller than that
+	maximumPrecision := ethValDecimal.Mul(decimal.NewFromFloat(float64(1e-8))).Floor()
+	amount := maximumPrecision.Mul(decimal.NewFromFloat(float64(1e-10)))
 
 	return amount, nil
 }
 
 func formatQtumAmount(amount decimal.Decimal) (string, error) {
-	decimalAmount := amount.Mul(decimal.NewFromFloat(float64(1e8)))
+	decimalAmount := amount.Mul(decimal.NewFromFloat(float64(1e18)))
 
 	//convert decimal to Integer
 	result := decimalAmount.BigInt()

@@ -20,6 +20,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var FLAG_GENERATE_ADDRESS_TO = "REGTEST_GENERATE_ADDRESS_TO"
+
 var maximumRequestTime = 10000
 var maximumBackoff = (2 * time.Second).Milliseconds()
 
@@ -39,6 +41,9 @@ type Client struct {
 	id      *big.Int
 	idStep  *big.Int
 	idMutex sync.Mutex
+
+	mutex *sync.RWMutex
+	flags map[string]interface{}
 }
 
 func ReformatJSON(input []byte) ([]byte, error) {
@@ -64,6 +69,8 @@ func NewClient(isMain bool, rpcURL string, opts ...func(*Client) error) (*Client
 		debug:  false,
 		id:     big.NewInt(0),
 		idStep: big.NewInt(1),
+		mutex:  &sync.RWMutex{},
+		flags:  make(map[string]interface{}),
 	}
 
 	for _, opt := range opts {
@@ -209,6 +216,35 @@ func (c *Client) do(body io.Reader) ([]byte, error) {
 	return reader, nil
 }
 
+func (c *Client) SetFlag(key string, value interface{}) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.setFlagImpl(key, value)
+}
+
+func (c *Client) setFlagImpl(key string, value interface{}) {
+	c.flags[key] = value
+}
+
+func (c *Client) GetFlag(key string) interface{} {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.getFlagImpl(key)
+}
+
+func (c *Client) getFlagImpl(key string) interface{} {
+	return c.flags[key]
+}
+
+func (c *Client) GetFlagString(key string) *string {
+	value := c.GetFlag(key)
+	if value == nil {
+		return nil
+	}
+	result := fmt.Sprintf("%v", value)
+	return &result
+}
+
 type doer interface {
 	Do(*http.Request) (*http.Response, error)
 }
@@ -237,6 +273,15 @@ func SetLogger(l log.Logger) func(*Client) error {
 func SetAccounts(accounts Accounts) func(*Client) error {
 	return func(c *Client) error {
 		c.Accounts = accounts
+		return nil
+	}
+}
+
+func SetGenerateToAddress(address string) func(*Client) error {
+	return func(c *Client) error {
+		if address != "" {
+			c.SetFlag(FLAG_GENERATE_ADDRESS_TO, address)
+		}
 		return nil
 	}
 }

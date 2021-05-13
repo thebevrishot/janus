@@ -1415,7 +1415,6 @@ func (options ListUnspentQueryOptions) MarshalJSON() ([]byte, error) {
 	return json.Marshal(optionsObj)
 }
 
-
 // ======== getstorage ======== //
 type (
 	GetStorageRequest struct {
@@ -1460,7 +1459,7 @@ type (
 	GetAddressBalanceResponse struct {
 		Balance  uint64 `json:"balance"`
 		Received uint64 `json:"received"`
-		Immature int64 `json:"immature"`
+		Immature int64  `json:"immature"`
 	}
 )
 
@@ -1470,8 +1469,6 @@ func (req *GetAddressBalanceRequest) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(params)
 }
-
-
 
 // ======== getpeerinfo ========= //
 type (
@@ -1579,4 +1576,3 @@ type (
 		Score   int64  `json:"score"`
 	}
 )
-

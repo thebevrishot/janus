@@ -254,4 +254,9 @@ $ curl --header 'Content-Type: application/json' --data \
 
 ## Known issues
 - Sending coins with the creation of a contract will cause a loss of coins
+  - This is a Qtum intentional deisgn decision and will not change
 - On a transfer of Qtum to a Qtum address, there is no receipt generated for such a transfer
+- When converting from WEI -> QTUM, precision is lost due to QTUM's smallest demonination being 1 satoshi.
+  - 1 satoshi = 0.00000001 QTUM = 10000000000 wei
+- QTUM's minimum gas price is 40 satoshi
+  - When specifying a gas price in wei lower than that, the minimum gas price will be used (40 satoshi)

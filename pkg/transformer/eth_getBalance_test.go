@@ -37,7 +37,7 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	getAddressBalanceResponse := qtum.GetAddressBalanceResponse{Balance: 10010000000000}
+	getAddressBalanceResponse := qtum.GetAddressBalanceResponse{Balance: uint64(100000000), Received: uint64(100000000), Immature: int64(0)}
 	err = mockedClientDoer.AddResponseWithRequestID(3, qtum.MethodGetAddressBalance, getAddressBalanceResponse)
 	if err != nil {
 		t.Fatal(err)
@@ -54,7 +54,7 @@ func TestGetBalanceRequestAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := string("0x91aa27e8400") //(100000+100)*10^8 == 10010000000000 == 0x91AA27E8400
+	want := string("0xde0b6b3a7640000") //1 Qtum represented in Wei
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
