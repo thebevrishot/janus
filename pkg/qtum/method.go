@@ -243,18 +243,28 @@ func (m *Method) GetBlock(hash string) (resp *GetBlockResponse, err error) {
 }
 
 func (m *Method) Generate(blockNum int, maxTries *int) (resp GenerateResponse, err error) {
-	if len(m.Accounts) == 0 {
+	generateToAccount := m.GetFlagString(FLAG_GENERATE_ADDRESS_TO)
+
+	if len(m.Accounts) == 0 && generateToAccount == nil {
 		return nil, errors.New("you must specify QTUM accounts")
 	}
 
-	acc := Account{m.Accounts[0]}
+	var qAddress string
 
-	qAddress, err := acc.ToBase58Address(m.isMain)
-	if err != nil {
-		if m.IsDebugEnabled() {
-			m.GetDebugLogger().Log("function", "Generate", "msg", "Error getting address for account", "error", err)
+	if generateToAccount == nil {
+		acc := Account{m.Accounts[0]}
+
+		qAddress, err = acc.ToBase58Address(m.isMain)
+		if err != nil {
+			if m.IsDebugEnabled() {
+				m.GetDebugLogger().Log("function", "Generate", "msg", "Error getting address for account", "error", err)
+			}
+			return nil, err
 		}
-		return nil, err
+		m.GetDebugLogger().Log("function", "Generate", "msg", "generating to account 0", "account", qAddress)
+	} else {
+		qAddress = *generateToAccount
+		m.GetDebugLogger().Log("function", "Generate", "msg", "generating to specified account", "account", qAddress)
 	}
 
 	req := GenerateRequest{

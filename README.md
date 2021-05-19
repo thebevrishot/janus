@@ -5,7 +5,10 @@ Janus is and old school ETH web3 HTTP provider that translates Ethereum JSON RPC
 
 - [Requirements](#requirements)
 - [Installation](#installation)
+  - [SSL](#ssl)
+  - [Self-signed SSL](#self-signed-ssl)
 - [How to use Janus as a Web3 provider](#how-to-use-janus-as-a-web3-provider)
+- [How to add Janus to Metamask](#how-to-add-janus-to-metamask)
 - [Support ETH methods](#support-eth-methods)
 - [Try to interact with contract](#try-to-interact-with-contract)
   - [Assumption parameters](#assumption-parameters)
@@ -49,30 +52,41 @@ Note that Janus will use the hex address for the test base58 Qtum addresses that
   - qUbxboqjBRp96j3La8D1RYkyqx5uQbJPoW (hex 0x7926223070547d2d15b2ef5e7383e541c338ffe9 )
   - qLn9vqbr2Gx3TsVR9QyTVB5mrMoh4x43Uf (hex 0x2352be3db3177f0a07efbe6da5857615b8c9901d )
 
+### SSL
+SSL keys and certificates go inside the https folder (mounted at `/https` in the container) and use `--https-key` and `--https-cert` parameters. If the specified files do not exist, it will fall back to http.
+
+### Self-signed SSL
+To generate self-signed certificates with docker for local development the following script will generate SSL certificates and drop them into the https folder
+
+```
+$ make docker-configure-https
+```
+
 ## How to use Janus as a Web3 provider
 
 Once Janus is successfully running, all one has to do is point your desired framework to Janus in order to use it as your web3 provider. Lets say you want to use truffle for example, in this case all you have to do is go to your truffle-config.js file and add janus as a network:
 ```
-module.exports  =  {
-
-networks:  {
-
-	janus:  {
-
-		host:  "127.0.0.1",
-
-		port:  23889, 
-
-		network_id:  "*",
-
-		gasPrice:  "0x64"
-	},
-	...
-},
+module.exports = {
+  networks: {
+    janus: {
+      host: "127.0.0.1",
+      port: 23889,
+      network_id: "*",
+      gasPrice: "0x64"
+    },
+    ...
+  },
 ...
 }
 ```
- 
+
+## How to add Janus to Metamask
+
+Getting Janus to work with Metamask requires two things
+- [Configuring Metamask to point to Janus](metamask)
+- Locally signing transactions through Metamask
+  - (This is being worked on and currently is not implemented yet)
+
 ## Supported ETH methods
 
 -   web3_clientVersion
@@ -80,6 +94,7 @@ networks:  {
 -   net_version
 -   net_listening
 -   net_peerCount
+-   eth_protocolVersion
 -   eth_chainId
 -   eth_mining
 -   eth_hashrate
@@ -254,4 +269,9 @@ $ curl --header 'Content-Type: application/json' --data \
 
 ## Known issues
 - Sending coins with the creation of a contract will cause a loss of coins
+  - This is a Qtum intentional deisgn decision and will not change
 - On a transfer of Qtum to a Qtum address, there is no receipt generated for such a transfer
+- When converting from WEI -> QTUM, precision is lost due to QTUM's smallest demonination being 1 satoshi.
+  - 1 satoshi = 0.00000001 QTUM = 10000000000 wei
+- QTUM's minimum gas price is 40 satoshi
+  - When specifying a gas price in wei lower than that, the minimum gas price will be used (40 satoshi)

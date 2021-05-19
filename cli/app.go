@@ -25,9 +25,13 @@ var (
 	qtumNetwork = app.Flag("qtum-network", "").Envar("QTUM_NETWORK").Default("regtest").String()
 	bind        = app.Flag("bind", "network interface to bind to (e.g. 0.0.0.0) ").Default("localhost").String()
 	port        = app.Flag("port", "port to serve proxy").Default("23889").Int()
+	httpsKey    = app.Flag("https-key", "https keyfile").Default("").String()
+	httpsCert   = app.Flag("https-cert", "https certificate").Default("").String()
 
 	devMode        = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
 	singleThreaded = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
+
+	generateToAddressTo = app.Flag("generateToAddressTo", "[regtest only] configure address to mine blocks to when mining new transactions in blocks").Envar("GENERATE_TO_ADDRESS").Default("").String()
 )
 
 func loadAccounts(r io.Reader, l log.Logger) qtum.Accounts {
@@ -73,7 +77,14 @@ func action(pc *kingpin.ParseContext) error {
 
 	isMain := *qtumNetwork == qtum.ChainMain
 
-	qtumJSONRPC, err := qtum.NewClient(isMain, *qtumRPC, qtum.SetDebug(*devMode), qtum.SetLogger(logger), qtum.SetAccounts(accounts))
+	qtumJSONRPC, err := qtum.NewClient(
+		isMain,
+		*qtumRPC,
+		qtum.SetDebug(*devMode),
+		qtum.SetLogger(logger),
+		qtum.SetAccounts(accounts),
+		qtum.SetGenerateToAddress(*generateToAddressTo),
+	)
 	if err != nil {
 		return errors.Wrap(err, "jsonrpc#New")
 	}
@@ -83,17 +94,42 @@ func action(pc *kingpin.ParseContext) error {
 		return errors.Wrap(err, "qtum#New")
 	}
 
-	t, err := transformer.New(qtumClient, transformer.DefaultProxies(qtumClient), transformer.SetDebug(*devMode), transformer.SetLogger(logger))
+	t, err := transformer.New(
+		qtumClient,
+		transformer.DefaultProxies(qtumClient),
+		transformer.SetDebug(*devMode),
+		transformer.SetLogger(logger),
+	)
 	if err != nil {
 		return errors.Wrap(err, "transformer#New")
 	}
 
-	s, err := server.New(qtumClient, t, addr, server.SetLogger(logger), server.SetDebug(*devMode), server.SetSingleThreaded(*singleThreaded))
+	httpsKeyFile := getEmptyStringIfFileDoesntExist(*httpsKey, logger)
+	httpsCertFile := getEmptyStringIfFileDoesntExist(*httpsCert, logger)
+
+	s, err := server.New(
+		qtumClient,
+		t,
+		addr,
+		server.SetLogger(logger),
+		server.SetDebug(*devMode),
+		server.SetSingleThreaded(*singleThreaded),
+		server.SetHttps(httpsKeyFile, httpsCertFile),
+	)
 	if err != nil {
 		return errors.Wrap(err, "server#New")
 	}
 
 	return s.Start()
+}
+
+func getEmptyStringIfFileDoesntExist(file string, l log.Logger) string {
+	_, err := os.Stat(file)
+	if os.IsNotExist(err) {
+		l.Log("file does not exist", file)
+		return ""
+	}
+	return file
 }
 
 func Run() {
