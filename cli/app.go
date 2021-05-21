@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/notifier"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/server"
 	"github.com/qtumproject/janus/pkg/transformer"
@@ -94,15 +96,18 @@ func action(pc *kingpin.ParseContext) error {
 		return errors.Wrap(err, "qtum#New")
 	}
 
+	agent := notifier.NewAgent(context.Background(), qtumClient, nil)
+	proxies := transformer.DefaultProxies(qtumClient, agent)
 	t, err := transformer.New(
 		qtumClient,
-		transformer.DefaultProxies(qtumClient),
+		proxies,
 		transformer.SetDebug(*devMode),
 		transformer.SetLogger(logger),
 	)
 	if err != nil {
 		return errors.Wrap(err, "transformer#New")
 	}
+	agent.SetTransformer(t)
 
 	httpsKeyFile := getEmptyStringIfFileDoesntExist(*httpsKey, logger)
 	httpsCertFile := getEmptyStringIfFileDoesntExist(*httpsCert, logger)

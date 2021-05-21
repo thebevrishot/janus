@@ -2,19 +2,34 @@ package notifier
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/utils"
 )
 
-func NewAgent(ctx context.Context, qtum *qtum.Qtum) *Agent {
+// Allows dependency injection of eth rpc calls as the transformer package imports this package
+type Transformer interface {
+	Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error)
+}
+
+func NewAgent(ctx context.Context, qtum *qtum.Qtum, transformer Transformer) *Agent {
+	if ctx == nil {
+		panic("ctx cannot be nil")
+	}
+	if qtum == nil {
+		panic("qtum cannot be nil")
+	}
 	agent := &Agent{
 		qtum:          qtum,
+		transformer:   transformer,
 		ctx:           ctx,
 		mutex:         sync.RWMutex{},
 		running:       false,
@@ -43,8 +58,42 @@ func newSubscriptionRegistry() *subscriptionRegistry {
 	}
 }
 
+func (s *subscriptionRegistry) forEach(do func(*subscriptionInformation)) {
+	s.mutex.RLock()
+	subscriptions := make([]*subscriptionInformation, 0, len(s.subscriptions))
+	for _, subscription := range s.subscriptions {
+		subscriptions = append(subscriptions, subscription)
+	}
+	s.mutex.RUnlock()
+	for index := range subscriptions {
+		subscription := subscriptions[index]
+		do(subscription)
+	}
+}
+
+func (s *subscriptionRegistry) Count() int {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	return s.subscriptionCount
+}
+
+func (s *subscriptionRegistry) SendAll(message interface{}) {
+	send := func(s *subscriptionInformation) {
+		// send writes to a queue that can block when full if a client has a lot of responses queued up
+		// that could potentially affect other clients so we run this in a goroutine
+		subscription := &eth.EthSubscription{
+			SubscriptionID: s.Subscription.id,
+			Result:         message,
+		}
+		go s.Send(subscription)
+	}
+	s.forEach(send)
+}
+
 type Agent struct {
 	qtum          *qtum.Qtum
+	transformer   Transformer
 	ctx           context.Context
 	mutex         sync.RWMutex
 	running       bool
@@ -53,6 +102,12 @@ type Agent struct {
 	logs          *subscriptionRegistry
 	newPendingTxs *subscriptionRegistry
 	syncing       *subscriptionRegistry
+}
+
+func (a *Agent) SetTransformer(transformer Transformer) {
+	a.mutex.Lock()
+	a.transformer = transformer
+	a.mutex.Unlock()
 }
 
 func (a *Agent) Stop() {
@@ -207,6 +262,8 @@ func (a *Agent) run() {
 		a.mutex.Lock()
 		defer a.mutex.Unlock()
 
+		a.qtum.GetDebugLogger().Log("msg", "Agent exited subscription processing thread")
+
 		a.running = false
 	}()
 
@@ -224,22 +281,61 @@ func (a *Agent) run() {
 		}
 	}
 
-	return
-
 	// TODO: Other subscription types
+	a.qtum.GetDebugLogger().Log("msg", "Agent started subscription processing thread")
 
 	for {
 		// infinite loop while we have subscriptions
-		subscriptionCount := a.subscriptionCount(true)
-		if subscriptionCount == 0 {
+		newHeadsSubscriptions := a.newHeads.Count()
+		if newHeadsSubscriptions == 0 {
 			return
 		}
 
-		blockchainInfo, err := a.qtum.GetBlockChainInfo()
-		if err != nil {
-			latestBlock := blockchainInfo.Blocks
-			if latestBlock > lastBlock {
-
+		a.mutex.RLock()
+		transformer := a.transformer
+		a.mutex.RUnlock()
+		if transformer == nil {
+			a.qtum.GetErrorLogger().Log("msg", "Agent does not have access to eth transformer, cannot process 'newHeads' subscriptions")
+		} else {
+			blockchainInfo, err := a.qtum.GetBlockChainInfo()
+			if err != nil {
+				a.qtum.GetErrorLogger().Log("msg", "Failure getting blockchaininfo", "err", err)
+			} else {
+				latestBlock := blockchainInfo.Blocks
+				if lastBlock == 0 {
+					// prevent sending the current head to the first client connected
+					lastBlock = latestBlock
+				} else if latestBlock > lastBlock {
+					a.qtum.GetDebugLogger().Log("msg", "New head detected", "block", latestBlock)
+					// get the latest block as an eth_getBlockByHash request
+					params, err := json.Marshal([]interface{}{
+						utils.AddHexPrefix(blockchainInfo.Bestblockhash),
+						false,
+					})
+					if err != nil {
+						panic(fmt.Sprintf("Failed to serialize eth_getBlockByHash request parameters: %s", err))
+					}
+					result, err := transformer.Transform(&eth.JSONRPCRequest{
+						JSONRPC: "2.0",
+						Method:  "eth_getBlockByHash",
+						Params:  params,
+					}, nil)
+					if err != nil {
+						a.qtum.GetErrorLogger().Log("msg", "Failed to eth_getBlockByHash", "hash", blockchainInfo.Bestblockhash, "err", err)
+					} else {
+						getBlockByHashResponse, ok := result.(*eth.GetBlockByHashResponse)
+						if !ok {
+							a.qtum.GetErrorLogger().Log("msg", "Failed to eth_getBlockByHash, unexpected response type", "hash", blockchainInfo.Bestblockhash)
+						} else {
+							lastBlock = latestBlock
+							// notify newHead
+							newHeadRespose := eth.NewEthSubscriptionNewHeadResponse(getBlockByHashResponse)
+							a.newHeads.SendAll(newHeadRespose)
+						}
+					}
+				} else {
+					a.qtum.GetDebugLogger().Log("msg", "Detected same head", "block", latestBlock)
+				}
 			}
 		}
 

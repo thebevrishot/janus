@@ -17,10 +17,10 @@ var UnsubSignal = new(struct{})
 type UnsubscribeCallback func(string)
 
 type Subscription struct {
+	*Notifier
 	id          string
 	once        sync.Once
 	unsubscribe UnsubscribeCallback
-	notifier    *Notifier
 }
 
 func NewSubscription(notifier *Notifier, callback UnsubscribeCallback) (*Subscription, error) {
@@ -29,14 +29,14 @@ func NewSubscription(notifier *Notifier, callback UnsubscribeCallback) (*Subscri
 		return nil, err
 	}
 	return &Subscription{
-		id:   id,
-		once: sync.Once{},
-		unsubscribe: func(id string) {
+		notifier,
+		id,
+		sync.Once{},
+		func(id string) {
 			callback(id)
 			// call in goroutine as this can be called from Unsubscribe and end in a deadlock
 			go notifier.Unsubscribe(id)
 		},
-		notifier: notifier,
 	}, nil
 }
 

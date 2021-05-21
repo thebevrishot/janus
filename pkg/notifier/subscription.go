@@ -107,7 +107,7 @@ func (s *subscriptionInformation) run() {
 					if _, ok := sentHashes[hash]; !ok {
 						sentHashes[hash] = true
 						s.qtum.GetDebugLogger().Log("subscriptionId", s.id, "msg", "notifying of logs")
-						s.notifier.Send(subscription)
+						s.Send(subscription)
 					}
 				}
 			}

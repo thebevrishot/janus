@@ -1,8 +1,6 @@
 package transformer
 
 import (
-	"context"
-
 	"github.com/go-kit/kit/log"
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
@@ -87,9 +85,8 @@ func (t *Transformer) IsDebugEnabled() bool {
 }
 
 // DefaultProxies are the default proxy methods made available
-func DefaultProxies(qtumRPCClient *qtum.Qtum) []ETHProxy {
+func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy {
 	filter := eth.NewFilterSimulator()
-	agent := notifier.NewAgent(context.Background(), qtumRPCClient)
 	getFilterChanges := &ProxyETHGetFilterChanges{Qtum: qtumRPCClient, filter: filter}
 	ethCall := &ProxyETHCall{Qtum: qtumRPCClient}
 

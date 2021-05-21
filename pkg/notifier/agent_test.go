@@ -14,7 +14,7 @@ import (
 	"github.com/qtumproject/janus/pkg/qtum"
 )
 
-func TestAgentAddSubscription(t *testing.T) {
+func TestAgentAddSubscriptionLogs(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -42,7 +42,7 @@ func TestAgentAddSubscription(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	agent := NewAgent(ctx, mockedClient)
+	agent := NewAgent(ctx, mockedClient, nil)
 
 	notifierContext, cancelNotifierContext := context.WithCancel(ctx)
 
@@ -146,4 +146,7 @@ func TestAgentAddSubscription(t *testing.T) {
 	if notifier.Unsubscribe(id) {
 		t.Fatalf("Double unsubscribe to subscription %s worked, it shouldn't", id)
 	}
+}
+
+func TestAgentAddSubscriptionNewHeads(t *testing.T) {
 }
