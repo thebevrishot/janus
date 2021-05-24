@@ -1,5 +1,5 @@
 # Qtum adapter to Ethereum JSON RPC
-Janus is and old school ETH web3 HTTP provider that translates Ethereum JSON RPC calls into their equivalent Qtum RPC call/s. The current version self hosts the keys and supports web sockets.
+Janus is a web3 proxy adapter that can be used as a web3 provider to interact with Qtum. It supports HTTP(s) and websockets and the current version enables self hosting of keys.
 
 # Table of Contents
 
