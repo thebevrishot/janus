@@ -15,12 +15,19 @@ import (
 	"github.com/qtumproject/janus/pkg/utils"
 )
 
+var agentConfigNewHeadsKey = "newHeadsInterval"
+var agentConfigNewHeadsInterval = 10 * time.Second
+
 // Allows dependency injection of eth rpc calls as the transformer package imports this package
 type Transformer interface {
 	Transform(req *eth.JSONRPCRequest, c echo.Context) (interface{}, error)
 }
 
 func NewAgent(ctx context.Context, qtum *qtum.Qtum, transformer Transformer) *Agent {
+	return newAgentWithConfiguration(ctx, qtum, transformer, make(map[string]interface{}))
+}
+
+func newAgentWithConfiguration(ctx context.Context, qtum *qtum.Qtum, transformer Transformer, configuration map[string]interface{}) *Agent {
 	if ctx == nil {
 		panic("ctx cannot be nil")
 	}
@@ -33,6 +40,7 @@ func NewAgent(ctx context.Context, qtum *qtum.Qtum, transformer Transformer) *Ag
 		ctx:           ctx,
 		mutex:         sync.RWMutex{},
 		running:       false,
+		config:        configuration,
 		stop:          make(chan interface{}, 1000),
 		newHeads:      newSubscriptionRegistry(),
 		logs:          newSubscriptionRegistry(),
@@ -98,6 +106,7 @@ type Agent struct {
 	mutex         sync.RWMutex
 	running       bool
 	stop          chan interface{}
+	config        map[string]interface{}
 	newHeads      *subscriptionRegistry
 	logs          *subscriptionRegistry
 	newPendingTxs *subscriptionRegistry
@@ -120,6 +129,17 @@ func (a *Agent) Stop() {
 	closeSubscriptionRegistry(a.logs)
 	closeSubscriptionRegistry(a.newPendingTxs)
 	closeSubscriptionRegistry(a.syncing)
+}
+
+func (a *Agent) setConfigValue(key string, value interface{}) {
+	a.config[key] = value
+}
+
+func (a *Agent) getConfigValue(key string, defaultValue interface{}) interface{} {
+	if value, ok := a.config[key]; ok {
+		return value
+	}
+	return defaultValue
 }
 
 func closeSubscriptionRegistry(registry *subscriptionRegistry) {
@@ -249,6 +269,12 @@ func (a *Agent) NewSubscription(notifier *Notifier, params *eth.EthSubscriptionR
 	return subscription.id, nil
 }
 
+func (a *Agent) isRunning() bool {
+	a.mutex.RLock()
+	defer a.mutex.RUnlock()
+	return a.running
+}
+
 func (a *Agent) run() {
 	a.mutex.Lock()
 	if a.running {
@@ -281,7 +307,13 @@ func (a *Agent) run() {
 		}
 	}
 
-	// TODO: Other subscription types
+	newHeadsIntervalValue := a.getConfigValue(agentConfigNewHeadsKey, agentConfigNewHeadsInterval)
+	newHeadsInterval, ok := newHeadsIntervalValue.(time.Duration)
+	if !ok {
+		panic(fmt.Sprintf("Unexpected %s type", agentConfigNewHeadsKey))
+	}
+
+	// TODO: newPendingTransactions
 	a.qtum.GetDebugLogger().Log("msg", "Agent started subscription processing thread")
 
 	for {
@@ -305,6 +337,7 @@ func (a *Agent) run() {
 				if lastBlock == 0 {
 					// prevent sending the current head to the first client connected
 					lastBlock = latestBlock
+					a.qtum.GetDebugLogger().Log("msg", "Got getblockchaininfo response for same block", "block", lastBlock)
 				} else if latestBlock > lastBlock {
 					a.qtum.GetDebugLogger().Log("msg", "New head detected", "block", latestBlock)
 					// get the latest block as an eth_getBlockByHash request
@@ -340,7 +373,7 @@ func (a *Agent) run() {
 		}
 
 		select {
-		case <-time.After(10 * time.Second):
+		case <-time.After(newHeadsInterval):
 			// continue
 		case <-a.ctx.Done():
 			return

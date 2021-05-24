@@ -3,6 +3,7 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -32,7 +33,7 @@ type Doer interface {
 
 func NewDoerMappedMock() *doerMappedMock {
 	return &doerMappedMock{
-		Responses: make(map[string][]byte),
+		Responses: make(map[string][][]byte),
 	}
 }
 
@@ -40,16 +41,16 @@ func NewDoerMappedMock() *doerMappedMock {
 type doerMappedMock struct {
 	mutex     sync.Mutex
 	latestId  int
-	Responses map[string][]byte
+	Responses map[string][][]byte
 }
 
-func (d doerMappedMock) updateId(id int) {
+func (d *doerMappedMock) updateId(id int) {
 	if id > d.latestId {
 		d.latestId = id
 	}
 }
 
-func (d doerMappedMock) Do(request *http.Request) (*http.Response, error) {
+func (d *doerMappedMock) Do(request *http.Request) (*http.Response, error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	requestJSON, err := parseRequestFromBody(request)
@@ -61,7 +62,7 @@ func (d doerMappedMock) Do(request *http.Request) (*http.Response, error) {
 		log.Printf("No mocked response for %s\n", requestJSON.Method)
 	}
 
-	responseWriter := ioutil.NopCloser(bytes.NewReader(d.Responses[requestJSON.Method]))
+	responseWriter := ioutil.NopCloser(bytes.NewReader(d.popResponse(requestJSON.Method)))
 	return &http.Response{
 		StatusCode: 200,
 		Body:       responseWriter,
@@ -115,9 +116,32 @@ func prepareRawResponse(requestID int, responseResult interface{}, responseError
 	return responseRPCRaw, err
 }
 
+func (d *doerMappedMock) pushResponse(requestType string, responseRaw []byte) {
+	if _, exists := d.Responses[requestType]; !exists {
+		d.Responses[requestType] = make([][]byte, 0, 1)
+	}
+	d.Responses[requestType] = append(d.Responses[requestType], responseRaw)
+}
+
+func (d *doerMappedMock) popResponse(requestType string) []byte {
+	responses := len(d.Responses[requestType])
+	if responses == 0 {
+		return nil
+	} else {
+		latest := d.Responses[requestType][0]
+		if responses > 1 {
+			fmt.Printf("popped response: %s\n", requestType)
+			d.Responses[requestType] = d.Responses[requestType][1:responses]
+		} else {
+			fmt.Printf("one response: %s\n", requestType)
+		}
+		return latest
+	}
+}
+
 func (d *doerMappedMock) AddRawResponse(requestType string, rawResponse []byte) {
 	d.mutex.Lock()
-	d.Responses[requestType] = rawResponse
+	d.pushResponse(requestType, rawResponse)
 	d.mutex.Unlock()
 }
 
@@ -131,7 +155,7 @@ func (d *doerMappedMock) AddResponse(requestType string, responseResult interfac
 	}
 
 	d.updateId(requestID)
-	d.Responses[requestType] = responseRaw
+	d.pushResponse(requestType, responseRaw)
 	return nil
 }
 
@@ -144,7 +168,7 @@ func (d *doerMappedMock) AddResponseWithRequestID(requestID int, requestType str
 	}
 
 	d.updateId(requestID)
-	d.Responses[requestType] = responseRaw
+	d.pushResponse(requestType, responseRaw)
 	return nil
 }
 
@@ -158,7 +182,7 @@ func (d *doerMappedMock) AddError(requestType string, responseError *eth.JSONRPC
 	}
 
 	d.updateId(requestID)
-	d.Responses[requestType] = responseRaw
+	d.pushResponse(requestType, responseRaw)
 	return nil
 }
 
@@ -171,7 +195,7 @@ func (d *doerMappedMock) AddErrorWithRequestID(requestID int, requestType string
 	}
 
 	d.updateId(requestID)
-	d.Responses[requestType] = responseRaw
+	d.pushResponse(requestType, responseRaw)
 	return nil
 }
 
@@ -241,28 +265,7 @@ var (
 		GasPrice:         "0x0",
 	}
 
-	GetTransactionByHashResponse = eth.GetBlockByHashResponse{
-		Number:           GetTransactionByHashBlockNumberHex,
-		Hash:             GetTransactionByHashBlockHexHash,
-		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
-		Miner:            "0x0000000000000000000000000000000000000000",
-		Size:             "0x26c",
-		Nonce:            "0x0000000000000000",
-		TransactionsRoot: "0x0b5f03dc9d456c63c587cc554b70c1232449be43d1df62bc25a493b04de90334",
-		ReceiptsRoot:     "0x0b5f03dc9d456c63c587cc554b70c1232449be43d1df62bc25a493b04de90334",
-		StateRoot:        "0x3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
-		Difficulty:       "0x4",
-		TotalDifficulty:  "0x4",
-		LogsBloom:        eth.EmptyLogsBloom,
-		ExtraData:        "0x0000000000000000000000000000000000000000000000000000000000000000",
-		GasLimit:         utils.AddHexPrefix(qtum.DefaultBlockGasLimit),
-		GasUsed:          "0x0",
-		Timestamp:        "0x5b95ebd0",
-		Transactions: []interface{}{"0x3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
-			"0x8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"},
-		Sha3Uncles: eth.DefaultSha3Uncles,
-		Uncles:     []string{},
-	}
+	GetTransactionByHashResponse = CreateTransactionByHashResponse()
 
 	GetTransactionByHashResponseWithTransactions = eth.GetBlockByHashResponse{
 		Number:           GetTransactionByHashBlockNumberHex,
@@ -337,6 +340,31 @@ var (
 		Uncles:     []string{},
 	}
 )
+
+func CreateTransactionByHashResponse() eth.GetBlockByHashResponse {
+	return eth.GetBlockByHashResponse{
+		Number:           GetTransactionByHashBlockNumberHex,
+		Hash:             GetTransactionByHashBlockHexHash,
+		ParentHash:       "0x6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
+		Miner:            "0x0000000000000000000000000000000000000000",
+		Size:             "0x26c",
+		Nonce:            "0x0000000000000000",
+		TransactionsRoot: "0x0b5f03dc9d456c63c587cc554b70c1232449be43d1df62bc25a493b04de90334",
+		ReceiptsRoot:     "0x0b5f03dc9d456c63c587cc554b70c1232449be43d1df62bc25a493b04de90334",
+		StateRoot:        "0x3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
+		Difficulty:       "0x4",
+		TotalDifficulty:  "0x4",
+		LogsBloom:        eth.EmptyLogsBloom,
+		ExtraData:        "0x0000000000000000000000000000000000000000000000000000000000000000",
+		GasLimit:         utils.AddHexPrefix(qtum.DefaultBlockGasLimit),
+		GasUsed:          "0x0",
+		Timestamp:        "0x5b95ebd0",
+		Transactions: []interface{}{"0x3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
+			"0x8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"},
+		Sha3Uncles: eth.DefaultSha3Uncles,
+		Uncles:     []string{},
+	}
+}
 
 func QtumTransactionReceipt(logs []qtum.Log) qtum.TransactionReceipt {
 	return qtum.TransactionReceipt{

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/qtumproject/janus/pkg/eth"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestEthCallRequest(t *testing.T) {
@@ -137,27 +137,12 @@ func TestRetry(t *testing.T) {
 		},
 	}
 
-	// return QTUM is busy response
-	clientDoerMock.AddRawResponse(qtum.MethodCallContract, []byte(qtum.ErrQtumWorkQueueDepth.Error()))
-	testFinished := make(chan bool)
-
-	// async set the correct response after a time has elapsed
-	go func() {
-		time.Sleep(2 * time.Second)
-		err = clientDoerMock.AddResponseWithRequestID(1, qtum.MethodCallContract, callContractResponse)
-		if err != nil {
-			t.Fatal(err)
-		}
-		timer := time.NewTimer(2 * time.Second)
-		select {
-		case <-timer.C:
-			t.Error("Timed out waiting for test to finish")
-			t.FailNow()
-		case <-testFinished:
-			// test finished correctly
-			return
-		}
-	}()
+	// return QTUM is busy response 4 times
+	for i := 0; i < 4; i++ {
+		clientDoerMock.AddRawResponse(qtum.MethodCallContract, []byte(qtum.ErrQtumWorkQueueDepth.Error()))
+	}
+	// on 5th request, return correct value
+	clientDoerMock.AddResponseWithRequestID(1, qtum.MethodCallContract, callContractResponse)
 
 	fromHexAddressResponse := qtum.FromHexAddressResponse("0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960")
 	err = clientDoerMock.AddResponseWithRequestID(2, qtum.MethodFromHexAddress, fromHexAddressResponse)
@@ -171,11 +156,14 @@ func TestRetry(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	before := time.Now()
+
 	got, err := proxyEth.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	testFinished <- true
+
+	after := time.Now()
 
 	want := eth.CallResponse("0x0000000000000000000000000000000000000000000000000000000000000001")
 	if !reflect.DeepEqual(got, &want) {
@@ -185,5 +173,9 @@ func TestRetry(t *testing.T) {
 			string(internal.MustMarshalIndent(want, "", "  ")),
 			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
+	}
+
+	if after.Sub(before) < 2*time.Second {
+		t.Errorf("Retrying requests was too quick: %v < 2s", after.Sub(before))
 	}
 }
