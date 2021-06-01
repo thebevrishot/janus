@@ -22,7 +22,7 @@ func TranslateTopics(ethTopics []interface{}) ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			topics = append(topics, topic)
+			topics = append(topics, topic...)
 		case string:
 			topics = append(topics, utils.RemoveHexPrefix(topic.(string)))
 		case nil:
