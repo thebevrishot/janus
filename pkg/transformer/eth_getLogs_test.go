@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/qtumproject/janus/pkg/eth"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestGetLogs(t *testing.T) {

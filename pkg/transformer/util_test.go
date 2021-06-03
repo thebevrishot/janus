@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
@@ -38,6 +39,24 @@ func TestEthValueToQtumAmount(t *testing.T) {
 		}
 		if !got.Equal(want) {
 			t.Errorf("in: %s, want: %v, got: %v", in, want, got)
+		}
+	}
+}
+
+func TestQtumValueToEthAmount(t *testing.T) {
+	cases := []decimal.Decimal{
+		decimal.NewFromFloat(1),
+		decimal.NewFromFloat(0.5),
+		decimal.NewFromFloat(0.00000001),
+		MinimumGas,
+	}
+	for _, c := range cases {
+		in := c
+		eth := QtumDecimalValueToETHAmount(in)
+		out := EthDecimalValueToQtumAmount(eth)
+
+		if !in.Equals(out) {
+			t.Errorf("in: %s, eth: %v, qtum: %v", in, eth, out)
 		}
 	}
 }
@@ -128,5 +147,21 @@ func TestAddressesConversion(t *testing.T) {
 			require.NoError(t, err, "couldn't convert Qtum address to Ethereum address")
 			require.Equal(t, in.ethAddress, ethAddress, "unexpected converted Ethereum address value")
 		})
+	}
+}
+
+func TestSendTransactionRequestHasDefaultGasPriceAndAmount(t *testing.T) {
+	var req eth.SendTransactionRequest
+	err := unmarshalRequest([]byte(`[{}]`), &req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defaultGasPriceInWei := req.GasPrice.Int
+	defaultGasPriceInQTUM := EthDecimalValueToQtumAmount(decimal.NewFromBigInt(defaultGasPriceInWei, 1))
+	if !defaultGasPriceInQTUM.Equals(MinimumGas) {
+		t.Fatalf("Default gas price does not convert to QTUM minimum gas price, got: %s want: %s", defaultGasPriceInQTUM.String(), MinimumGas.String())
+	}
+	if eth.DefaultGasAmountForQtum.String() != req.Gas.Int.String() {
+		t.Fatalf("Default gas amount does not match expected default, got: %s want: %s", req.Gas.Int.String(), eth.DefaultGasAmountForQtum.String())
 	}
 }

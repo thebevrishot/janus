@@ -42,6 +42,21 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 	return
 }
 
+func QtumGasToEth(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
+	gasLimit = g.(*eth.SendTransactionRequest).Gas.Int
+
+	gasPriceDecimal, err := EthValueToQtumAmount(g.GasPriceHex(), MinimumGas)
+	if err != nil {
+		return nil, "0.0", err
+	}
+	if gasPriceDecimal.LessThan(MinimumGas) {
+		gasPriceDecimal = MinimumGas
+	}
+	gasPrice = fmt.Sprintf("%v", gasPriceDecimal)
+
+	return
+}
+
 func EthValueToQtumAmount(val string, defaultValue decimal.Decimal) (decimal.Decimal, error) {
 	if val == "" {
 		return defaultValue, nil
@@ -57,6 +72,10 @@ func EthValueToQtumAmount(val string, defaultValue decimal.Decimal) (decimal.Dec
 		return ZeroSatoshi, errors.New("decimal.NewFromString was not a success")
 	}
 
+	return EthDecimalValueToQtumAmount(ethValDecimal), nil
+}
+
+func EthDecimalValueToQtumAmount(ethValDecimal decimal.Decimal) decimal.Decimal {
 	// Convert Wei to Qtum
 	// 10000000000
 	// one satoshi is 0.00000001
@@ -64,7 +83,32 @@ func EthValueToQtumAmount(val string, defaultValue decimal.Decimal) (decimal.Dec
 	maximumPrecision := ethValDecimal.Mul(decimal.NewFromFloat(float64(1e-8))).Floor()
 	amount := maximumPrecision.Mul(decimal.NewFromFloat(float64(1e-10)))
 
-	return amount, nil
+	return amount
+}
+
+func QtumValueToETHAmount(val string, defaultValue decimal.Decimal) (decimal.Decimal, error) {
+	if val == "" {
+		return defaultValue, nil
+	}
+
+	qtumVal, err := utils.DecodeBig(val)
+	if err != nil {
+		return ZeroSatoshi, err
+	}
+
+	qtumValDecimal, err := decimal.NewFromString(qtumVal.String())
+	if err != nil {
+		return ZeroSatoshi, errors.New("decimal.NewFromString was not a success")
+	}
+
+	return QtumDecimalValueToETHAmount(qtumValDecimal), nil
+}
+
+func QtumDecimalValueToETHAmount(qtumValDecimal decimal.Decimal) decimal.Decimal {
+	// Computes inverse of EthDecimalValueToQtumAmount
+	amount := qtumValDecimal.Div(decimal.NewFromFloat(float64(1e-18)))
+
+	return amount
 }
 
 func formatQtumAmount(amount decimal.Decimal) (string, error) {

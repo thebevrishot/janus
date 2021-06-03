@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -12,6 +13,11 @@ import (
 	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/shopspring/decimal"
 )
+
+var DefaultGasAmountForQtum = big.NewInt(250000)
+
+// QTUM default gas value (also the minimum gas) in wei
+var DefaultGasPriceInWei = big.NewInt(40000000000)
 
 type (
 	SendTransactionResponse string
@@ -37,6 +43,18 @@ func (r *SendTransactionRequest) UnmarshalJSON(data []byte) error {
 	}
 
 	*r = SendTransactionRequest(params[0])
+
+	if r.Gas == nil {
+		// ETH: (optional, default: 90000) Integer of the gas provided for the transaction execution. It will return unused gas.
+		// QTUM: (numeric or string, optional) gasLimit, default: 250000, max: 40000000
+		r.Gas = &ETHInt{DefaultGasAmountForQtum}
+	}
+
+	if r.GasPrice == nil {
+		// ETH: (optional, default: To-Be-Determined) Integer of the gasPrice used for each paid gas
+		// QTUM: (numeric or string, optional) gasPrice Qtum price per gas unit, default: 0.0000004, min:0.0000004
+		r.GasPrice = &ETHInt{DefaultGasPriceInWei}
+	}
 
 	return nil
 }
