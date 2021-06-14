@@ -22,6 +22,7 @@ import (
 )
 
 var FLAG_GENERATE_ADDRESS_TO = "REGTEST_GENERATE_ADDRESS_TO"
+var FLAG_IGNORE_UNKNOWN_TX = "IGNORE_UNKNOWN_TX"
 
 var maximumRequestTime = 10000
 var maximumBackoff = (2 * time.Second).Milliseconds()
@@ -256,6 +257,18 @@ func (c *Client) GetFlagString(key string) *string {
 	return &result
 }
 
+func (c *Client) GetFlagBool(key string) bool {
+	value := c.GetFlag(key)
+	if value == nil {
+		return false
+	}
+	result, ok := value.(bool)
+	if !ok {
+		return false
+	}
+	return result
+}
+
 type doer interface {
 	Do(*http.Request) (*http.Response, error)
 }
@@ -293,6 +306,13 @@ func SetGenerateToAddress(address string) func(*Client) error {
 		if address != "" {
 			c.SetFlag(FLAG_GENERATE_ADDRESS_TO, address)
 		}
+		return nil
+	}
+}
+
+func SetIgnoreUnknownTransactions(ignore bool) func(*Client) error {
+	return func(c *Client) error {
+		c.SetFlag(FLAG_IGNORE_UNKNOWN_TX, ignore)
 		return nil
 	}
 }

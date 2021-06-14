@@ -125,9 +125,12 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 			}
 			if tx == nil {
 				p.GetDebugLogger().Log("msg", "Failed to get transaction by hash included in a block", "hash", txHash)
-				return nil, errors.WithMessage(err, "couldn't get transaction by hash included in a block")
+				if !p.GetFlagBool(qtum.FLAG_IGNORE_UNKNOWN_TX) {
+					return nil, errors.WithMessage(err, "couldn't get transaction by hash included in a block")
+				}
+			} else {
+				resp.Transactions = append(resp.Transactions, *tx)
 			}
-			resp.Transactions = append(resp.Transactions, *tx)
 			// TODO: fill gas used
 			// TODO: fill gas limit?
 		}

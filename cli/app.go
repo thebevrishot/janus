@@ -33,6 +33,8 @@ var (
 	devMode        = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
 	singleThreaded = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
 
+	ignoreUnknownTransactions = app.Flag("ignoreTransactions", "[Development] Ignore transactions inside blocks we can't fetch and return responses instead of failing").Default("false").Bool()
+
 	generateToAddressTo = app.Flag("generateToAddressTo", "[regtest only] configure address to mine blocks to when mining new transactions in blocks").Envar("GENERATE_TO_ADDRESS").Default("").String()
 )
 
@@ -86,6 +88,7 @@ func action(pc *kingpin.ParseContext) error {
 		qtum.SetLogger(logger),
 		qtum.SetAccounts(accounts),
 		qtum.SetGenerateToAddress(*generateToAddressTo),
+		qtum.SetIgnoreUnknownTransactions(*ignoreUnknownTransactions),
 	)
 	if err != nil {
 		return errors.Wrap(err, "jsonrpc#New")
