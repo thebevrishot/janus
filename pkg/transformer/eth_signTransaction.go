@@ -58,7 +58,7 @@ func (p *ProxyETHSignTransaction) getRequiredUtxos(from string, neededAmount dec
 	}
 
 	//Convert minSumAmount to Satoshis
-	minimumSum := neededAmount.Mul(decimal.NewFromFloat(float64(1e8)))
+	minimumSum := convertFromQtumToSatoshis(neededAmount)
 	var utxos []qtum.RawTxInputs
 	var minUTXOsSum decimal.Decimal
 	for _, utxo := range *qtumresp {

@@ -49,17 +49,26 @@ func (p *ProxyQTUMGetUTXOs) request(params eth.GetUTXOsRequest) (*eth.GetUTXOsRe
 	}
 
 	//Convert minSumAmount to Satoshis
-	minimumSum := params.MinSumAmount.Mul(decimal.NewFromFloat(float64(1e8)))
+	minimumSum := convertFromQtumToSatoshis(params.MinSumAmount)
 
 	var utxos []eth.QtumUTXO
 	var minUTXOsSum decimal.Decimal
 	for _, utxo := range *resp {
 		minUTXOsSum = minUTXOsSum.Add(utxo.Satoshis)
-		utxos = append(utxos, eth.QtumUTXO{TXID: utxo.TXID, Vout: utxo.OutputIndex})
+		utxos = append(utxos, toEthResponseType(utxo))
 		if minUTXOsSum.GreaterThanOrEqual(minimumSum) {
 			return (*eth.GetUTXOsResponse)(&utxos), nil
 		}
 	}
 
 	return nil, errors.Errorf("required minimum amount is greater than total amount of UTXOs")
+}
+
+func toEthResponseType(utxo qtum.UTXO) eth.QtumUTXO {
+	return eth.QtumUTXO{
+		Address: utxo.Address,
+		TXID:    utxo.TXID,
+		Vout:    utxo.OutputIndex,
+		Amount:  convertFromSatoshisToQtum(utxo.Satoshis).String(),
+	}
 }

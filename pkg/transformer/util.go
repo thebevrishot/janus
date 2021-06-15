@@ -343,3 +343,13 @@ func processFilter(p *ProxyETHGetFilterChanges, rawreq *eth.JSONRPCRequest) (*et
 
 	return filter, nil
 }
+
+// Converts a satoshis to qtum balance
+func convertFromSatoshisToQtum(inSatoshis decimal.Decimal) decimal.Decimal {
+	return inSatoshis.Div(decimal.NewFromFloat(float64(1e8)))
+}
+
+// Converts a qtum balance to satoshis
+func convertFromQtumToSatoshis(inQtum decimal.Decimal) decimal.Decimal {
+	return inQtum.Mul(decimal.NewFromFloat(float64(1e8)))
+}

@@ -864,8 +864,10 @@ type (
 	}
 
 	QtumUTXO struct {
-		TXID string `json:"txid"`
-		Vout uint   `json:"vout"`
+		Address string `json:"address"`
+		TXID    string `json:"txid"`
+		Vout    uint   `json:"vout"`
+		Amount  string `json:"amount"`
 	}
 
 	GetUTXOsResponse []QtumUTXO
