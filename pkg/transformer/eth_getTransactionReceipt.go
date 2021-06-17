@@ -35,36 +35,29 @@ func (p *ProxyETHGetTransactionReceipt) Request(rawreq *eth.JSONRPCRequest, c ec
 }
 
 func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptRequest) (*eth.GetTransactionReceiptResponse, error) {
-	isVMTransaction := false
 	qtumReceipt, err := p.Qtum.GetTransactionReceipt(string(*req))
-	if err == nil {
-		isVMTransaction = true
-	} else {
-		if qtumReceipt == nil {
-			// panic(err)
-		}
-		rawTransaction, getRawTransactionErr := p.Qtum.GetRawTransaction(string(*req), false)
-		if getRawTransactionErr == nil {
-			block, err := p.Qtum.GetBlock(rawTransaction.BlockHash)
-			if err != nil {
-				p.Qtum.GetDebugLogger().Log("msg", "Failed to get block with hash", "hash", rawTransaction.BlockHash, "err", err)
-				return nil, err
-			}
-			p.Qtum.GetDebugLogger().Log("msg", "Transaction does not execute VM code so does not have a transaction receipt, returning a dummy", "txid", string(*req))
-			qtumReceipt = &qtum.GetTransactionReceiptResponse{
-				TransactionHash:  string(*req),
-				TransactionIndex: 1,
-				BlockHash:        rawTransaction.BlockHash,
-				BlockNumber:      uint64(block.Height),
-			}
-		} else {
-			p.Qtum.GetDebugLogger().Log("msg", "Transaction does not exist", "txid", string(*req))
+	if err != nil {
+		ethTx, getRewardTransactionErr := getRewardTransactionByHash(p.Qtum, string(*req))
+		if getRewardTransactionErr != nil {
 			errCause := errors.Cause(err)
 			if errCause == qtum.EmptyResponseErr {
 				return nil, nil
 			}
+			p.Qtum.GetDebugLogger().Log("msg", "Transaction does not exist", "txid", string(*req))
 			return nil, err
 		}
+		return &eth.GetTransactionReceiptResponse{
+			TransactionHash:   ethTx.Hash,
+			TransactionIndex:  ethTx.TransactionIndex,
+			BlockHash:         ethTx.BlockHash,
+			BlockNumber:       ethTx.BlockNumber,
+			CumulativeGasUsed: "0x0",
+			GasUsed:           "0x0",
+			From:              ethTx.From,
+			To:                ethTx.To,
+			LogsBloom:         eth.EmptyLogsBloom,
+			Status:            "0x0",
+		}, nil
 	}
 
 	ethReceipt := &eth.GetTransactionReceiptResponse{
@@ -89,23 +82,21 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 	}
 	ethReceipt.Status = status
 
-	if isVMTransaction {
-		r := qtum.TransactionReceipt(*qtumReceipt)
-		ethReceipt.Logs = conversion.ExtractETHLogsFromTransactionReceipt(&r)
+	r := qtum.TransactionReceipt(*qtumReceipt)
+	ethReceipt.Logs = conversion.ExtractETHLogsFromTransactionReceipt(&r)
 
-		qtumTx, err := p.Qtum.GetTransaction(qtumReceipt.TransactionHash)
-		if err != nil {
-			return nil, errors.WithMessage(err, "couldn't get transaction")
-		}
-		decodedRawQtumTx, err := p.Qtum.DecodeRawTransaction(qtumTx.Hex)
-		if err != nil {
-			return nil, errors.WithMessage(err, "couldn't decode raw transaction")
-		}
-		if decodedRawQtumTx.IsContractCreation() {
-			ethReceipt.To = ""
-		} else {
-			ethReceipt.ContractAddress = ""
-		}
+	qtumTx, err := p.Qtum.GetTransaction(qtumReceipt.TransactionHash)
+	if err != nil {
+		return nil, errors.WithMessage(err, "couldn't get transaction")
+	}
+	decodedRawQtumTx, err := p.Qtum.DecodeRawTransaction(qtumTx.Hex)
+	if err != nil {
+		return nil, errors.WithMessage(err, "couldn't decode raw transaction")
+	}
+	if decodedRawQtumTx.IsContractCreation() {
+		ethReceipt.To = ""
+	} else {
+		ethReceipt.ContractAddress = ""
 	}
 
 	// TODO: researching

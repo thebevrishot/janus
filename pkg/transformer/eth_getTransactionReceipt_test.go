@@ -8,11 +8,12 @@ import (
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/internal"
 	"github.com/qtumproject/janus/pkg/qtum"
+	"github.com/qtumproject/janus/pkg/utils"
 )
 
 func TestGetTransactionReceiptForNonVMTransaction(t *testing.T) {
 	//preparing request
-	requestParams := []json.RawMessage{[]byte(`"0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5"`)}
+	requestParams := []json.RawMessage{[]byte(`"0x8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"`)}
 	request, err := internal.PrepareEthRPCRequest(1, requestParams)
 	if err != nil {
 		t.Fatal(err)
@@ -51,12 +52,14 @@ func TestGetTransactionReceiptForNonVMTransaction(t *testing.T) {
 	}
 
 	want := eth.GetTransactionReceiptResponse{
-		TransactionHash:   "0x11e97fa5877c5df349934bafc02da6218038a427e8ed081f048626fa6eb523f5",
+		TransactionHash:   "0x8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950",
 		TransactionIndex:  "0x1",
 		BlockHash:         "0xbba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5",
 		BlockNumber:       "0xf8f",
 		GasUsed:           "0x0",
 		CumulativeGasUsed: "0x0",
+		To:                utils.AddHexPrefix(qtum.ZeroAddress),
+		From:              utils.AddHexPrefix(qtum.ZeroAddress),
 		LogsBloom:         eth.EmptyLogsBloom,
 		Status:            "0x0",
 	}
@@ -64,8 +67,8 @@ func TestGetTransactionReceiptForNonVMTransaction(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			request,
-			want,
-			got,
+			internal.MustMarshalIndent(want, "", " "),
+			internal.MustMarshalIndent(got, "", " "),
 		)
 	}
 }

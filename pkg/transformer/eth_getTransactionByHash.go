@@ -55,7 +55,19 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 			if errors.Cause(err) == qtum.ErrInvalidAddress {
 				return nil, nil
 			}
-			return nil, errors.WithMessage(err, "couldn't get reward transaction by hash")
+			rawTx, err := p.GetRawTransaction(hash, false)
+			if err != nil {
+				if errors.Cause(err) == qtum.ErrInvalidAddress {
+					return nil, nil
+				}
+				return nil, err
+			} else {
+				qtumTx = &qtum.GetTransactionResponse{
+					BlockHash:  rawTx.BlockHash,
+					BlockIndex: 1, // TODO: Possible to get this somewhere?
+					Hex:        rawTx.Hex,
+				}
+			}
 		}
 		return ethTx, nil
 	}
