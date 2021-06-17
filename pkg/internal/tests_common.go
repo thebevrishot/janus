@@ -98,9 +98,13 @@ func prepareRawResponse(requestID int, responseResult interface{}, responseError
 
 	var responseResultRaw json.RawMessage
 	if responseResult != nil {
-		responseResultRaw, err = json.Marshal(responseResult)
-		if err != nil {
-			return nil, err
+		var alreadyByteArray bool
+		responseResultRaw, alreadyByteArray = responseResult.([]byte)
+		if !alreadyByteArray {
+			responseResultRaw, err = json.Marshal(responseResult)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -339,6 +343,34 @@ var (
 		Sha3Uncles: eth.DefaultSha3Uncles,
 		Uncles:     []string{},
 	}
+
+	GetBlockResponse = qtum.GetBlockResponse{
+		Hash:              GetTransactionByHashBlockHash,
+		Confirmations:     1,
+		Strippedsize:      584,
+		Size:              620,
+		Weight:            2372,
+		Height:            3983,
+		Version:           536870912,
+		VersionHex:        "20000000",
+		Merkleroot:        "0b5f03dc9d456c63c587cc554b70c1232449be43d1df62bc25a493b04de90334",
+		Time:              1536551888,
+		Mediantime:        1536551728,
+		Nonce:             0,
+		Bits:              "207fffff",
+		Difficulty:        4.656542373906925,
+		Chainwork:         "0000000000000000000000000000000000000000000000000000000000001f20",
+		HashStateRoot:     "3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
+		HashUTXORoot:      "130a3e712d9f8b06b83f5ebf02b27542fb682cdff3ce1af1c17b804729d88a47",
+		Previousblockhash: "6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
+		Flags:             "proof-of-stake",
+		Proofhash:         "15bd6006ecbab06708f705ecf68664b78b388e4d51416cdafb019d5b90239877",
+		Modifier:          "a79c00d1d570743ca8135a173d535258026d26bafbc5f3d951c3d33486b1f120",
+		Txs: []string{"3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
+			"8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"},
+		Nextblockhash: "d7758774cfdd6bab7774aa891ae035f1dc5a2ff44240784b5e7bdfd43a7a6ec1",
+		Signature:     "3045022100a6ab6c2b14b1f73e734f1a61d4d22385748e48836492723a6ab37cdf38525aba022014a51ecb9e51f5a7a851641683541fec6f8f20205d0db49e50b2a4e5daed69d2",
+	}
 )
 
 func CreateTransactionByHashResponse() eth.GetBlockByHashResponse {
@@ -414,34 +446,7 @@ func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer Doer) {
 		t.Fatal(err)
 	}
 
-	getBlockResponse := qtum.GetBlockResponse{
-		Hash:              GetTransactionByHashBlockHash,
-		Confirmations:     1,
-		Strippedsize:      584,
-		Size:              620,
-		Weight:            2372,
-		Height:            3983,
-		Version:           536870912,
-		VersionHex:        "20000000",
-		Merkleroot:        "0b5f03dc9d456c63c587cc554b70c1232449be43d1df62bc25a493b04de90334",
-		Time:              1536551888,
-		Mediantime:        1536551728,
-		Nonce:             0,
-		Bits:              "207fffff",
-		Difficulty:        4.656542373906925,
-		Chainwork:         "0000000000000000000000000000000000000000000000000000000000001f20",
-		HashStateRoot:     "3e49216e58f1ad9e6823b5095dc532f0a6cc44943d36ff4a7b1aa474e172d672",
-		HashUTXORoot:      "130a3e712d9f8b06b83f5ebf02b27542fb682cdff3ce1af1c17b804729d88a47",
-		Previousblockhash: "6d7d56af09383301e1bb32a97d4a5c0661d62302c06a778487d919b7115543be",
-		Flags:             "proof-of-stake",
-		Proofhash:         "15bd6006ecbab06708f705ecf68664b78b388e4d51416cdafb019d5b90239877",
-		Modifier:          "a79c00d1d570743ca8135a173d535258026d26bafbc5f3d951c3d33486b1f120",
-		Txs: []string{"3208dc44733cbfa11654ad5651305428de473ef1e61a1ec07b0c1a5f4843be91",
-			"8fcd819194cce6a8454b2bec334d3448df4f097e9cdc36707bfd569900268950"},
-		Nextblockhash: "d7758774cfdd6bab7774aa891ae035f1dc5a2ff44240784b5e7bdfd43a7a6ec1",
-		Signature:     "3045022100a6ab6c2b14b1f73e734f1a61d4d22385748e48836492723a6ab37cdf38525aba022014a51ecb9e51f5a7a851641683541fec6f8f20205d0db49e50b2a4e5daed69d2",
-	}
-	err = mockedClientDoer.AddResponse(qtum.MethodGetBlock, getBlockResponse)
+	err = mockedClientDoer.AddResponse(qtum.MethodGetBlock, GetBlockResponse)
 	if err != nil {
 		t.Fatal(err)
 	}
