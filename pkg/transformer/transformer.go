@@ -121,6 +121,8 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy 
 		&ETHGetCompilers{},
 		&ETHProtocolVersion{},
 		&ETHGetUncleByBlockHashAndIndex{},
+		&ETHGetUncleCountByBlockHash{},
+		&ETHGetUncleCountByBlockNumber{},
 		&Web3ClientVersion{},
 		&Web3Sha3{},
 		&ProxyETHSign{Qtum: qtumRPCClient},
