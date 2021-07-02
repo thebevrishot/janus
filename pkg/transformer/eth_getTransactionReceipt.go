@@ -55,6 +55,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 			GasUsed:           "0x0",
 			From:              ethTx.From,
 			To:                ethTx.To,
+			Logs:		   []eth.Log{},
 			LogsBloom:         eth.EmptyLogsBloom,
 			Status:            "0x0",
 		}, nil
