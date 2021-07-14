@@ -149,13 +149,8 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 
 	// TODO: researching
 	// ! Temporary solution
-	ethTx.Input = "0x"
-	for _, detail := range qtumTx.Details {
-		if detail.Label != "" {
-			ethTx.Input = utils.AddHexPrefix(detail.Label)
-			break
-		}
-	}
+	ethTx.Input = utils.AddHexPrefix(qtumTx.Hex)
+	
 
 	// TODO: researching
 	// ? Is it correct for non contract transaction
