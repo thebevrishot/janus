@@ -337,12 +337,23 @@ type (
 )
 
 func (r *CallContractRequest) MarshalJSON() ([]byte, error) {
-	return json.Marshal([]interface{}{
+	params := []interface{}{
 		utils.RemoveHexPrefix(r.To),
 		utils.RemoveHexPrefix(r.Data),
 		r.From,
-		r.GasLimit,
-	})
+	}
+	if r.GasLimit != nil {
+		// optional parameter, null will not work
+		params = append(params, r.GasLimit)
+	}
+	/*
+		1. "address" (string, required) The account address
+		2. "data"    (string, required) The data hex string
+		3. address   (string, optional) The sender address hex string
+		4. gasLimit  (string, optional) The gas limit for executing the contract
+	*/
+
+	return json.Marshal(params)
 }
 
 // ========== FromHexAddress ============= //
