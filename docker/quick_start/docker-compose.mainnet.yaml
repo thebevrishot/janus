@@ -8,7 +8,7 @@ volumes:
 
 services:
   janus_mainnet:
-    image: qtum/janus:ignoreTx
+    image: qtum/janus
     container_name: janus_mainnet
     build: 
         context: ../../
