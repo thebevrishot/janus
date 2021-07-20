@@ -109,12 +109,20 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 	}
 	if isContractTx {
 		// TODO: research is this allowed? ethTx.Input = utils.AddHexPrefix(qtumTxContractInfo.UserInput)
-		ethTx.Input = "0x"
 		if qtumTxContractInfo.UserInput == "" {
+			ethTx.Input = "0x0"
+		} else {
 			ethTx.Input = utils.AddHexPrefix(qtumTxContractInfo.UserInput)
 		}
 		ethTx.From = utils.AddHexPrefix(qtumTxContractInfo.From)
-		ethTx.To = utils.AddHexPrefix(qtumTxContractInfo.To)
+		//TODO: research if 'To' adress could be other than zero address when 'isContractTx == TRUE'
+		if len(qtumTxContractInfo.To) == 0 {
+			ethTx.To = utils.AddHexPrefix(qtum.ZeroAddress)
+
+		} else {
+			ethTx.To = utils.AddHexPrefix(qtumTxContractInfo.To)
+
+		}
 		ethTx.Gas = hexutil.Encode([]byte(qtumTxContractInfo.GasLimit))
 		ethTx.GasPrice = hexutil.Encode([]byte(qtumTxContractInfo.GasPrice))
 
@@ -149,13 +157,12 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 
 	// TODO: researching
 	// ! Temporary solution
-	ethTx.Input = "0x"
-	for _, detail := range qtumTx.Details {
-		if detail.Label != "" {
-			ethTx.Input = utils.AddHexPrefix(detail.Label)
-			break
-		}
-	}
+	//	if len(qtumTx.Hex) == 0 {
+	//		ethTx.Input = "0x0"
+	//	} else {
+	//		ethTx.Input = utils.AddHexPrefix(qtumTx.Hex)
+	//	}
+	ethTx.Input = utils.AddHexPrefix(qtumTx.Hex)
 
 	// TODO: researching
 	// ? Is it correct for non contract transaction

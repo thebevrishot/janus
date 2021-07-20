@@ -55,6 +55,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 			GasUsed:           "0x0",
 			From:              ethTx.From,
 			To:                ethTx.To,
+			Logs:		   []eth.Log{},
 			LogsBloom:         eth.EmptyLogsBloom,
 			Status:            "0x0",
 		}, nil
@@ -85,7 +86,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 	r := qtum.TransactionReceipt(*qtumReceipt)
 	ethReceipt.Logs = conversion.ExtractETHLogsFromTransactionReceipt(&r)
 
-	qtumTx, err := p.Qtum.GetTransaction(qtumReceipt.TransactionHash)
+	qtumTx, err := p.Qtum.GetRawTransaction(qtumReceipt.TransactionHash, false)
 	if err != nil {
 		return nil, errors.WithMessage(err, "couldn't get transaction")
 	}

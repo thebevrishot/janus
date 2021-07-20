@@ -5,8 +5,8 @@ volumes:
 
 services:
   janus:
-    image: qtum/janus:websockets
-    container_name: janus
+    image: qtum/janus:fix-getTxByHash
+    container_name: janus_testchain
     build: 
         context: ../../
         cache_from:
@@ -20,7 +20,7 @@ services:
         - ../../https:/https
     depends_on:
       - qtum
-    command: --bind 0.0.0.0 --accounts $GOPATH/github.com/qtumproject/janus/myaccounts.txt --dev --https-key /https/key.pem --https-cert /https/cert.pem
+    command: --bind 0.0.0.0 --ignoreTransactions --accounts $GOPATH/github.com/qtumproject/janus/myaccounts.txt --dev --https-key /https/key.pem --https-cert /https/cert.pem
   qtum:
     ports:
       - "3889:3889"
