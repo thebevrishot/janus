@@ -57,6 +57,7 @@ func TestGetTransactionReceiptForNonVMTransaction(t *testing.T) {
 		BlockHash:         "0xbba11e1bacc69ba535d478cf1f2e542da3735a517b0b8eebaf7e6bb25eeb48c5",
 		BlockNumber:       "0xf8f",
 		GasUsed:           "0x0",
+		Logs:              []eth.Log{},
 		CumulativeGasUsed: "0x0",
 		To:                utils.AddHexPrefix(qtum.ZeroAddress),
 		From:              utils.AddHexPrefix(qtum.ZeroAddress),
