@@ -94,7 +94,7 @@ type (
 	// Presents hexed string of a raw transaction
 	SendRawTransactionRequest [1]string
 	// Presents hexed string of a transaction hash
-	SendRawTransactionResponse [1]string
+	SendRawTransactionResponse string
 )
 
 // CallResponse

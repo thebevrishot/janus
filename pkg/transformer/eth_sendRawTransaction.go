@@ -39,16 +39,27 @@ func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionReques
 
 	qtumresp, err := p.Qtum.SendRawTransaction(&req)
 	if err != nil {
-		return eth.SendRawTransactionResponse{}, err
-	}
-
-	if p.Chain() == qtum.ChainRegTest {
-		if _, err = p.Generate(1, nil); err != nil {
-			p.GetErrorLogger().Log("Error generating new block", err)
+		if err == qtum.ErrVerifyAlreadyInChain {
+			// already committed
+			// we need to send back the tx hash
+			rawTx, err := p.Qtum.DecodeRawTransaction(qtumHexedRawTx)
+			if err != nil {
+				p.GetErrorLogger().Log("msg", "Error decoding raw transaction for duplicate raw transaction", "err", err)
+				return eth.SendRawTransactionResponse(""), err
+			}
+			qtumresp = &qtum.SendRawTransactionResponse{Result: rawTx.Hash}
+		} else {
+			return eth.SendRawTransactionResponse(""), err
+		}
+	} else {
+		if p.Chain() == qtum.ChainRegTest {
+			if _, err = p.Generate(1, nil); err != nil {
+				p.GetErrorLogger().Log("Error generating new block", err)
+			}
 		}
 	}
 
 	resp := *qtumresp
 	ethHexedTxHash := utils.AddHexPrefix(resp.Result)
-	return eth.SendRawTransactionResponse([1]string{ethHexedTxHash}), nil
+	return eth.SendRawTransactionResponse(ethHexedTxHash), nil
 }
