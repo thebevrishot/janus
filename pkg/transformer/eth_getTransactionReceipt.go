@@ -2,7 +2,9 @@ package transformer
 
 import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/labstack/echo"
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/conversion"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
@@ -17,7 +19,7 @@ func (p *ProxyETHGetTransactionReceipt) Method() string {
 	return "eth_getTransactionReceipt"
 }
 
-func (p *ProxyETHGetTransactionReceipt) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHGetTransactionReceipt) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	var req eth.GetTransactionReceiptRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
 		return nil, err
@@ -33,13 +35,30 @@ func (p *ProxyETHGetTransactionReceipt) Request(rawreq *eth.JSONRPCRequest) (int
 }
 
 func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptRequest) (*eth.GetTransactionReceiptResponse, error) {
-	qtumReceipt, err := p.GetTransactionReceipt(string(*req))
+	qtumReceipt, err := p.Qtum.GetTransactionReceipt(string(*req))
 	if err != nil {
-		errCause := errors.Cause(err)
-		if errCause == qtum.EmptyResponseErr {
-			return nil, nil
+		ethTx, getRewardTransactionErr := getRewardTransactionByHash(p.Qtum, string(*req))
+		if getRewardTransactionErr != nil {
+			errCause := errors.Cause(err)
+			if errCause == qtum.EmptyResponseErr {
+				return nil, nil
+			}
+			p.Qtum.GetDebugLogger().Log("msg", "Transaction does not exist", "txid", string(*req))
+			return nil, err
 		}
-		return nil, err
+		return &eth.GetTransactionReceiptResponse{
+			TransactionHash:   ethTx.Hash,
+			TransactionIndex:  ethTx.TransactionIndex,
+			BlockHash:         ethTx.BlockHash,
+			BlockNumber:       ethTx.BlockNumber,
+			CumulativeGasUsed: "0x0",
+			GasUsed:           "0x0",
+			From:              ethTx.From,
+			To:                ethTx.To,
+			Logs:              []eth.Log{},
+			LogsBloom:         eth.EmptyLogsBloom,
+			Status:            "0x0",
+		}, nil
 	}
 
 	ethReceipt := &eth.GetTransactionReceiptResponse{
@@ -47,15 +66,15 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 		TransactionIndex:  hexutil.EncodeUint64(qtumReceipt.TransactionIndex),
 		BlockHash:         utils.AddHexPrefix(qtumReceipt.BlockHash),
 		BlockNumber:       hexutil.EncodeUint64(qtumReceipt.BlockNumber),
-		ContractAddress:   utils.AddHexPrefix(qtumReceipt.ContractAddress),
+		ContractAddress:   utils.AddHexPrefixIfNotEmpty(qtumReceipt.ContractAddress),
 		CumulativeGasUsed: hexutil.EncodeUint64(qtumReceipt.CumulativeGasUsed),
 		GasUsed:           hexutil.EncodeUint64(qtumReceipt.GasUsed),
-		From:              utils.AddHexPrefix(qtumReceipt.From),
-		To:                utils.AddHexPrefix(qtumReceipt.To),
+		From:              utils.AddHexPrefixIfNotEmpty(qtumReceipt.From),
+		To:                utils.AddHexPrefixIfNotEmpty(qtumReceipt.To),
 
 		// TODO: researching
 		// ! Temporary accept this value to be always zero, as it is at eth logs
-		LogsBloom: "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+		LogsBloom: eth.EmptyLogsBloom,
 	}
 
 	status := "0x0"
@@ -65,9 +84,9 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 	ethReceipt.Status = status
 
 	r := qtum.TransactionReceipt(*qtumReceipt)
-	ethReceipt.Logs = extractETHLogsFromTransactionReceipt(&r)
+	ethReceipt.Logs = conversion.ExtractETHLogsFromTransactionReceipt(&r)
 
-	qtumTx, err := p.Qtum.GetTransaction(qtumReceipt.TransactionHash)
+	qtumTx, err := p.Qtum.GetRawTransaction(qtumReceipt.TransactionHash, false)
 	if err != nil {
 		return nil, errors.WithMessage(err, "couldn't get transaction")
 	}

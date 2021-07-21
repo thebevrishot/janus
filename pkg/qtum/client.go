@@ -2,6 +2,7 @@ package qtum
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,6 +22,7 @@ import (
 )
 
 var FLAG_GENERATE_ADDRESS_TO = "REGTEST_GENERATE_ADDRESS_TO"
+var FLAG_IGNORE_UNKNOWN_TX = "IGNORE_UNKNOWN_TX"
 
 var maximumRequestTime = 10000
 var maximumBackoff = (2 * time.Second).Milliseconds()
@@ -87,6 +89,10 @@ func (c *Client) IsMain() bool {
 }
 
 func (c *Client) Request(method string, params interface{}, result interface{}) error {
+	return c.RequestWithContext(nil, method, params, result)
+}
+
+func (c *Client) RequestWithContext(ctx context.Context, method string, params interface{}, result interface{}) error {
 	req, err := c.NewRPCRequest(method, params)
 	if err != nil {
 		return errors.WithMessage(err, "couldn't make new rpc request")
@@ -95,7 +101,7 @@ func (c *Client) Request(method string, params interface{}, result interface{}) 
 	var resp *SuccessJSONRPCResult
 	max := int(math.Floor(math.Max(float64(maximumRequestTime/int(maximumBackoff)), 1)))
 	for i := 0; i < max; i++ {
-		resp, err = c.Do(req)
+		resp, err = c.Do(ctx, req)
 		if err != nil {
 			if strings.Contains(err.Error(), ErrQtumWorkQueueDepth.Error()) && i != max-1 {
 				requestString := marshalToString(req)
@@ -122,7 +128,7 @@ func (c *Client) Request(method string, params interface{}, result interface{}) 
 	return nil
 }
 
-func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
+func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 	reqBody, err := json.MarshalIndent(req, "", "  ")
 	if err != nil {
 		return nil, err
@@ -136,7 +142,7 @@ func (c *Client) Do(req *JSONRPCRequest) (*SuccessJSONRPCResult, error) {
 		fmt.Printf("=> qtum RPC request\n%s\n", reqBody)
 	}
 
-	respBody, err := c.do(bytes.NewReader(reqBody))
+	respBody, err := c.do(ctx, bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, errors.Wrap(err, "Client#do")
 	}
@@ -192,8 +198,14 @@ func (c *Client) NewRPCRequest(method string, params interface{}) (*JSONRPCReque
 	}, nil
 }
 
-func (c *Client) do(body io.Reader) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodPost, c.URL, body)
+func (c *Client) do(ctx context.Context, body io.Reader) ([]byte, error) {
+	var req *http.Request
+	var err error
+	if ctx != nil {
+		req, err = http.NewRequestWithContext(ctx, http.MethodPost, c.URL, body)
+	} else {
+		req, err = http.NewRequest(http.MethodPost, c.URL, body)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -245,6 +257,18 @@ func (c *Client) GetFlagString(key string) *string {
 	return &result
 }
 
+func (c *Client) GetFlagBool(key string) bool {
+	value := c.GetFlag(key)
+	if value == nil {
+		return false
+	}
+	result, ok := value.(bool)
+	if !ok {
+		return false
+	}
+	return result
+}
+
 type doer interface {
 	Do(*http.Request) (*http.Response, error)
 }
@@ -282,6 +306,13 @@ func SetGenerateToAddress(address string) func(*Client) error {
 		if address != "" {
 			c.SetFlag(FLAG_GENERATE_ADDRESS_TO, address)
 		}
+		return nil
+	}
+}
+
+func SetIgnoreUnknownTransactions(ignore bool) func(*Client) error {
+	return func(c *Client) error {
+		c.SetFlag(FLAG_IGNORE_UNKNOWN_TX, ignore)
 		return nil
 	}
 }

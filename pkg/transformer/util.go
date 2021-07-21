@@ -42,6 +42,21 @@ func EthGasToQtum(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
 	return
 }
 
+func QtumGasToEth(g EthGas) (gasLimit *big.Int, gasPrice string, err error) {
+	gasLimit = g.(*eth.SendTransactionRequest).Gas.Int
+
+	gasPriceDecimal, err := EthValueToQtumAmount(g.GasPriceHex(), MinimumGas)
+	if err != nil {
+		return nil, "0.0", err
+	}
+	if gasPriceDecimal.LessThan(MinimumGas) {
+		gasPriceDecimal = MinimumGas
+	}
+	gasPrice = fmt.Sprintf("%v", gasPriceDecimal)
+
+	return
+}
+
 func EthValueToQtumAmount(val string, defaultValue decimal.Decimal) (decimal.Decimal, error) {
 	if val == "" {
 		return defaultValue, nil
@@ -57,6 +72,10 @@ func EthValueToQtumAmount(val string, defaultValue decimal.Decimal) (decimal.Dec
 		return ZeroSatoshi, errors.New("decimal.NewFromString was not a success")
 	}
 
+	return EthDecimalValueToQtumAmount(ethValDecimal), nil
+}
+
+func EthDecimalValueToQtumAmount(ethValDecimal decimal.Decimal) decimal.Decimal {
 	// Convert Wei to Qtum
 	// 10000000000
 	// one satoshi is 0.00000001
@@ -64,7 +83,32 @@ func EthValueToQtumAmount(val string, defaultValue decimal.Decimal) (decimal.Dec
 	maximumPrecision := ethValDecimal.Mul(decimal.NewFromFloat(float64(1e-8))).Floor()
 	amount := maximumPrecision.Mul(decimal.NewFromFloat(float64(1e-10)))
 
-	return amount, nil
+	return amount
+}
+
+func QtumValueToETHAmount(val string, defaultValue decimal.Decimal) (decimal.Decimal, error) {
+	if val == "" {
+		return defaultValue, nil
+	}
+
+	qtumVal, err := utils.DecodeBig(val)
+	if err != nil {
+		return ZeroSatoshi, err
+	}
+
+	qtumValDecimal, err := decimal.NewFromString(qtumVal.String())
+	if err != nil {
+		return ZeroSatoshi, errors.New("decimal.NewFromString was not a success")
+	}
+
+	return QtumDecimalValueToETHAmount(qtumValDecimal), nil
+}
+
+func QtumDecimalValueToETHAmount(qtumValDecimal decimal.Decimal) decimal.Decimal {
+	// Computes inverse of EthDecimalValueToQtumAmount
+	amount := qtumValDecimal.Div(decimal.NewFromFloat(float64(1e-18)))
+
+	return amount
 }
 
 func formatQtumAmount(amount decimal.Decimal) (string, error) {
@@ -231,27 +275,6 @@ func isBytesOfString(v json.RawMessage) bool {
 	return true
 }
 
-func extractETHLogsFromTransactionReceipt(receipt *qtum.TransactionReceipt) []eth.Log {
-	logs := make([]eth.Log, 0, len(receipt.Log))
-	for i, log := range receipt.Log {
-		topics := make([]string, 0, len(log.Topics))
-		for _, topic := range log.Topics {
-			topics = append(topics, utils.AddHexPrefix(topic))
-		}
-		logs = append(logs, eth.Log{
-			TransactionHash:  utils.AddHexPrefix(receipt.TransactionHash),
-			TransactionIndex: hexutil.EncodeUint64(receipt.TransactionIndex),
-			BlockHash:        utils.AddHexPrefix(receipt.BlockHash),
-			BlockNumber:      hexutil.EncodeUint64(receipt.BlockNumber),
-			Data:             utils.AddHexPrefix(log.Data),
-			Address:          utils.AddHexPrefix(log.Address),
-			Topics:           topics,
-			LogIndex:         hexutil.EncodeUint64(uint64(i)),
-		})
-	}
-	return logs
-}
-
 // Converts Ethereum address to a Qtum address, where `address` represents
 // Ethereum address without `0x` prefix and `chain` represents target Qtum
 // chain
@@ -301,35 +324,6 @@ func convertQtumAddress(address string) (ethAddress string, _ error) {
 	return hex.EncodeToString(ethAddrBytes), nil
 }
 
-// translateTopics takes in an ethReq's topics field and translates it to a it's equivalent QtumReq
-// topics (optional) has a max lenght of 4
-func translateTopics(ethTopics []interface{}) ([]interface{}, error) {
-
-	var topics []interface{}
-
-	if len(ethTopics) > 4 {
-		return nil, errors.Errorf("invalid number of topics. Logs have a max of 4 topics.")
-	}
-
-	for _, topic := range ethTopics {
-		switch topic.(type) {
-		case []interface{}:
-			topic, err := translateTopics(topic.([]interface{}))
-			if err != nil {
-				return nil, err
-			}
-			topics = append(topics, topic)
-		case string:
-			topics = append(topics, utils.RemoveHexPrefix(topic.(string)))
-		case nil:
-			topics = append(topics, nil)
-		}
-	}
-
-	return topics, nil
-
-}
-
 func processFilter(p *ProxyETHGetFilterChanges, rawreq *eth.JSONRPCRequest) (*eth.Filter, error) {
 	var req eth.GetFilterChangesRequest
 	if err := unmarshalRequest(rawreq.Params, &req); err != nil {
@@ -348,4 +342,14 @@ func processFilter(p *ProxyETHGetFilterChanges, rawreq *eth.JSONRPCRequest) (*et
 	filter := _filter.(*eth.Filter)
 
 	return filter, nil
+}
+
+// Converts a satoshis to qtum balance
+func convertFromSatoshisToQtum(inSatoshis decimal.Decimal) decimal.Decimal {
+	return inSatoshis.Div(decimal.NewFromFloat(float64(1e8)))
+}
+
+// Converts a qtum balance to satoshis
+func convertFromQtumToSatoshis(inQtum decimal.Decimal) decimal.Decimal {
+	return inQtum.Mul(decimal.NewFromFloat(float64(1e8)))
 }

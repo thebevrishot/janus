@@ -65,7 +65,7 @@ local-dev-logs: check-env
 
 .PHONY: unit-tests
 unit-tests: check-env
-	go test -v ./...
+	go test -v ./... -timeout 30s
 
 docker-build-unit-tests:
 	docker build -t qtum/tests.janus -f ./docker/unittests.Dockerfile .
@@ -103,6 +103,19 @@ run-janus:
 		--port=23888 \
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \
 		--dev
+
+run-janus-https:
+	@ printf "\nRunning Janus...\n\n"
+
+	go run `pwd`/cli/janus/main.go \
+		--qtum-rpc=http://${test_user}:${test_user_passwd}@0.0.0.0:3889 \
+		--qtum-network=regtest \
+		--bind=0.0.0.0 \
+		--port=23888 \
+		--accounts=`pwd`/docker/standalone/myaccounts.txt \
+		--dev \
+		--https-key https/key.pem \
+		--https-cert https/cert.pem
 
 test_user = qtum
 test_user_passwd = testpasswd

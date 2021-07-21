@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/qtumproject/janus/pkg/eth"
+	"github.com/qtumproject/janus/pkg/internal"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
 
@@ -31,13 +32,13 @@ func TestGetLogs(t *testing.T) {
 	}
 
 	requestParamsArray := []json.RawMessage{requestRaw}
-	requestRPC, err := prepareEthRPCRequest(1, requestParamsArray)
+	requestRPC, err := internal.PrepareEthRPCRequest(1, requestParamsArray)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	clientDoerMock := newDoerMappedMock()
-	qtumClient, err := createMockedClient(clientDoerMock)
+	clientDoerMock := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(clientDoerMock)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +78,7 @@ func TestGetLogs(t *testing.T) {
 	//preparing proxy & executing
 	proxyEth := ProxyETHGetLogs{qtumClient}
 
-	got, err := proxyEth.Request(requestRPC)
+	got, err := proxyEth.Request(requestRPC, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,8 +102,8 @@ func TestGetLogs(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			requestRPC,
-			string(mustMarshalIndent(want, "", "  ")),
-			string(mustMarshalIndent(got, "", "  ")),
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
 		)
 	}
 }
@@ -122,7 +123,7 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 		},
 	}
 
-	translatedTopics, err := translateTopics(request.Topics)
+	translatedTopics, err := eth.TranslateTopics(request.Topics)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,8 +134,8 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 		t.Fatalf("Expected nil for topic 2, got: %v", translatedTopics[1])
 	}
 
-	clientDoerMock := newDoerMappedMock()
-	qtumClient, err := createMockedClient(clientDoerMock)
+	clientDoerMock := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(clientDoerMock)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,8 +160,8 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 		t.Errorf(
 			"error\ninput: %s\nwant: %s\ngot: %s",
 			qtumRawRequest,
-			string(mustMarshalIndent(expectedRawRequest, "", "  ")),
-			string(mustMarshalIndent(string(qtumRawRequest), "", "  ")),
+			string(internal.MustMarshalIndent(expectedRawRequest, "", "  ")),
+			string(internal.MustMarshalIndent(string(qtumRawRequest), "", "  ")),
 		)
 	}
 }

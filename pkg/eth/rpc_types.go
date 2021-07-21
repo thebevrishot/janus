@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -12,6 +13,11 @@ import (
 	"github.com/qtumproject/janus/pkg/utils"
 	"github.com/shopspring/decimal"
 )
+
+var DefaultGasAmountForQtum = big.NewInt(250000)
+
+// QTUM default gas value (also the minimum gas) in wei
+var DefaultGasPriceInWei = big.NewInt(40000000000)
 
 type (
 	SendTransactionResponse string
@@ -37,6 +43,18 @@ func (r *SendTransactionRequest) UnmarshalJSON(data []byte) error {
 	}
 
 	*r = SendTransactionRequest(params[0])
+
+	if r.Gas == nil {
+		// ETH: (optional, default: 90000) Integer of the gas provided for the transaction execution. It will return unused gas.
+		// QTUM: (numeric or string, optional) gasLimit, default: 250000, max: 40000000
+		r.Gas = &ETHInt{DefaultGasAmountForQtum}
+	}
+
+	if r.GasPrice == nil {
+		// ETH: (optional, default: To-Be-Determined) Integer of the gasPrice used for each paid gas
+		// QTUM: (numeric or string, optional) gasPrice Qtum price per gas unit, default: 0.0000004, min:0.0000004
+		r.GasPrice = &ETHInt{DefaultGasPriceInWei}
+	}
 
 	return nil
 }
@@ -76,7 +94,7 @@ type (
 	// Presents hexed string of a raw transaction
 	SendRawTransactionRequest [1]string
 	// Presents hexed string of a transaction hash
-	SendRawTransactionResponse [1]string
+	SendRawTransactionResponse string
 )
 
 // CallResponse
@@ -635,6 +653,129 @@ func newErrInvalidParameterType(idx int, gotType interface{}, wantedType interfa
 	return errors.Errorf("invalid %d parameter of %T type, but %T type is expected", idx, gotType, wantedType)
 }
 
+// ========== eth_subscribe ============= //
+
+type (
+	EthLogSubscriptionParameter struct {
+		Address ETHAddress    `json:"address"`
+		Topics  []interface{} `json:"topics"`
+	}
+
+	EthSubscriptionRequest struct {
+		Method string
+		Params *EthLogSubscriptionParameter
+	}
+
+	EthSubscriptionResponse string
+
+	/*
+	   {
+	     "jsonrpc": "2.0",
+	     "method": "eth_subscription",
+	     "params": {
+	       "result": {
+	         "difficulty": "0x15d9223a23aa",
+	         "extraData": "0xd983010305844765746887676f312e342e328777696e646f7773",
+	         "gasLimit": "0x47e7c4",
+	         "gasUsed": "0x38658",
+	         "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+	         "miner": "0xf8b483dba2c3b7176a3da549ad41a48bb3121069",
+	         "nonce": "0x084149998194cc5f",
+	         "number": "0x1348c9",
+	         "parentHash": "0x7736fab79e05dc611604d22470dadad26f56fe494421b5b333de816ce1f25701",
+	         "receiptRoot": "0x2fab35823ad00c7bb388595cb46652fe7886e00660a01e867824d3dceb1c8d36",
+	         "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+	         "stateRoot": "0xb3346685172db67de536d8765c43c31009d0eb3bd9c501c9be3229203f15f378",
+	         "timestamp": "0x56ffeff8",
+	         "transactionsRoot": "0x0167ffa60e3ebc0b080cdb95f7c0087dd6c0e61413140e39d94d3468d7c9689f"
+	       },
+	       "subscription": "0x9ce59a13059e417087c02d3236a0b1cc"
+	     }
+	   }
+	*/
+
+	EthSubscriptionNewHeadResponse struct {
+		Difficulty       string `json:"difficulty"`
+		ExtraData        string `json:"extraData"`
+		GasLimit         string `json:"gasLimit"`
+		GasUsed          string `json:"gasUsed"`
+		LogsBloom        string `json:"logsBloom"`
+		Miner            string `json:"miner"`
+		Nonce            string `json:"nonce"`
+		Number           string `json:"number"`
+		ParentHash       string `json:"parentHash"`
+		ReceiptRoot      string `json:"receiptRoot"`
+		Sha3Uncles       string `json:"sha3Uncles"`
+		StateRoot        string `json:"stateRoot"`
+		Timestamp        string `json:"timestamp"`
+		TransactionsRoot string `json:"transactionsRoot"`
+	}
+)
+
+func (r *EthSubscriptionRequest) UnmarshalJSON(data []byte) error {
+	var params []interface{}
+	if err := json.Unmarshal(data, &params); err != nil {
+		return errors.Wrap(err, "couldn't unmarhsal data")
+	}
+
+	method, ok := params[0].(string)
+	if !ok {
+		return newErrInvalidParameterType(1, params[0], "")
+	}
+	r.Method = method
+
+	if len(params) >= 2 {
+		param, err := json.Marshal(params[1])
+		if err != nil {
+			return err
+		}
+		var subscriptionParameter EthLogSubscriptionParameter
+		err = json.Unmarshal(param, &subscriptionParameter)
+		if err != nil {
+			return err
+		}
+		r.Params = &subscriptionParameter
+	}
+
+	return nil
+}
+
+func (r EthSubscriptionRequest) MarshalJSON() ([]byte, error) {
+	output := []interface{}{}
+	output = append(output, r.Method)
+	if r.Params != nil {
+		output = append(output, r.Params)
+	}
+
+	return json.Marshal(output)
+}
+
+func NewEthSubscriptionNewHeadResponse(block *GetBlockByHashResponse) *EthSubscriptionNewHeadResponse {
+	return &EthSubscriptionNewHeadResponse{
+		Difficulty:       block.Difficulty,
+		ExtraData:        block.ExtraData,
+		GasLimit:         block.GasLimit,
+		GasUsed:          block.GasUsed,
+		LogsBloom:        block.LogsBloom,
+		Miner:            block.Miner,
+		Nonce:            block.Nonce,
+		Number:           block.Number,
+		ParentHash:       block.ParentHash,
+		ReceiptRoot:      block.ReceiptsRoot,
+		Sha3Uncles:       block.Sha3Uncles,
+		Timestamp:        block.Timestamp,
+		TransactionsRoot: block.TransactionsRoot,
+	}
+}
+
+// ========== eth_unsubscribe =========== //
+
+type (
+	EthUnsubscribeRequest []string
+
+	EthUnsubscribeResponse bool
+)
+
 // ========== eth_newFilter ============= //
 
 type NewFilterRequest struct {
@@ -708,6 +849,12 @@ func (r *GetStorageRequest) UnmarshalJSON(data []byte) error {
 // ======= eth_chainId ============= //
 type ChainIdResponse string
 
+// ======= eth_subscription ======== //
+type EthSubscription struct {
+	SubscriptionID string      `json:"subscription"`
+	Result         interface{} `json:"result"`
+}
+
 // ======= qtum_getUTXOs ============= //
 
 type (
@@ -717,8 +864,10 @@ type (
 	}
 
 	QtumUTXO struct {
-		TXID string `json:"txid"`
-		Vout uint   `json:"vout"`
+		Address string `json:"address"`
+		TXID    string `json:"txid"`
+		Vout    uint   `json:"vout"`
+		Amount  string `json:"amount"`
 	}
 
 	GetUTXOsResponse []QtumUTXO

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
+	"github.com/qtumproject/janus/pkg/notifier"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/server"
 	"github.com/qtumproject/janus/pkg/transformer"
@@ -30,6 +32,8 @@ var (
 
 	devMode        = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
 	singleThreaded = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
+
+	ignoreUnknownTransactions = app.Flag("ignoreTransactions", "[Development] Ignore transactions inside blocks we can't fetch and return responses instead of failing").Default("false").Bool()
 
 	generateToAddressTo = app.Flag("generateToAddressTo", "[regtest only] configure address to mine blocks to when mining new transactions in blocks").Envar("GENERATE_TO_ADDRESS").Default("").String()
 )
@@ -84,6 +88,7 @@ func action(pc *kingpin.ParseContext) error {
 		qtum.SetLogger(logger),
 		qtum.SetAccounts(accounts),
 		qtum.SetGenerateToAddress(*generateToAddressTo),
+		qtum.SetIgnoreUnknownTransactions(*ignoreUnknownTransactions),
 	)
 	if err != nil {
 		return errors.Wrap(err, "jsonrpc#New")
@@ -94,15 +99,18 @@ func action(pc *kingpin.ParseContext) error {
 		return errors.Wrap(err, "qtum#New")
 	}
 
+	agent := notifier.NewAgent(context.Background(), qtumClient, nil)
+	proxies := transformer.DefaultProxies(qtumClient, agent)
 	t, err := transformer.New(
 		qtumClient,
-		transformer.DefaultProxies(qtumClient),
+		proxies,
 		transformer.SetDebug(*devMode),
 		transformer.SetLogger(logger),
 	)
 	if err != nil {
 		return errors.Wrap(err, "transformer#New")
 	}
+	agent.SetTransformer(t)
 
 	httpsKeyFile := getEmptyStringIfFileDoesntExist(*httpsKey, logger)
 	httpsCertFile := getEmptyStringIfFileDoesntExist(*httpsCert, logger)

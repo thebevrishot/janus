@@ -43,4 +43,7 @@ repeat_until_success qtum-cli -rpcuser=qtum -rpcpassword=testpasswd generatetoad
 # address6
 echo Seeding qW28njWueNpBXYWj2KDmtFG2gbLeALeHfV
 repeat_until_success qtum-cli -rpcuser=qtum -rpcpassword=testpasswd generatetoaddress 100 qW28njWueNpBXYWj2KDmtFG2gbLeALeHfV
+# playground pet shop dapp
+echo Seeding 0xCca81b02942D8079A871e02BA03A3A4a8D7740d2
+repeat_until_success qtum-cli -rpcuser=qtum -rpcpassword=testpasswd generatetoaddress 2 qcDWPLgdY9pTv3cKLkaMPvqjukURH3Qudy
 echo Finished importing and seeding accounts

@@ -4,14 +4,12 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/utils"
 )
-
-var EmptyLogsBloom = "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-var DefaultSha3Uncles = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
 
 // ProxyETHGetBlockByHash implements ETHProxy
 type ProxyETHGetBlockByHash struct {
@@ -22,7 +20,7 @@ func (p *ProxyETHGetBlockByHash) Method() string {
 	return "eth_getBlockByHash"
 }
 
-func (p *ProxyETHGetBlockByHash) Request(rawreq *eth.JSONRPCRequest) (interface{}, error) {
+func (p *ProxyETHGetBlockByHash) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
 	req := new(eth.GetBlockByHashRequest)
 	if err := unmarshalRequest(rawreq.Params, req); err != nil {
 		return nil, err
@@ -73,12 +71,12 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 		Uncles: []string{},
 
 		// TODO: check value correctness
-		Sha3Uncles: DefaultSha3Uncles,
+		Sha3Uncles: eth.DefaultSha3Uncles,
 
 		// TODO: backlog
 		// ! Not found
 		// - Temporary expect this value to be always zero, as Etherium logs are usually zeros
-		LogsBloom: EmptyLogsBloom,
+		LogsBloom: eth.EmptyLogsBloom,
 
 		// TODO: researching
 		// ? What value to put
@@ -127,9 +125,12 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 			}
 			if tx == nil {
 				p.GetDebugLogger().Log("msg", "Failed to get transaction by hash included in a block", "hash", txHash)
-				return nil, errors.WithMessage(err, "couldn't get transaction by hash included in a block")
+				if !p.GetFlagBool(qtum.FLAG_IGNORE_UNKNOWN_TX) {
+					return nil, errors.WithMessage(err, "couldn't get transaction by hash included in a block")
+				}
+			} else {
+				resp.Transactions = append(resp.Transactions, *tx)
 			}
-			resp.Transactions = append(resp.Transactions, *tx)
 			// TODO: fill gas used
 			// TODO: fill gas limit?
 		}
