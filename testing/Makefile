@@ -22,6 +22,9 @@ init:
 openzeppelin:
 	cd openzeppelin/openzeppelin-contracts && truffle test --network testing
 
+openzeppelin-development:
+	cd openzeppelin/openzeppelin-contracts && truffle test --network development
+
 openzeppelin-docker: build
 	docker run --rm qtum/janus-openzeppelin
 
