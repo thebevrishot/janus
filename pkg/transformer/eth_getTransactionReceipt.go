@@ -10,6 +10,9 @@ import (
 	"github.com/qtumproject/janus/pkg/utils"
 )
 
+var STATUS_SUCCESS = "0x1"
+var STATUS_FAILURE = "0x0"
+
 // ProxyETHGetTransactionReceipt implements ETHProxy
 type ProxyETHGetTransactionReceipt struct {
 	*qtum.Qtum
@@ -57,7 +60,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 			To:                ethTx.To,
 			Logs:              []eth.Log{},
 			LogsBloom:         eth.EmptyLogsBloom,
-			Status:            "0x0",
+			Status:            STATUS_SUCCESS,
 		}, nil
 	}
 
@@ -77,9 +80,11 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 		LogsBloom: eth.EmptyLogsBloom,
 	}
 
-	status := "0x0"
+	status := STATUS_FAILURE
 	if qtumReceipt.Excepted == "None" {
-		status = "0x1"
+		status = STATUS_SUCCESS
+	} else {
+		p.Qtum.GetDebugLogger().Log("transaction", ethReceipt.TransactionHash, "msg", "transaction excepted", "message", qtumReceipt.Excepted)
 	}
 	ethReceipt.Status = status
 
