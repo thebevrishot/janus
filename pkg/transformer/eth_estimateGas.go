@@ -22,6 +22,15 @@ func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest, c echo.Context
 		return nil, err
 	}
 
+	// when supplying this parameter to callcontract to estimate gas in the qtum api
+	// if there isn't enough gas specified here, the result will be an exception
+	// Excepted = "OutOfGasIntrinsic"
+	// Gas = "the supplied value"
+	// this is different from geth's behavior
+	// which will return a used gas value that is higher than the incoming gas parameter
+	// so we set this to nil so that callcontract will return the actual gas estimate
+	ethreq.Gas = nil
+
 	// eth req -> qtum req
 	qtumreq, err := p.ToRequest(&ethreq)
 	if err != nil {
