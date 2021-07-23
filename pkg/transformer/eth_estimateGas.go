@@ -3,9 +3,12 @@ package transformer
 import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo"
+	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/qtum"
 )
+
+var ErrExecutionReverted = errors.New("execution reverted")
 
 // ProxyETHEstimateGas implements ETHProxy
 type ProxyETHEstimateGas struct {
@@ -47,6 +50,10 @@ func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest, c echo.Context
 }
 
 func (p *ProxyETHEstimateGas) toResp(qtumresp *qtum.CallContractResponse) (*eth.EstimateGasResponse, error) {
+	if qtumresp.ExecutionResult.Excepted != "None" {
+		// TODO: Return code -32000
+		return nil, ErrExecutionReverted
+	}
 	gas := eth.EstimateGasResponse(hexutil.EncodeUint64(uint64(qtumresp.ExecutionResult.GasUsed)))
 	p.GetDebugLogger().Log(p.Method(), gas)
 	return &gas, nil
