@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	stdLog "log"
 	"net/http"
 	"sync"
@@ -11,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/eth"
 	"github.com/qtumproject/janus/pkg/notifier"
+	"github.com/qtumproject/janus/pkg/qtum"
 
 	"github.com/gorilla/websocket"
 )
@@ -315,6 +317,17 @@ func websocketHandler(c echo.Context) error {
 		err = send(responseBytes)
 		if err == nil {
 			notifier.ResponseSent()
+
+			if cc.IsDebugEnabled() {
+				reqBody, err := qtum.ReformatJSON(req)
+				resBody, err := qtum.ReformatJSON(responseBytes)
+				if err == nil {
+					cc.GetDebugLogger().Log("msg", "ETH WEBSOCKET RPC")
+					fmt.Printf("=> ETH request\n%s\n", reqBody)
+					fmt.Printf("<= ETH response\n%s\n", resBody)
+				}
+			}
+
 		} else {
 			cc.GetErrorLogger().Log("err", err.Error())
 			return nil
