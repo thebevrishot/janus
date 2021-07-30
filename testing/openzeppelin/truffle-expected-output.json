@@ -1,10 +1,10 @@
 {
  "stats": {
-  "suites": 893,
-  "tests": 1525,
-  "passes": 1347,
+  "suites": 894,
+  "tests": 1531,
+  "passes": 1349,
   "pending": 4,
-  "failures": 182
+  "failures": 185
  },
  "failures": [
   {
@@ -268,10 +268,6 @@
    "title": "should remove function"
   },
   {
-   "fullTitle": "release reverts if non-payee want to claim",
-   "title": "reverts if non-payee want to claim"
-  },
-  {
    "fullTitle": "safeBatchTransferFrom \"before each\" hook for \"reverts when transferring amount more than any of balances\"",
    "title": "\"before each\" hook for \"reverts when transferring amount more than any of balances\""
   },
@@ -520,8 +516,16 @@
    "title": "throws"
   },
   {
-   "fullTitle": "when sender contract has funds \"before each\" hook for \"sends 0 wei\"",
-   "title": "\"before each\" hook for \"sends 0 wei\""
+   "fullTitle": "when sender contract has funds sends 0 wei",
+   "title": "sends 0 wei"
+  },
+  {
+   "fullTitle": "when sender contract has funds sends non-zero amounts",
+   "title": "sends non-zero amounts"
+  },
+  {
+   "fullTitle": "when sender contract has funds sends the whole balance",
+   "title": "sends the whole balance"
   },
   {
    "fullTitle": "when sender contract has no funds sends 0 wei",
@@ -678,6 +682,14 @@
   {
    "fullTitle": "with burnt token deletes the token",
    "title": "deletes the token"
+  },
+  {
+   "fullTitle": "with contract recipient reverts on recipient revert",
+   "title": "reverts on recipient revert"
+  },
+  {
+   "fullTitle": "with contract recipient sends funds",
+   "title": "sends funds"
   },
   {
    "fullTitle": "with correct signature returns signer address",
@@ -2620,6 +2632,10 @@
   {
    "fullTitle": "release reverts if no funds to claim",
    "title": "reverts if no funds to claim"
+  },
+  {
+   "fullTitle": "release reverts if non-payee want to claim",
+   "title": "reverts if non-payee want to claim"
   },
   {
    "fullTitle": "remove adds and removes multiple keys",
@@ -4660,6 +4676,10 @@
   {
    "fullTitle": "when paused reverts when re-pausing",
    "title": "reverts when re-pausing"
+  },
+  {
+   "fullTitle": "when sender contract has funds reverts when sending more than the balance",
+   "title": "reverts when sending more than the balance"
   },
   {
    "fullTitle": "when sender contract has no funds reverts when sending non-zero amounts",
