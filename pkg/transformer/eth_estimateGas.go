@@ -8,6 +8,8 @@ import (
 	"github.com/qtumproject/janus/pkg/qtum"
 )
 
+// 22000
+var NonContractVMGasLimit = "0x55f0"
 var ErrExecutionReverted = errors.New("execution reverted")
 
 // ProxyETHEstimateGas implements ETHProxy
@@ -23,6 +25,11 @@ func (p *ProxyETHEstimateGas) Request(rawreq *eth.JSONRPCRequest, c echo.Context
 	var ethreq eth.CallRequest
 	if err := unmarshalRequest(rawreq.Params, &ethreq); err != nil {
 		return nil, err
+	}
+
+	if ethreq.Data == "" {
+		response := eth.EstimateGasResponse(NonContractVMGasLimit)
+		return &response, nil
 	}
 
 	// when supplying this parameter to callcontract to estimate gas in the qtum api
