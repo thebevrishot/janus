@@ -62,7 +62,7 @@ func TestGetTransactionReceiptForNonVMTransaction(t *testing.T) {
 		To:                utils.AddHexPrefix(qtum.ZeroAddress),
 		From:              utils.AddHexPrefix(qtum.ZeroAddress),
 		LogsBloom:         eth.EmptyLogsBloom,
-		Status:            "0x0",
+		Status:            STATUS_SUCCESS,
 	}
 	if !reflect.DeepEqual(got, &want) {
 		t.Errorf(
