@@ -98,7 +98,8 @@ func (s *subscriptionInformation) run() {
 		if err == nil {
 			nextBlock = int(resp.NextBlock)
 			for _, qtumLog := range resp.Entries {
-				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(&qtumLog)
+				logs := []qtum.Log{qtumLog.Log()}
+				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(qtumLog, logs)
 				for _, ethLog := range ethLogs {
 					subscription := &eth.EthSubscription{
 						SubscriptionID: s.Subscription.id,

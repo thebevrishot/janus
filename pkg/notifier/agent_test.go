@@ -26,13 +26,11 @@ func TestAgentAddSubscriptionLogs(t *testing.T) {
 	topic1 := "topic1"
 
 	doer.AddResponse(qtum.MethodWaitForLogs, qtum.WaitForLogsResponse{
-		Entries: []qtum.TransactionReceipt{
-			internal.QtumTransactionReceipt([]qtum.Log{
-				{
-					Address: internal.QtumTransactionReceipt(nil).ContractAddress,
-					Topics:  []string{topic1},
-					Data:    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-				},
+		Entries: []qtum.WaitForLogsEntry{
+			internal.QtumWaitForLogsEntry(qtum.Log{
+				Address: internal.QtumTransactionReceipt(nil).ContractAddress,
+				Topics:  []string{topic1},
+				Data:    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
 			}),
 		},
 		Count:     1,

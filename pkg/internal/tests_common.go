@@ -413,6 +413,22 @@ func QtumTransactionReceipt(logs []qtum.Log) qtum.TransactionReceipt {
 	}
 }
 
+func QtumWaitForLogsEntry(log qtum.Log) qtum.WaitForLogsEntry {
+	return qtum.WaitForLogsEntry{
+		BlockHash:         GetTransactionByHashBlockHexHash,
+		BlockNumber:       GetTransactionByHashBlockNumberInteger,
+		TransactionHash:   GetTransactionByHashResponseData.Hash,
+		TransactionIndex:  hexutil.MustDecodeUint64(GetTransactionByHashResponseData.TransactionIndex),
+		From:              GetTransactionByHashResponseData.From,
+		To:                GetTransactionByHashResponseData.To,
+		CumulativeGasUsed: hexutil.MustDecodeUint64(GetTransactionByHashResponseData.Gas),
+		GasUsed:           hexutil.MustDecodeUint64(GetTransactionByHashResponseData.Gas),
+		ContractAddress:   GetTransactionByHashResponseData.To,
+		Topics:            log.Topics,
+		Data:              log.Data,
+	}
+}
+
 func SetupGetBlockByHashResponses(t *testing.T, mockedClientDoer Doer) {
 	//preparing answer to "getblockhash"
 	getBlockHashResponse := qtum.GetBlockHashResponse(GetTransactionByHashBlockHexHash)
