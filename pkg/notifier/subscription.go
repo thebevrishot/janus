@@ -96,6 +96,7 @@ func (s *subscriptionInformation) run() {
 		resp, err := s.qtum.WaitForLogsWithContext(s.ctx, req)
 		timeAfterCall := time.Now()
 		if err == nil {
+			nextBlock = int(resp.NextBlock)
 			for _, qtumLog := range resp.Entries {
 				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(&qtumLog)
 				for _, ethLog := range ethLogs {
