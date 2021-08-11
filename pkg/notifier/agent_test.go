@@ -102,8 +102,18 @@ func TestAgentAddSubscriptionLogs(t *testing.T) {
 	case <-sentValuesChannel:
 		gotBytes := sentValues[0]
 		got := string(gotBytes)
+		var jsonRpcNotification eth.JSONRPCNotification
+		err = json.Unmarshal(gotBytes, &jsonRpcNotification)
+		method := "eth_subscription"
+		if jsonRpcNotification.Method != method {
+			t.Fatalf(
+				"unexpected method\nwant: %s\ngot: %s",
+				method,
+				string(jsonRpcNotification.Method),
+			)
+		}
 		var receivedEthSubscription eth.EthSubscription
-		err = json.Unmarshal(gotBytes, &receivedEthSubscription)
+		err = json.Unmarshal(jsonRpcNotification.Params, &receivedEthSubscription)
 		if err != nil {
 			t.Fatalf("Failed to unmarshal: %s: %s", got, err)
 		}

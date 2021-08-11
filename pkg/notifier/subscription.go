@@ -109,7 +109,12 @@ func (s *subscriptionInformation) run() {
 					if _, ok := sentHashes[hash]; !ok {
 						sentHashes[hash] = true
 						s.qtum.GetDebugLogger().Log("subscriptionId", s.id, "msg", "notifying of logs")
-						s.Send(subscription)
+						jsonRpcNotification, err := eth.NewJSONRPCNotification("eth_subscription", subscription)
+						if err != nil {
+							s.qtum.GetErrorLogger().Log("subscriptionId", s.id, "err", err)
+							return
+						}
+						s.Send(jsonRpcNotification)
 					}
 				}
 			}

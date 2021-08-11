@@ -48,3 +48,22 @@ func NewJSONRPCResult(id json.RawMessage, res interface{}) (*JSONRPCResult, erro
 		RawResult: rawResult,
 	}, nil
 }
+
+type JSONRPCNotification struct {
+	JSONRPC string          `json:"jsonrpc"`
+	Method  string          `json:"method,omitempty"`
+	Params  json.RawMessage `json:"params"`
+}
+
+func NewJSONRPCNotification(method string, params interface{}) (*JSONRPCNotification, error) {
+	rawParams, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return &JSONRPCNotification{
+		JSONRPC: RPCVersion,
+		Method:  method,
+		Params:  rawParams,
+	}, nil
+}
