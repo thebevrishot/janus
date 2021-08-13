@@ -179,3 +179,54 @@ func TestRetry(t *testing.T) {
 		t.Errorf("Retrying requests was too quick: %v < 2s", after.Sub(before))
 	}
 }
+
+func TestEthCallRequestOnUnknownContract(t *testing.T) {
+	//prepare request
+	request := eth.CallRequest{
+		From: "0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960",
+		To:   "0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960",
+	}
+	requestRaw, err := json.Marshal(&request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requestParamsArray := []json.RawMessage{requestRaw}
+	requestRPC, err := internal.PrepareEthRPCRequest(1, requestParamsArray)
+
+	clientDoerMock := internal.NewDoerMappedMock()
+	qtumClient, err := internal.CreateMockedClient(clientDoerMock)
+
+	fromHexAddressResponse := qtum.FromHexAddressResponse("0x1e6f89d7399081b4f8f8aa1ae2805a5efff2f960")
+	err = clientDoerMock.AddResponse(qtum.MethodFromHexAddress, fromHexAddressResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//preparing error response
+	unknownAddressResponse := qtum.GetErrorResponse(qtum.ErrInvalidAddress)
+	err = clientDoerMock.AddError(qtum.MethodCallContract, unknownAddressResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//preparing proxy & executing
+	proxyEth := ProxyETHCall{qtumClient}
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := proxyEth.Request(requestRPC, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := eth.CallResponse("0x")
+	if !reflect.DeepEqual(got, &want) {
+		t.Errorf(
+			"error\ninput: %s\nwant: %s\ngot: %s",
+			requestRPC,
+			string(internal.MustMarshalIndent(want, "", "  ")),
+			string(internal.MustMarshalIndent(got, "", "  ")),
+		)
+	}
+}

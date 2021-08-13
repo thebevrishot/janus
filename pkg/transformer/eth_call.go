@@ -36,6 +36,11 @@ func (p *ProxyETHCall) request(ethreq *eth.CallRequest) (interface{}, error) {
 
 	qtumresp, err := p.CallContract(qtumreq)
 	if err != nil {
+		if err == qtum.ErrInvalidAddress {
+			qtumresp := eth.CallResponse("0x")
+			return &qtumresp, nil
+		}
+
 		return nil, err
 	}
 
@@ -67,14 +72,11 @@ func (p *ProxyETHCall) ToRequest(ethreq *eth.CallRequest) (*qtum.CallContractReq
 }
 
 func (p *ProxyETHCall) ToResponse(qresp *qtum.CallContractResponse) interface{} {
-
 	if qresp.ExecutionResult.Output == "" {
-
 		return &eth.JSONRPCError{
 			Message: "Revert: executionResult output is empty",
 			Code:    -32000,
 		}
-
 	}
 
 	data := utils.AddHexPrefix(qresp.ExecutionResult.Output)
