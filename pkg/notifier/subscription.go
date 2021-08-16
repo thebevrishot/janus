@@ -50,7 +50,7 @@ func (s *subscriptionInformation) run() {
 	}()
 
 	var nextBlock interface{}
-	nextBlock = 0
+	nextBlock = nil
 	qtumTopics, err := eth.TranslateTopics(s.params.Params.Topics)
 	if err != nil {
 		s.qtum.GetDebugLogger().Log("msg", "Error translating logs topics", "error", err)
