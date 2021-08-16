@@ -49,7 +49,8 @@ func (s *subscriptionInformation) run() {
 		s.running = false
 	}()
 
-	nextBlock := 0
+	var nextBlock interface{}
+	nextBlock = 0
 	qtumTopics, err := eth.TranslateTopics(s.params.Params.Topics)
 	if err != nil {
 		s.qtum.GetDebugLogger().Log("msg", "Error translating logs topics", "error", err)
@@ -57,10 +58,14 @@ func (s *subscriptionInformation) run() {
 	}
 	req := &qtum.WaitForLogsRequest{
 		FromBlock: nextBlock,
-		ToBlock:   "latest",
+		ToBlock:   nil,
 		Filter: qtum.WaitForLogsFilter{
 			Topics: &qtumTopics,
 		},
+	}
+
+	if s.qtum.Chain() == qtum.ChainRegTest || s.qtum.Chain() == qtum.ChainTest {
+		req.MinimumConfirmations = 0
 	}
 
 	// this throttles QTUM api calls if waitforlogs is returning very quickly a lot
