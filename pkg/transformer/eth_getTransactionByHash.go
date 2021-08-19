@@ -132,10 +132,15 @@ func getTransactionByHash(p *qtum.Qtum, hash string) (*eth.GetTransactionByHashR
 	if qtumTx.Generated {
 		ethTx.From = utils.AddHexPrefix(qtum.ZeroAddress)
 	} else {
-		ethTx.From, err = getNonContractTxSenderAddress(p, qtumDecodedRawTx.Vins)
-		if err != nil {
-			return nil, errors.WithMessage(err, "couldn't get non contract transaction sender address")
-		}
+		// TODO: Figure out proper way to do this
+		// There is a problem with this function, sometimes it returns errors on regtest, empty block?
+		// commenting it out as its being overwritten below anyway
+		/*
+			ethTx.From, err = getNonContractTxSenderAddress(p, qtumDecodedRawTx.Vins)
+			if err != nil {
+				return nil, errors.WithMessage(err, "couldn't get non contract transaction sender address")
+			}
+		*/
 		// TODO: discuss
 		// ? Does func above return incorrect address for graph-node (len is < 40)
 		// ! Temporary solution

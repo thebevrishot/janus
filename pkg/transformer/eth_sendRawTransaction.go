@@ -52,10 +52,8 @@ func (p *ProxyETHSendRawTransaction) request(params eth.SendRawTransactionReques
 			return eth.SendRawTransactionResponse(""), err
 		}
 	} else {
-		if p.Chain() == qtum.ChainRegTest {
-			if _, err = p.Generate(1, nil); err != nil {
-				p.GetErrorLogger().Log("Error generating new block", err)
-			}
+		if p.CanGenerate() {
+			p.GenerateIfPossible()
 		}
 	}
 
