@@ -37,12 +37,8 @@ func (p *ProxyETHSendTransaction) Request(rawreq *eth.JSONRPCRequest, c echo.Con
 		return nil, errors.New("Unknown operation")
 	}
 
-	if p.Chain() == qtum.ChainRegTest && err == nil {
-		defer func() {
-			if _, generateErr := p.Generate(1, nil); generateErr != nil {
-				p.GetErrorLogger().Log("Error generating new block", generateErr)
-			}
-		}()
+	if p.CanGenerate() {
+		p.GenerateIfPossible()
 	}
 
 	return result, err
