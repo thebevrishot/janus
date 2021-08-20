@@ -49,7 +49,8 @@ func (s *subscriptionInformation) run() {
 		s.running = false
 	}()
 
-	nextBlock := 0
+	var nextBlock interface{}
+	nextBlock = nil
 	qtumTopics, err := eth.TranslateTopics(s.params.Params.Topics)
 	if err != nil {
 		s.qtum.GetDebugLogger().Log("msg", "Error translating logs topics", "error", err)
@@ -57,10 +58,14 @@ func (s *subscriptionInformation) run() {
 	}
 	req := &qtum.WaitForLogsRequest{
 		FromBlock: nextBlock,
-		ToBlock:   "latest",
+		ToBlock:   nil,
 		Filter: qtum.WaitForLogsFilter{
 			Topics: &qtumTopics,
 		},
+	}
+
+	if s.qtum.Chain() == qtum.ChainRegTest || s.qtum.Chain() == qtum.ChainTest {
+		req.MinimumConfirmations = 0
 	}
 
 	// this throttles QTUM api calls if waitforlogs is returning very quickly a lot
@@ -96,8 +101,10 @@ func (s *subscriptionInformation) run() {
 		resp, err := s.qtum.WaitForLogsWithContext(s.ctx, req)
 		timeAfterCall := time.Now()
 		if err == nil {
+			nextBlock = int(resp.NextBlock)
 			for _, qtumLog := range resp.Entries {
-				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(&qtumLog)
+				logs := []qtum.Log{qtumLog.Log()}
+				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(qtumLog, logs)
 				for _, ethLog := range ethLogs {
 					subscription := &eth.EthSubscription{
 						SubscriptionID: s.Subscription.id,
@@ -107,7 +114,12 @@ func (s *subscriptionInformation) run() {
 					if _, ok := sentHashes[hash]; !ok {
 						sentHashes[hash] = true
 						s.qtum.GetDebugLogger().Log("subscriptionId", s.id, "msg", "notifying of logs")
-						s.Send(subscription)
+						jsonRpcNotification, err := eth.NewJSONRPCNotification("eth_subscription", subscription)
+						if err != nil {
+							s.qtum.GetErrorLogger().Log("subscriptionId", s.id, "err", err)
+							return
+						}
+						s.Send(jsonRpcNotification)
 					}
 				}
 			}

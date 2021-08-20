@@ -57,6 +57,13 @@ type (
 		Data    string   `json:"data"`
 	}
 
+	LogBlockData interface {
+		GetTransactionHash() string
+		GetTransactionIndex() uint64
+		GetBlockHash() string
+		GetBlockNumber() uint64
+	}
+
 	/*
 		{
 		  "chain": "regtest",
@@ -144,6 +151,18 @@ type (
 		Verificationprogress float64 `json:"verificationprogress"`
 	}
 )
+
+func (l Log) GetAddress() string {
+	return l.Address
+}
+
+func (l Log) GetTopics() []string {
+	return l.Topics
+}
+
+func (l Log) GetData() string {
+	return l.Data
+}
 
 // ========== SendToAddress ============= //
 
@@ -646,6 +665,22 @@ type (
 	}
 )
 
+func (r TransactionReceipt) GetTransactionHash() string {
+	return r.TransactionHash
+}
+
+func (r TransactionReceipt) GetTransactionIndex() uint64 {
+	return r.TransactionIndex
+}
+
+func (r TransactionReceipt) GetBlockHash() string {
+	return r.BlockHash
+}
+
+func (r TransactionReceipt) GetBlockNumber() uint64 {
+	return r.BlockNumber
+}
+
 func (r GetTransactionReceiptRequest) MarshalJSON() ([]byte, error) {
 	/*
 		1. "hash"          (string, required) The transaction hash
@@ -765,8 +800,9 @@ type (
 
 	}
 	RawTransactionVin struct {
-		ID    string `json:"txid"`
-		VoutN int64  `json:"vout"`
+		ID     string  `json:"txid"`
+		VoutN  int64   `json:"vout"`
+		Amount float64 `json:"value"`
 
 		// Additional fields:
 		// - "scriptSig"
@@ -803,6 +839,20 @@ func (r *GetRawTransactionRequest) MarshalJSON() ([]byte, error) {
 
 func (r *GetRawTransactionResponse) IsPending() bool {
 	return r.BlockHash == ""
+}
+
+func (r *GetRawTransactionResponse) GetMiningFeeInQTUM() float64 {
+	var vinsTotals float64
+	var voutsTotals float64
+
+	for _, in := range r.Vins {
+		vinsTotals += in.Amount
+	}
+	for _, out := range r.Vouts {
+		voutsTotals += out.Amount
+	}
+
+	return vinsTotals - voutsTotals
 }
 
 // ========== GetTransaction ============= //
@@ -1665,12 +1715,78 @@ type (
 		Topics    *[]interface{} `json:"topics,omitempty"`
 	}
 
+	WaitForLogsEntry struct {
+		BlockHash        string `json:"blockHash"`
+		BlockNumber      uint64 `json:"blockNumber"`
+		Bloom            string `json:"bloom"`
+		TransactionHash  string `json:"transactionHash"`
+		TransactionIndex uint64 `json:"transactionIndex"`
+		From             string `json:"from"`
+		// (does this apply to waitforlogs or only searchlogs?)
+		// NOTE: will be null for a contract creation transaction
+		To                string `json:"to"`
+		CumulativeGasUsed uint64 `json:"cumulativeGasUsed"`
+		GasUsed           uint64 `json:"gasUsed"`
+
+		// (does this apply to waitforlogs or only searchlogs?)
+		// TODO: discuss -
+		// 	? May be a contract transaction created by non-contract
+		//
+		// The created contract address. If this tx is created by the contract,
+		// return the contract address, else return null
+		ContractAddress string   `json:"contractAddress"`
+		Data            string   `json:"data"`
+		Topics          []string `json:"topics"`
+
+		// May has "None" value, which means, that transaction is not executed
+		Excepted        string `json:"excepted"`
+		ExceptedMessage string `json:"exceptedMessage"`
+
+		OutputIndex int64 `json:"outputIndex"`
+	}
+
 	WaitForLogsResponse struct {
-		Entries   []TransactionReceipt `json:"entries"`
-		Count     uint64               `json:"count"`
-		NextBlock uint64               `json:"nextBlock"`
+		Entries   []WaitForLogsEntry `json:"entries"`
+		Count     uint64             `json:"count"`
+		NextBlock uint64             `json:"nextBlock"`
 	}
 )
+
+func (e WaitForLogsEntry) Log() Log {
+	return Log{
+		Address: e.ContractAddress,
+		Topics:  []string(e.Topics),
+		Data:    e.Data,
+	}
+}
+
+func (e WaitForLogsEntry) GetTransactionHash() string {
+	return e.TransactionHash
+}
+
+func (e WaitForLogsEntry) GetTransactionIndex() uint64 {
+	return e.TransactionIndex
+}
+
+func (e WaitForLogsEntry) GetBlockHash() string {
+	return e.BlockHash
+}
+
+func (e WaitForLogsEntry) GetBlockNumber() uint64 {
+	return e.BlockNumber
+}
+
+func (e WaitForLogsEntry) GetAddress() string {
+	return e.ContractAddress
+}
+
+func (e WaitForLogsEntry) GetTopics() []string {
+	return e.Topics
+}
+
+func (e WaitForLogsEntry) GetData() string {
+	return e.Data
+}
 
 func (r *WaitForLogsRequest) MarshalJSON() ([]byte, error) {
 	/*

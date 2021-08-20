@@ -50,12 +50,14 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 			return nil, err
 		}
 		return &eth.GetTransactionReceiptResponse{
-			TransactionHash:   ethTx.Hash,
-			TransactionIndex:  ethTx.TransactionIndex,
-			BlockHash:         ethTx.BlockHash,
-			BlockNumber:       ethTx.BlockNumber,
-			CumulativeGasUsed: "0x0",
-			GasUsed:           "0x0",
+			TransactionHash:  ethTx.Hash,
+			TransactionIndex: ethTx.TransactionIndex,
+			BlockHash:        ethTx.BlockHash,
+			BlockNumber:      ethTx.BlockNumber,
+			// TODO: This is higher than GasUsed in geth but does it matter?
+			CumulativeGasUsed: NonContractVMGasLimit,
+			EffectiveGasPrice: "0x0",
+			GasUsed:           NonContractVMGasLimit,
 			From:              ethTx.From,
 			To:                ethTx.To,
 			Logs:              []eth.Log{},
@@ -89,7 +91,7 @@ func (p *ProxyETHGetTransactionReceipt) request(req *qtum.GetTransactionReceiptR
 	ethReceipt.Status = status
 
 	r := qtum.TransactionReceipt(*qtumReceipt)
-	ethReceipt.Logs = conversion.ExtractETHLogsFromTransactionReceipt(&r)
+	ethReceipt.Logs = conversion.ExtractETHLogsFromTransactionReceipt(&r, r.Log)
 
 	qtumTx, err := p.Qtum.GetRawTransaction(qtumReceipt.TransactionHash, false)
 	if err != nil {

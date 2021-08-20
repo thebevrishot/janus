@@ -97,7 +97,7 @@ func (s *Server) Start() error {
 	e.HideBanner = true
 	if s.mutex == nil {
 		e.POST("/*", httpHandler)
-		e.GET("/ws", websocketHandler)
+		e.GET("/*", websocketHandler)
 	} else {
 		level.Info(s.logger).Log("msg", "Processing RPC requests single threaded")
 		e.POST("/*", func(c echo.Context) error {
@@ -105,7 +105,7 @@ func (s *Server) Start() error {
 			defer s.mutex.Unlock()
 			return httpHandler(c)
 		})
-		e.GET("/ws", websocketHandler)
+		e.GET("/*", websocketHandler)
 	}
 
 	https := (s.httpsKey != "" && s.httpsCert != "")

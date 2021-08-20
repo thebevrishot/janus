@@ -112,7 +112,7 @@ func (p *ProxyETHGetFilterChanges) doSearchLogs(req *qtum.SearchLogsRequest) (et
 	}
 
 	receiptToResult := func(receipt *qtum.TransactionReceipt) []interface{} {
-		logs := conversion.ExtractETHLogsFromTransactionReceipt(receipt)
+		logs := conversion.ExtractETHLogsFromTransactionReceipt(receipt, receipt.Log)
 		res := make([]interface{}, len(logs))
 		for i := range res {
 			res[i] = logs[i]

@@ -48,7 +48,7 @@ func (p *ProxyETHGetLogs) request(req *qtum.SearchLogsRequest) (*eth.GetLogsResp
 	logs := make([]eth.Log, 0)
 	for _, receipt := range receipts {
 		r := qtum.TransactionReceipt(receipt)
-		logs = append(logs, conversion.ExtractETHLogsFromTransactionReceipt(&r)...)
+		logs = append(logs, conversion.ExtractETHLogsFromTransactionReceipt(r, r.Log)...)
 	}
 
 	resp := eth.GetLogsResponse(logs)

@@ -378,7 +378,8 @@ type (
 		BlockNumber      string `json:"blockNumber"`      // QUANTITY - block number where this transaction was in.
 		From             string `json:"from,omitempty"`   // DATA, 20 Bytes - address of the sender.
 		// NOTE: must be null if it's a contract creation transaction
-		To                string `json:"to,omitempty"`      // DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
+		To                string `json:"to,omitempty"` // DATA, 20 Bytes - address of the receiver. null when its a contract creation transaction.
+		EffectiveGasPrice string `json:"effectiveGasPrice"`
 		CumulativeGasUsed string `json:"cumulativeGasUsed"` // QUANTITY - The total amount of gas used when this transaction was executed in the block.
 		GasUsed           string `json:"gasUsed"`           // QUANTITY - The amount of gas used by this specific transaction alone.
 		// NOTE: must be null if it's NOT a contract creation transaction
