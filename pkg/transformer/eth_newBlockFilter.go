@@ -27,16 +27,12 @@ func (p *ProxyETHNewBlockFilter) request() (eth.NewBlockFilterResponse, error) {
 		return "", err
 	}
 
-	if p.Chain() == qtum.ChainRegTest {
-		defer func() {
-			if _, generateErr := p.Generate(1, nil); generateErr != nil {
-				p.GetErrorLogger().Log("Error generating new block", generateErr)
-			}
-		}()
-	}
-
 	filter := p.filter.New(eth.NewBlockFilterTy)
 	filter.Data.Store("lastBlockNumber", blockCount.Uint64())
+
+	if p.CanGenerate() {
+		p.GenerateIfPossible()
+	}
 
 	return eth.NewBlockFilterResponse(hexutil.EncodeUint64(filter.ID)), nil
 }
