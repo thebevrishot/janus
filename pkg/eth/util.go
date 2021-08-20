@@ -1,7 +1,6 @@
 package eth
 
 import (
-	"github.com/pkg/errors"
 	"github.com/qtumproject/janus/pkg/utils"
 )
 
@@ -10,10 +9,6 @@ import (
 func TranslateTopics(ethTopics []interface{}) ([]interface{}, error) {
 
 	var topics []interface{}
-
-	if len(ethTopics) > 4 {
-		return nil, errors.Errorf("invalid number of topics. Logs have a max of 4 topics.")
-	}
 
 	for _, topic := range ethTopics {
 		switch topic.(type) {

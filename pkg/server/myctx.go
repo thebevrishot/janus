@@ -47,7 +47,9 @@ func (c *myCtx) JSONRPCError(err *eth.JSONRPCError) error {
 	resp := c.GetJSONRPCError(err)
 
 	if !c.Response().Committed {
-		return c.JSON(http.StatusInternalServerError, resp)
+		err := c.JSON(http.StatusInternalServerError, resp)
+		c.logger.Log("Internal server error", err)
+		return err
 	}
 
 	return nil
