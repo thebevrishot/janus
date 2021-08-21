@@ -100,7 +100,7 @@ run-janus:
 		--qtum-rpc=http://${test_user}:${test_user_passwd}@0.0.0.0:3889 \
 		--qtum-network=regtest \
 		--bind=0.0.0.0 \
-		--port=23888 \
+		--port=23889 \
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \
 		--dev
 
@@ -111,7 +111,7 @@ run-janus-https:
 		--qtum-rpc=http://${test_user}:${test_user_passwd}@0.0.0.0:3889 \
 		--qtum-network=regtest \
 		--bind=0.0.0.0 \
-		--port=23888 \
+		--port=23889 \
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \
 		--dev \
 		--https-key https/key.pem \
@@ -132,6 +132,14 @@ run-qtum:
 
 	@ printf "\n(3) Filling test accounts wallets...\n\n"
 	docker exec ${qtum_container_name} /bin/sh -c ./fill_user_account.sh > /dev/null
+	@ printf "\n... Done\n\n"
+
+seed-qtum:
+	@ printf "\n(2) Importing test accounts...\n\n"
+	docker cp ${shell pwd}/docker/fill_user_account.sh ${qtum_container_name}:.
+
+	@ printf "\n(3) Filling test accounts wallets...\n\n"
+	docker exec ${qtum_container_name} /bin/sh -c ./fill_user_account.sh
 	@ printf "\n... Done\n\n"
 
 qtum_container_name = test-chain

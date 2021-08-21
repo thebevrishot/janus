@@ -829,7 +829,6 @@ func (r *GetRawTransactionRequest) MarshalJSON() ([]byte, error) {
 		1. "txid"      (string, required) The transaction id
 		2. verbose     (bool, optional, default=false) If false, return a string, otherwise return a json object
 		3. "blockhash" (string, optional) The block in which to look for the transaction
-
 	*/
 	return json.Marshal([]interface{}{
 		r.TxID,
