@@ -29,5 +29,6 @@ func (p *ProxyETHGasPrice) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (
 }
 
 func (p *ProxyETHGasPrice) response(qtumresp *big.Int) string {
-	return hexutil.EncodeBig(qtumresp)
+	// 34 GWEI is the minimum price that QTUM will confirm tx with
+	return hexutil.EncodeBig(convertFromSatoshiToWei(qtumresp))
 }

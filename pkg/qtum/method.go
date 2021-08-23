@@ -189,9 +189,10 @@ func (m *Method) GetMining() (resp *GetMiningResponse, err error) {
 
 // hard coded for now as there is only the minimum gas price
 func (m *Method) GetGasPrice() (*big.Int, error) {
-	gasPrice := big.NewInt(0x28)
-	m.GetDebugLogger().Log("Message", "GetGasPrice is hardcoded to "+gasPrice.String())
-	return gasPrice, nil
+	// 40 satoshi
+	minimumGas := big.NewInt(0x28)
+	m.GetDebugLogger().Log("Message", "GetGasPrice is hardcoded to "+minimumGas.String())
+	return minimumGas, nil
 }
 
 // hard coded 0x1 due to the unique nature of Qtums UTXO system, might

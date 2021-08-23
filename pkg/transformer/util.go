@@ -353,3 +353,7 @@ func convertFromSatoshisToQtum(inSatoshis decimal.Decimal) decimal.Decimal {
 func convertFromQtumToSatoshis(inQtum decimal.Decimal) decimal.Decimal {
 	return inQtum.Mul(decimal.NewFromFloat(float64(1e8)))
 }
+
+func convertFromSatoshiToWei(inSatoshis *big.Int) *big.Int {
+	return inSatoshis.Mul(inSatoshis, big.NewInt(1e9))
+}

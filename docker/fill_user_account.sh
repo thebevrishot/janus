@@ -23,8 +23,13 @@ repeat_until_success qtum-cli -rpcuser=qtum -rpcpassword=testpasswd importprivke
 repeat_until_success qtum-cli -rpcuser=qtum -rpcpassword=testpasswd importprivkey "cV93kaaV8hvNqZ711s2z9jVWLYEtwwsVpyFeEZCP6otiZgrCTiEW" address4 # addr=qWMi6ne9mDQFatRGejxdDYVUV9rQVkAFGp
 repeat_until_success qtum-cli -rpcuser=qtum -rpcpassword=testpasswd importprivkey "cVPHpTvmv3UjQsZfsMRrW5RrGCyTSAZ3MWs1f8R1VeKJSYxy5uac" address5 # addr=qLcshhsRS6HKeTKRYFdpXnGVZxw96QQcfm
 repeat_until_success qtum-cli -rpcuser=qtum -rpcpassword=testpasswd importprivkey "cTs5NqY4Ko9o6FESHGBDEG77qqz9me7cyYCoinHcWEiqMZgLC6XY" address6 # addr=qW28njWueNpBXYWj2KDmtFG2gbLeALeHfV
+
 echo Finished importing accounts
 echo Seeding accounts
+echo Seeding qcavTSEVe31NLdXyfq925GzGp8yN5QnS6a
+repeat_until_success qtum-cli -rpcuser=qtum -rpcpassword=testpasswd generatetoaddress 2 qcavTSEVe31NLdXyfq925GzGp8yN5QnS6a
+qtum-cli -rpcuser=qtum -rpcpassword=testpasswd generatetoaddress 2 qa1W7VnwtJPoFDoNjxxGdDHBtsRKDpjW8c
+qtum-cli -rpcuser=qtum -rpcpassword=testpasswd generatetoaddress 1000 qaofg5zZVyvPmWgGL6YdVAyRTKWd3MjZ4A
 # address1
 echo Seeding qUbxboqjBRp96j3La8D1RYkyqx5uQbJPoW
 repeat_until_success qtum-cli -rpcuser=qtum -rpcpassword=testpasswd generatetoaddress 1000 qUbxboqjBRp96j3La8D1RYkyqx5uQbJPoW

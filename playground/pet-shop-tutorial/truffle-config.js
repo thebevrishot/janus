@@ -21,5 +21,16 @@ module.exports = {
       from: "0x7926223070547d2d15b2ef5e7383e541c338ffe9",
       gasPrice: "0x64"
     }
-  }
+  },
+  compilers: {
+    solc: {
+      version: "^0.8.0",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 1,
+        },
+      },
+    },
+  },
 };
