@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo"
@@ -24,11 +25,15 @@ func (p *ProxyETHChainId) Request(req *eth.JSONRPCRequest, c echo.Context) (inte
 	}
 
 	var chainId *big.Int
-	switch qtumresp.Chain {
+	switch strings.ToLower(qtumresp.Chain) {
+	case "main":
+		chainId = big.NewInt(8888)
+	case "test":
+		chainId = big.NewInt(8889)
 	case "regtest":
-		chainId = big.NewInt(113)
+		chainId = big.NewInt(8890)
 	default:
-		chainId = big.NewInt(81)
+		chainId = big.NewInt(8890)
 		p.GetDebugLogger().Log("method", p.Method(), "msg", "Unknown chain "+qtumresp.Chain)
 	}
 

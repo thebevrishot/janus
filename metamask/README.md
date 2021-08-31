@@ -28,7 +28,7 @@ window.ethereum.request({ method: 'eth_requestAccounts' })
             method: "wallet_addEthereumChain",
             params: [{
                 {
-                    chainId: '0x71',
+                    chainId: '0x22B9',
                     chainName: 'Qtum Testnet',
                     rpcUrls: ['https://localhost:23889'],
                     blockExplorerUrls: ['https://testnet.qtum.info/'],
@@ -36,6 +36,10 @@ window.ethereum.request({ method: 'eth_requestAccounts' })
                         'https://qtum.info/images/metamask_icon.svg',
                         'https://qtum.info/images/metamask_icon.png',
                     ],
+                    nativeCurrency: {
+                        decimals: 18,
+                        symbol: 'QTUM',
+                    },
                 }
             }],
         }
@@ -47,4 +51,3 @@ window.ethereum.request({ method: 'eth_requestAccounts' })
   - Either directly through Janus with `--https-key ./path --https-cert ./path2` see [SSL](../README.md#ssl)
   - Through the Makefile `make docker-configure-https && make run-janus-https`
   - Or do it yourself with a proxy (eg, nginx)
-- Client side transaction signing is not implemented yet
