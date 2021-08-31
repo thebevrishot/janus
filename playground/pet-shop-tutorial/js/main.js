@@ -10,8 +10,8 @@ window.$ = $;
 window.jQuery = $;
 
 let QTUMMainnet = {
-  chainId: '0x71',
-  chainName: 'Qtum Mainnet',
+  chainId: '0x22B8', // 8888
+  chainName: 'QTUM Mainnet',
   rpcUrls: ['https://localhost:23889'],
   blockExplorerUrls: ['https://qtum.info/'],
   iconUrls: [
@@ -24,8 +24,8 @@ let QTUMMainnet = {
   },
 };
 let QTUMTestNet = {
-  chainId: '0x71',
-  chainName: 'Qtum Testnet',
+  chainId: '0x22B9', // 8889
+  chainName: 'QTUM Testnet',
   rpcUrls: ['https://localhost:23889'],
   blockExplorerUrls: ['https://testnet.qtum.info/'],
   iconUrls: [
@@ -37,19 +37,28 @@ let QTUMTestNet = {
     symbol: 'QTUM',
   },
 };
+let QTUMRegTest = {
+  chainId: '0x22BA', // 8890
+  chainName: 'QTUM Regtest',
+  rpcUrls: ['https://localhost:23889'],
+  // blockExplorerUrls: ['https://testnet.qtum.info/'],
+  iconUrls: [
+    'https://qtum.info/images/metamask_icon.svg',
+    'https://qtum.info/images/metamask_icon.png',
+  ],
+  nativeCurrency: {
+    decimals: 18,
+    symbol: 'QTUM',
+  },
+};
 let config = {
-  "0x1": QTUMMainnet,
-  // ETH Ropsten
-  "0x3": QTUMTestNet,
-  // ETH Rinkby
-  "0x4": QTUMTestNet,
-  // ETH Görli
-  "0x5": QTUMTestNet,
-  // ETH Kovan
-  "0x71": QTUMTestNet,
+  "0x22B8": QTUMMainnet,
+  "0x22B9": QTUMTestNet,
+  "0x22BA": QTUMRegTest,
 };
 config[QTUMMainnet.chainId] = QTUMMainnet;
 config[QTUMTestNet.chainId] = QTUMTestNet;
+config[QTUMRegTest.chainId] = QTUMRegTest;
 
 const metamask = true;
 
@@ -82,7 +91,7 @@ window.App = {
   },
 
   getChainId: function() {
-    return (window.ethereum || {}).chainId || 113;
+    return (window.ethereum || {}).chainId || 8890;
   },
   isOnQtumChainId: function() {
     let chainId = this.getChainId();
@@ -101,7 +110,7 @@ window.App = {
 
   initWeb3: function() {
     let self = this;
-    let qtumConfig = config[this.getChainId()] || QTUMTestNet;
+    let qtumConfig = config[this.getChainId()] || QTUMRegTest;
     console.log("Adding network to Metamask", qtumConfig);
     window.ethereum.request({
       method: "wallet_addEthereumChain",
