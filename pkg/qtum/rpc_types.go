@@ -959,10 +959,11 @@ func (r *GetTransactionResponse) IsPending() bool {
 
 type (
 	SearchLogsRequest struct {
-		FromBlock *big.Int
-		ToBlock   *big.Int
-		Addresses []string
-		Topics    []interface{}
+		FromBlock            *big.Int
+		ToBlock              *big.Int
+		Addresses            []string
+		Topics               []interface{}
+		MinimumConfirmations *uint
 	}
 
 	SearchLogsResponse []TransactionReceipt
@@ -976,18 +977,31 @@ func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
 		4. "topics"           (string, optional) An array of values from which at least one must appear in the log entries. The order is important, if you want to leave topics out use null, e.g. ["null", "0x00..."].
 		5. "minconf"          (uint, optional, default=0) Minimal number of confirmations before a log is returned
 	*/
+	var addresses interface{}
+	if r.Addresses != nil && len(r.Addresses) != 0 {
+		addresses = map[string][]string{
+			"addresses": r.Addresses,
+		}
+	}
+
+	var topics interface{}
+	if len(r.Topics) > 0 {
+		topics = map[string][]interface{}{
+			"topics": r.Topics,
+		}
+	}
+
 	data := []interface{}{
 		r.FromBlock,
 		r.ToBlock,
-		map[string][]string{
-			"addresses": r.Addresses,
-		},
+		// should be null if not specified
+		addresses,
+		// should be null if not specified
+		topics,
 	}
 
-	if len(r.Topics) > 0 {
-		data = append(data, map[string][]interface{}{
-			"topics": r.Topics,
-		})
+	if r.MinimumConfirmations != nil {
+		data = append(data, r.MinimumConfirmations)
 	}
 
 	return json.Marshal(data)
