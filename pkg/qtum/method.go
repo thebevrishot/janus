@@ -289,6 +289,10 @@ func (m *Method) Generate(blockNum int, maxTries *int) (resp GenerateResponse, e
 	return
 }
 
+/**
+ * Note that QTUM searchlogs api returns all logs in a transaction receipt if any log matches a topic
+ * While Ethereum behaves differently and will only return logs where topics match
+ */
 func (m *Method) SearchLogs(req *SearchLogsRequest) (receipts SearchLogsResponse, err error) {
 	if err := m.Request(MethodSearchLogs, req, &receipts); err != nil {
 		if m.IsDebugEnabled() {

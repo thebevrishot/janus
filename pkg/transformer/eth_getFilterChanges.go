@@ -106,7 +106,7 @@ func (p *ProxyETHGetFilterChanges) requestFilter(filter *eth.Filter) (qtumresp e
 }
 
 func (p *ProxyETHGetFilterChanges) doSearchLogs(req *qtum.SearchLogsRequest) (eth.GetFilterChangesResponse, error) {
-	resp, err := p.SearchLogs(req)
+	resp, err := SearchLogsAndFilterExtraTopics(p.Qtum, req)
 	if err != nil {
 		return nil, err
 	}
