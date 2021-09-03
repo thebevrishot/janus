@@ -124,9 +124,15 @@ func (p *ProxyETHGetBlockByHash) request(req *eth.GetBlockByHashRequest) (*eth.G
 				return nil, errors.WithMessage(err, "couldn't get transaction by hash")
 			}
 			if tx == nil {
-				p.GetDebugLogger().Log("msg", "Failed to get transaction by hash included in a block", "hash", txHash)
-				if !p.GetFlagBool(qtum.FLAG_IGNORE_UNKNOWN_TX) {
-					return nil, errors.WithMessage(err, "couldn't get transaction by hash included in a block")
+				if block.Height == 0 {
+					// Error Invalid address - The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved
+					// the coinbase we can ignore since its not a real transaction, mainnet ethereum also doesn't return any data about the genesis coinbase
+					p.GetDebugLogger().Log("msg", "Failed to get transaction in genesis block, probably the coinbase which we can't get")
+				} else {
+					p.GetDebugLogger().Log("msg", "Failed to get transaction by hash included in a block", "hash", txHash)
+					if !p.GetFlagBool(qtum.FLAG_IGNORE_UNKNOWN_TX) {
+						return nil, errors.WithMessage(err, "couldn't get transaction by hash included in a block")
+					}
 				}
 			} else {
 				resp.Transactions = append(resp.Transactions, *tx)
