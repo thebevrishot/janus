@@ -21,15 +21,6 @@ func TestEthLogSubscriptionRequestSerialization(t *testing.T) {
 	}
 }
 
-func TestEthLogSubscriptionRequestWithInvalidAddressSerialization(t *testing.T) {
-	jsonValue := `["logs",{"address":"0x0","topics":["0xd78a0cb8bb633d06981248b816e7bd33c2a35a6089241d099fa519e361cab902"]}]`
-	var request EthSubscriptionRequest
-	err := json.Unmarshal([]byte(jsonValue), &request)
-	if err != ErrInvalidLength {
-		t.Fatal(err)
-	}
-}
-
 func TestEthNewPendingTransactionsRequestSerialization(t *testing.T) {
 	jsonValue := `["newPendingTransactions"]`
 	var request EthSubscriptionRequest

@@ -50,7 +50,7 @@ func (p *ProxyETHNewFilter) request(ethreq *eth.NewFilterRequest) (*eth.NewFilte
 		if err != nil {
 			return nil, err
 		}
-		filter.Data.Store("topics", topics)
+		filter.Data.Store("topics", qtum.NewSearchLogsTopics(topics))
 	}
 	resp := eth.NewFilterResponse(hexutil.EncodeUint64(filter.ID))
 	return &resp, nil

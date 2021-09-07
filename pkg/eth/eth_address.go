@@ -16,6 +16,23 @@ type ETHAddress struct {
 	address string
 }
 
+func NewETHAddress(address string) (ETHAddress, error) {
+	var ethAddress ETHAddress
+	if !strings.HasPrefix(address, `"`) {
+		address = `"` + address
+	}
+
+	if !strings.HasSuffix(address, `"`) {
+		address = address + `"`
+	}
+
+	err := json.Unmarshal([]byte(address), &ethAddress)
+	if err != nil {
+		return ethAddress, err
+	}
+	return ethAddress, nil
+}
+
 func (addr *ETHAddress) String() string {
 	return addr.address
 }

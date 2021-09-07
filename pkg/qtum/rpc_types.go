@@ -962,12 +962,41 @@ type (
 		FromBlock            *big.Int
 		ToBlock              *big.Int
 		Addresses            []string
-		Topics               []interface{}
+		Topics               []SearchLogsTopic
 		MinimumConfirmations *uint
 	}
 
 	SearchLogsResponse []TransactionReceipt
+	SearchLogsTopic    []string
 )
+
+func NewSearchLogsTopics(topics [][]string) []SearchLogsTopic {
+	result := make([]SearchLogsTopic, len(topics))
+
+	for i, topic := range topics {
+		result[i] = NewSearchLogsTopic(topic)
+	}
+
+	return result
+}
+
+func NewSearchLogsTopic(topics []string) SearchLogsTopic {
+	result := SearchLogsTopic{}
+
+	for _, topic := range topics {
+		result = append(result, topic)
+	}
+
+	return result
+}
+
+func (t SearchLogsTopic) MarshalJSON() ([]byte, error) {
+	if len(t) == 1 {
+		return []byte(`"` + t[0] + `"`), nil
+	}
+
+	return []byte("null"), nil
+}
 
 func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
 	/*
@@ -986,7 +1015,7 @@ func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
 
 	var topics interface{}
 	if len(r.Topics) > 0 {
-		topics = map[string][]interface{}{
+		topics = map[string][]SearchLogsTopic{
 			"topics": r.Topics,
 		}
 	}
@@ -1724,8 +1753,8 @@ type (
 	}
 
 	WaitForLogsFilter struct {
-		Addresses *[]string      `json:"addresses,omitempty"`
-		Topics    *[]interface{} `json:"topics,omitempty"`
+		Addresses *[]string          `json:"addresses,omitempty"`
+		Topics    *[]SearchLogsTopic `json:"topics,omitempty"`
 	}
 
 	WaitForLogsEntry struct {

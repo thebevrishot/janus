@@ -2,7 +2,6 @@ package transformer
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/labstack/echo"
 	"github.com/qtumproject/janus/pkg/conversion"
@@ -41,7 +40,7 @@ func (p *ProxyETHGetLogs) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (i
 }
 
 func (p *ProxyETHGetLogs) request(req *qtum.SearchLogsRequest) (*eth.GetLogsResponse, error) {
-	receipts, err := SearchLogsAndFilterExtraTopics(p.Qtum, req)
+	receipts, err := conversion.SearchLogsAndFilterExtraTopics(p.Qtum, req)
 	if err != nil {
 		return nil, err
 	}
@@ -98,55 +97,6 @@ func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLog
 		Addresses: addresses,
 		FromBlock: from,
 		ToBlock:   to,
-		Topics:    topics,
+		Topics:    qtum.NewSearchLogsTopics(topics),
 	}, nil
-}
-
-func SearchLogsAndFilterExtraTopics(q *qtum.Qtum, req *qtum.SearchLogsRequest) (qtum.SearchLogsResponse, error) {
-	receipts, err := q.SearchLogs(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(req.Topics) == 0 {
-		return receipts, nil
-	}
-
-	var requestedTopics []string
-	for _, topic := range req.Topics {
-		requestedTopic, ok := topic.(string)
-		if ok {
-			requestedTopics = append(requestedTopics, requestedTopic)
-		}
-	}
-
-	if len(requestedTopics) == 0 {
-		// no actual string topics, probably weird inputs
-		return receipts, nil
-	}
-
-	requestedTopicsMap := make(map[string]bool)
-	for _, requestedTopic := range requestedTopics {
-		requestedTopicsMap[strings.ToLower(requestedTopic)] = true
-	}
-
-	var filteredReceipts qtum.SearchLogsResponse
-
-	for _, receipt := range receipts {
-		var logs []qtum.Log
-		for _, log := range receipt.Log {
-			for _, topic := range log.Topics {
-				if requestedTopicsMap[strings.ToLower(topic)] {
-					logs = append(logs, log)
-					break
-				}
-			}
-		}
-		receipt.Log = logs
-		if len(receipt.Log) != 0 {
-			filteredReceipts = append(filteredReceipts, receipt)
-		}
-	}
-
-	return filteredReceipts, nil
 }
