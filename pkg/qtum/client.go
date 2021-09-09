@@ -34,8 +34,9 @@ type Client struct {
 	// hex addresses to return for eth_accounts
 	Accounts Accounts
 
-	logger log.Logger
-	debug  bool
+	logWriter io.Writer
+	logger    log.Logger
+	debug     bool
 
 	// is this client using the main network?
 	isMain bool
@@ -139,7 +140,7 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 	debugLogger.Log("method", req.Method)
 
 	if c.IsDebugEnabled() {
-		fmt.Printf("=> qtum RPC request\n%s\n", reqBody)
+		fmt.Fprintf(c.logWriter, "=> qtum RPC request\n%s\n", reqBody)
 	}
 
 	respBody, err := c.do(ctx, bytes.NewReader(reqBody))
@@ -156,7 +157,7 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 		}
 
 		if err == nil {
-			fmt.Printf("<= qtum RPC response\n%s\n", formattedBodyStr)
+			fmt.Fprintf(c.logWriter, "<= qtum RPC response\n%s\n", formattedBodyStr)
 		}
 	}
 
@@ -287,6 +288,13 @@ func SetDebug(debug bool) func(*Client) error {
 	}
 }
 
+func SetLogWriter(logWriter io.Writer) func(*Client) error {
+	return func(c *Client) error {
+		c.logWriter = logWriter
+		return nil
+	}
+}
+
 func SetLogger(l log.Logger) func(*Client) error {
 	return func(c *Client) error {
 		c.logger = log.WithPrefix(l, "component", "qtum.Client")
@@ -315,6 +323,10 @@ func SetIgnoreUnknownTransactions(ignore bool) func(*Client) error {
 		c.SetFlag(FLAG_IGNORE_UNKNOWN_TX, ignore)
 		return nil
 	}
+}
+
+func (c *Client) GetLogWriter() io.Writer {
+	return c.logWriter
 }
 
 func (c *Client) GetLogger() log.Logger {

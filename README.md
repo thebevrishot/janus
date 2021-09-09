@@ -130,7 +130,7 @@ Getting Janus to work with Metamask requires two things
 -   eth_getFilterLogs    
 -   eth_getLogs
 
-## Websocket ETH methods (endpoint at /ws)
+## Websocket ETH methods (endpoint at /)
 -   (All the above methods)
 -   eth_subscribe (only 'logs' for now)
 -   eth_unsubscribe

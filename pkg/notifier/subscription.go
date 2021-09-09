@@ -113,7 +113,6 @@ func (s *subscriptionInformation) run() {
 		timeAfterCall := time.Now()
 		if err == nil {
 			nextBlock = int(resp.NextBlock)
-			fmt.Printf("got entries %d\n", len(resp.Entries))
 			for _, qtumLog := range resp.Entries {
 				qtumLogs := []qtum.Log{qtumLog.Log()}
 				logs := conversion.FilterQtumLogs(stringAddresses, qtumTopics, qtumLogs)

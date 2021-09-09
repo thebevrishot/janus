@@ -323,8 +323,8 @@ func websocketHandler(c echo.Context) error {
 				resBody, err := qtum.ReformatJSON(responseBytes)
 				if err == nil {
 					cc.GetDebugLogger().Log("msg", "ETH WEBSOCKET RPC")
-					fmt.Printf("=> ETH request\n%s\n", reqBody)
-					fmt.Printf("<= ETH response\n%s\n", resBody)
+					fmt.Fprintf(cc.GetLogWriter(), "=> ETH request\n%s\n", reqBody)
+					fmt.Fprintf(cc.GetLogWriter(), "<= ETH response\n%s\n", resBody)
 				}
 			}
 

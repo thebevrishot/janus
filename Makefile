@@ -102,6 +102,7 @@ run-janus:
 		--bind=0.0.0.0 \
 		--port=23889 \
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \
+		--log-file=janusLogs.txt \
 		--dev
 
 run-janus-https:
@@ -113,6 +114,7 @@ run-janus-https:
 		--bind=0.0.0.0 \
 		--port=23889 \
 		--accounts=`pwd`/docker/standalone/myaccounts.txt \
+		--log-file=janusLogs.txt \
 		--dev \
 		--https-key https/key.pem \
 		--https-cert https/cert.pem

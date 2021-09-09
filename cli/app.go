@@ -29,6 +29,7 @@ var (
 	port        = app.Flag("port", "port to serve proxy").Default("23889").Int()
 	httpsKey    = app.Flag("https-key", "https keyfile").Default("").String()
 	httpsCert   = app.Flag("https-cert", "https certificate").Default("").String()
+	logFile     = app.Flag("log-file", "write logs to a file").Envar("LOG_FILE").Default("").String()
 
 	devMode        = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
 	singleThreaded = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
@@ -67,7 +68,29 @@ func loadAccounts(r io.Reader, l log.Logger) qtum.Accounts {
 
 func action(pc *kingpin.ParseContext) error {
 	addr := fmt.Sprintf("%s:%d", *bind, *port)
-	logger := log.NewLogfmtLogger(os.Stdout)
+	writers := []io.Writer{os.Stdout}
+
+	if logFile != nil && (*logFile) != "" {
+		_, err := os.Stat(*logFile)
+		if os.IsNotExist(err) {
+			newLogFile, err := os.Create(*logFile)
+			if err != nil {
+				return errors.Wrapf(err, "Failed to create log file %s", *logFile)
+			} else {
+				writers = append(writers, newLogFile)
+			}
+		} else {
+			existingLogFile, err := os.Open(*logFile)
+			if err != nil {
+				return errors.Wrapf(err, "Failed to open log file %s", *logFile)
+			} else {
+				writers = append(writers, existingLogFile)
+			}
+		}
+	}
+
+	logWriter := io.MultiWriter(writers...)
+	logger := log.NewLogfmtLogger(logWriter)
 
 	if !*devMode {
 		logger = level.NewFilter(logger, level.AllowWarn())
@@ -85,6 +108,7 @@ func action(pc *kingpin.ParseContext) error {
 		isMain,
 		*qtumRPC,
 		qtum.SetDebug(*devMode),
+		qtum.SetLogWriter(logWriter),
 		qtum.SetLogger(logger),
 		qtum.SetAccounts(accounts),
 		qtum.SetGenerateToAddress(*generateToAddressTo),
@@ -119,6 +143,7 @@ func action(pc *kingpin.ParseContext) error {
 		qtumClient,
 		t,
 		addr,
+		server.SetLogWriter(logWriter),
 		server.SetLogger(logger),
 		server.SetDebug(*devMode),
 		server.SetSingleThreaded(*singleThreaded),
