@@ -24,6 +24,7 @@ import (
 var FLAG_GENERATE_ADDRESS_TO = "REGTEST_GENERATE_ADDRESS_TO"
 var FLAG_IGNORE_UNKNOWN_TX = "IGNORE_UNKNOWN_TX"
 var FLAG_DISABLE_SNIPPING_LOGS = "DISABLE_SNIPPING_LOGS"
+var FLAG_HIDE_QTUMD_LOGS = "HIDE_QTUMD_LOGS"
 
 var maximumRequestTime = 10000
 var maximumBackoff = (2 * time.Second).Milliseconds()
@@ -140,7 +141,7 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 
 	debugLogger.Log("method", req.Method)
 
-	if c.IsDebugEnabled() {
+	if c.IsDebugEnabled() && !c.GetFlagBool(FLAG_HIDE_QTUMD_LOGS) {
 		fmt.Fprintf(c.logWriter, "=> qtum RPC request\n%s\n", reqBody)
 	}
 
@@ -149,7 +150,7 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 		return nil, errors.Wrap(err, "Client#do")
 	}
 
-	if c.IsDebugEnabled() {
+	if c.IsDebugEnabled() && !c.GetFlagBool(FLAG_HIDE_QTUMD_LOGS) {
 		formattedBody, err := ReformatJSON(respBody)
 		formattedBodyStr := string(formattedBody)
 		if !c.GetFlagBool(FLAG_DISABLE_SNIPPING_LOGS) {
@@ -331,6 +332,13 @@ func SetIgnoreUnknownTransactions(ignore bool) func(*Client) error {
 func SetDisableSnippingQtumRpcOutput(disable bool) func(*Client) error {
 	return func(c *Client) error {
 		c.SetFlag(FLAG_DISABLE_SNIPPING_LOGS, !disable)
+		return nil
+	}
+}
+
+func SetHideQtumdLogs(hide bool) func(*Client) error {
+	return func(c *Client) error {
+		c.SetFlag(FLAG_HIDE_QTUMD_LOGS, hide)
 		return nil
 	}
 }

@@ -36,6 +36,7 @@ var (
 
 	ignoreUnknownTransactions = app.Flag("ignoreTransactions", "[Development] Ignore transactions inside blocks we can't fetch and return responses instead of failing").Default("false").Bool()
 	disableSnipping           = app.Flag("disableSnipping", "[Development] Disable ...snip... in logs").Default("false").Bool()
+	hideQtumdLogs             = app.Flag("hideQtumdLogs", "[Development] Hide QTUMD debug logs").Default("false").Bool()
 
 	generateToAddressTo = app.Flag("generateToAddressTo", "[regtest only] configure address to mine blocks to when mining new transactions in blocks").Envar("GENERATE_TO_ADDRESS").Default("").String()
 )
@@ -115,6 +116,7 @@ func action(pc *kingpin.ParseContext) error {
 		qtum.SetGenerateToAddress(*generateToAddressTo),
 		qtum.SetIgnoreUnknownTransactions(*ignoreUnknownTransactions),
 		qtum.SetDisableSnippingQtumRpcOutput(*disableSnipping),
+		qtum.SetHideQtumdLogs(*hideQtumdLogs),
 	)
 	if err != nil {
 		return errors.Wrap(err, "jsonrpc#New")
