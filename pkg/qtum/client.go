@@ -23,6 +23,7 @@ import (
 
 var FLAG_GENERATE_ADDRESS_TO = "REGTEST_GENERATE_ADDRESS_TO"
 var FLAG_IGNORE_UNKNOWN_TX = "IGNORE_UNKNOWN_TX"
+var FLAG_DISABLE_SNIPPING_LOGS = "DISABLE_SNIPPING_LOGS"
 
 var maximumRequestTime = 10000
 var maximumBackoff = (2 * time.Second).Milliseconds()
@@ -149,11 +150,13 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 	}
 
 	if c.IsDebugEnabled() {
-		maxBodySize := 1024 * 8
 		formattedBody, err := ReformatJSON(respBody)
 		formattedBodyStr := string(formattedBody)
-		if len(formattedBodyStr) > maxBodySize {
-			formattedBodyStr = formattedBodyStr[0:maxBodySize/2] + "\n...snip...\n" + formattedBodyStr[len(formattedBody)-maxBodySize/2:]
+		if !c.GetFlagBool(FLAG_DISABLE_SNIPPING_LOGS) {
+			maxBodySize := 1024 * 8
+			if len(formattedBodyStr) > maxBodySize {
+				formattedBodyStr = formattedBodyStr[0:maxBodySize/2] + "\n...snip...\n" + formattedBodyStr[len(formattedBody)-maxBodySize/2:]
+			}
 		}
 
 		if err == nil {
@@ -321,6 +324,13 @@ func SetGenerateToAddress(address string) func(*Client) error {
 func SetIgnoreUnknownTransactions(ignore bool) func(*Client) error {
 	return func(c *Client) error {
 		c.SetFlag(FLAG_IGNORE_UNKNOWN_TX, ignore)
+		return nil
+	}
+}
+
+func SetDisableSnippingQtumRpcOutput(disable bool) func(*Client) error {
+	return func(c *Client) error {
+		c.SetFlag(FLAG_DISABLE_SNIPPING_LOGS, !disable)
 		return nil
 	}
 }
