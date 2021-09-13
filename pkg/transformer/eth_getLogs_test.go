@@ -260,3 +260,27 @@ func TestGetLogsTranslateTopicWorksWithNil(t *testing.T) {
 		)
 	}
 }
+
+func TestGetLogsTranslateTopicReturnsEmptyArrayIfOnlyNil(t *testing.T) {
+	fromBlock, err := json.Marshal("0xfde")
+	toBlock, err := json.Marshal("0xfde")
+	address, err := json.Marshal("0xdb46f738bf32cdafb9a4a70eb8b44c76646bcaf0")
+
+	request := eth.GetLogsRequest{
+		FromBlock: fromBlock,
+		ToBlock:   toBlock,
+		Address:   address,
+		Topics: []interface{}{
+			nil,
+			nil,
+		},
+	}
+
+	translatedTopics, err := eth.TranslateTopics(request.Topics)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(translatedTopics) != 0 {
+		t.Fatalf("Unexpected translated topic length: %d", len(translatedTopics))
+	}
+}

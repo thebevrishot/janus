@@ -22,6 +22,7 @@ Topics are order-dependent. A transaction with a log with topics [A, B] will be 
 func TranslateTopics(ethTopics []interface{}) ([][]string, error) {
 
 	var topics [][]string
+	nilCount := 0
 
 	for _, topic := range ethTopics {
 		switch topic.(type) {
@@ -34,6 +35,7 @@ func TranslateTopics(ethTopics []interface{}) ([][]string, error) {
 		case string:
 			topics = append(topics, []string{utils.RemoveHexPrefix(topic.(string))})
 		case nil:
+			nilCount++
 			topics = append(topics, nil)
 		case []interface{}:
 			stringTopics := []string{}
@@ -46,6 +48,14 @@ func TranslateTopics(ethTopics []interface{}) ([][]string, error) {
 			}
 			topics = append(topics, stringTopics)
 		}
+	}
+
+	// QTUM rpc requires at least one topic to match
+	// null topics don't count as matching they count as skipping
+	// so if all topics are null, QTUM rpc will return an empty result as nothing will match
+	if nilCount == len(topics) {
+		// return an empty list of topics
+		return [][]string{}, nil
 	}
 
 	return topics, nil
