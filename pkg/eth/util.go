@@ -50,14 +50,6 @@ func TranslateTopics(ethTopics []interface{}) ([][]string, error) {
 		}
 	}
 
-	// QTUM rpc requires at least one topic to match
-	// null topics don't count as matching they count as skipping
-	// so if all topics are null, QTUM rpc will return an empty result as nothing will match
-	if nilCount == len(topics) {
-		// return an empty list of topics
-		return [][]string{}, nil
-	}
-
 	return topics, nil
 
 }

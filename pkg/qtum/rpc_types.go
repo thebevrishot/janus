@@ -1015,8 +1015,23 @@ func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
 
 	var topics interface{}
 	if len(r.Topics) > 0 {
-		topics = map[string][]SearchLogsTopic{
-			"topics": r.Topics,
+		// if all topics are null, filter them all out
+		nullCount := 0
+		for _, topic := range r.Topics {
+			byts, err := json.Marshal(topic)
+			if err != nil {
+				return []byte{}, err
+			}
+
+			if string(byts) == "null" {
+				nullCount++
+			}
+		}
+
+		if nullCount != len(r.Topics) {
+			topics = map[string][]SearchLogsTopic{
+				"topics": r.Topics,
+			}
 		}
 	}
 
