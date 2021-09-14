@@ -74,7 +74,6 @@ func SearchLogsAndFilterExtraTopics(q *qtum.Qtum, req *qtum.SearchLogsRequest) (
 
 			if DoFiltersMatch(req.Topics, log.Topics) {
 				logs = append(logs, log)
-				break
 			}
 		}
 		receipt.Log = logs
