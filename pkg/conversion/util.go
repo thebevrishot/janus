@@ -12,7 +12,7 @@ import (
 
 func ExtractETHLogsFromTransactionReceipt(blockData qtum.LogBlockData, logs []qtum.Log) []eth.Log {
 	result := make([]eth.Log, 0, len(logs))
-	for i, log := range logs {
+	for _, log := range logs {
 		topics := make([]string, 0, len(log.GetTopics()))
 		for _, topic := range log.GetTopics() {
 			topics = append(topics, utils.AddHexPrefix(topic))
@@ -25,7 +25,7 @@ func ExtractETHLogsFromTransactionReceipt(blockData qtum.LogBlockData, logs []qt
 			Data:             utils.AddHexPrefix(log.GetData()),
 			Address:          utils.AddHexPrefix(log.GetAddress()),
 			Topics:           topics,
-			LogIndex:         hexutil.EncodeUint64(uint64(i)),
+			LogIndex:         hexutil.EncodeUint64(uint64(log.Index)),
 		})
 	}
 	return result
@@ -67,7 +67,8 @@ func SearchLogsAndFilterExtraTopics(q *qtum.Qtum, req *qtum.SearchLogsRequest) (
 
 	for _, receipt := range receipts {
 		var logs []qtum.Log
-		for _, log := range receipt.Log {
+		for index, log := range receipt.Log {
+			log.Index = index
 			if hasAddresses && !requestedAddressesMap[strings.ToLower(log.Address)] {
 				continue
 			}

@@ -55,6 +55,7 @@ type (
 		Address string   `json:"address"`
 		Topics  []string `json:"topics"`
 		Data    string   `json:"data"`
+		Index   int      `json:"-"` // Keep track of which index the log is at
 	}
 
 	LogBlockData interface {
