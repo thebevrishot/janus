@@ -23,6 +23,8 @@ import (
 
 var FLAG_GENERATE_ADDRESS_TO = "REGTEST_GENERATE_ADDRESS_TO"
 var FLAG_IGNORE_UNKNOWN_TX = "IGNORE_UNKNOWN_TX"
+var FLAG_DISABLE_SNIPPING_LOGS = "DISABLE_SNIPPING_LOGS"
+var FLAG_HIDE_QTUMD_LOGS = "HIDE_QTUMD_LOGS"
 
 var maximumRequestTime = 10000
 var maximumBackoff = (2 * time.Second).Milliseconds()
@@ -34,8 +36,9 @@ type Client struct {
 	// hex addresses to return for eth_accounts
 	Accounts Accounts
 
-	logger log.Logger
-	debug  bool
+	logWriter io.Writer
+	logger    log.Logger
+	debug     bool
 
 	// is this client using the main network?
 	isMain bool
@@ -138,8 +141,8 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 
 	debugLogger.Log("method", req.Method)
 
-	if c.IsDebugEnabled() {
-		fmt.Printf("=> qtum RPC request\n%s\n", reqBody)
+	if c.IsDebugEnabled() && !c.GetFlagBool(FLAG_HIDE_QTUMD_LOGS) {
+		fmt.Fprintf(c.logWriter, "=> qtum RPC request\n%s\n", reqBody)
 	}
 
 	respBody, err := c.do(ctx, bytes.NewReader(reqBody))
@@ -147,16 +150,18 @@ func (c *Client) Do(ctx context.Context, req *JSONRPCRequest) (*SuccessJSONRPCRe
 		return nil, errors.Wrap(err, "Client#do")
 	}
 
-	if c.IsDebugEnabled() {
-		maxBodySize := 1024 * 8
+	if c.IsDebugEnabled() && !c.GetFlagBool(FLAG_HIDE_QTUMD_LOGS) {
 		formattedBody, err := ReformatJSON(respBody)
 		formattedBodyStr := string(formattedBody)
-		if len(formattedBodyStr) > maxBodySize {
-			formattedBodyStr = formattedBodyStr[0:maxBodySize/2] + "\n...snip...\n" + formattedBodyStr[len(formattedBody)-maxBodySize/2:]
+		if !c.GetFlagBool(FLAG_DISABLE_SNIPPING_LOGS) {
+			maxBodySize := 1024 * 8
+			if len(formattedBodyStr) > maxBodySize {
+				formattedBodyStr = formattedBodyStr[0:maxBodySize/2] + "\n...snip...\n" + formattedBodyStr[len(formattedBody)-maxBodySize/2:]
+			}
 		}
 
 		if err == nil {
-			fmt.Printf("<= qtum RPC response\n%s\n", formattedBodyStr)
+			fmt.Fprintf(c.logWriter, "<= qtum RPC response\n%s\n", formattedBodyStr)
 		}
 	}
 
@@ -287,6 +292,13 @@ func SetDebug(debug bool) func(*Client) error {
 	}
 }
 
+func SetLogWriter(logWriter io.Writer) func(*Client) error {
+	return func(c *Client) error {
+		c.logWriter = logWriter
+		return nil
+	}
+}
+
 func SetLogger(l log.Logger) func(*Client) error {
 	return func(c *Client) error {
 		c.logger = log.WithPrefix(l, "component", "qtum.Client")
@@ -315,6 +327,24 @@ func SetIgnoreUnknownTransactions(ignore bool) func(*Client) error {
 		c.SetFlag(FLAG_IGNORE_UNKNOWN_TX, ignore)
 		return nil
 	}
+}
+
+func SetDisableSnippingQtumRpcOutput(disable bool) func(*Client) error {
+	return func(c *Client) error {
+		c.SetFlag(FLAG_DISABLE_SNIPPING_LOGS, !disable)
+		return nil
+	}
+}
+
+func SetHideQtumdLogs(hide bool) func(*Client) error {
+	return func(c *Client) error {
+		c.SetFlag(FLAG_HIDE_QTUMD_LOGS, hide)
+		return nil
+	}
+}
+
+func (c *Client) GetLogWriter() io.Writer {
+	return c.logWriter
 }
 
 func (c *Client) GetLogger() log.Logger {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -23,6 +24,7 @@ type Server struct {
 	address       string
 	transformer   *transformer.Transformer
 	qtumRPCClient *qtum.Qtum
+	logWriter     io.Writer
 	logger        log.Logger
 	httpsKey      string
 	httpsCert     string
@@ -56,6 +58,7 @@ func New(
 }
 
 func (s *Server) Start() error {
+	logWriter := s.logWriter
 	e := s.echo
 	e.Use(middleware.CORS())
 	e.Use(middleware.BodyDump(func(c echo.Context, req []byte, res []byte) {
@@ -70,8 +73,8 @@ func (s *Server) Start() error {
 			resBody, err := qtum.ReformatJSON(res)
 			if err == nil {
 				cc.GetDebugLogger().Log("msg", "ETH RPC")
-				fmt.Printf("=> ETH request\n%s\n", reqBody)
-				fmt.Printf("<= ETH response\n%s\n", resBody)
+				fmt.Fprintf(logWriter, "=> ETH request\n%s\n", reqBody)
+				fmt.Fprintf(logWriter, "<= ETH response\n%s\n", resBody)
 			}
 		}
 	}))
@@ -80,6 +83,7 @@ func (s *Server) Start() error {
 		return func(c echo.Context) error {
 			cc := &myCtx{
 				Context:     c,
+				logWriter:   logWriter,
 				logger:      s.logger,
 				transformer: s.transformer,
 			}
@@ -120,6 +124,13 @@ func (s *Server) Start() error {
 }
 
 type Option func(*Server) error
+
+func SetLogWriter(logWriter io.Writer) Option {
+	return func(p *Server) error {
+		p.logWriter = logWriter
+		return nil
+	}
+}
 
 func SetLogger(l log.Logger) Option {
 	return func(p *Server) error {
@@ -214,6 +225,7 @@ func callHttpHandler(cc *myCtx, req *eth.JSONRPCRequest) (*eth.JSONRPCResult, er
 	newCtx := cc.Echo().NewContext(httpreq, rec)
 	myCtx := &myCtx{
 		Context:     newCtx,
+		logWriter:   cc.GetLogWriter(),
 		logger:      cc.logger,
 		transformer: cc.transformer,
 	}

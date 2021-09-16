@@ -51,16 +51,27 @@ func (s *subscriptionInformation) run() {
 
 	var nextBlock interface{}
 	nextBlock = nil
-	qtumTopics, err := eth.TranslateTopics(s.params.Params.Topics)
+	translatedTopics, err := eth.TranslateTopics(s.params.Params.Topics)
 	if err != nil {
 		s.qtum.GetDebugLogger().Log("msg", "Error translating logs topics", "error", err)
 		return
 	}
+	ethAddresses, err := s.params.Params.GetAddresses()
+	if err != nil {
+		s.qtum.GetDebugLogger().Log("msg", "Error translating logs addresses", "error", err)
+		return
+	}
+	stringAddresses := make([]string, len(ethAddresses))
+	for i, ethAddress := range ethAddresses {
+		stringAddresses[i] = ethAddress.String()
+	}
+	qtumTopics := qtum.NewSearchLogsTopics(translatedTopics)
 	req := &qtum.WaitForLogsRequest{
 		FromBlock: nextBlock,
 		ToBlock:   nil,
 		Filter: qtum.WaitForLogsFilter{
-			Topics: &qtumTopics,
+			Addresses: &stringAddresses,
+			Topics:    &qtumTopics,
 		},
 	}
 
@@ -103,7 +114,8 @@ func (s *subscriptionInformation) run() {
 		if err == nil {
 			nextBlock = int(resp.NextBlock)
 			for _, qtumLog := range resp.Entries {
-				logs := []qtum.Log{qtumLog.Log()}
+				qtumLogs := []qtum.Log{qtumLog.Log()}
+				logs := conversion.FilterQtumLogs(stringAddresses, qtumTopics, qtumLogs)
 				ethLogs := conversion.ExtractETHLogsFromTransactionReceipt(qtumLog, logs)
 				for _, ethLog := range ethLogs {
 					subscription := &eth.EthSubscription{

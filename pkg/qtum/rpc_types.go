@@ -55,6 +55,7 @@ type (
 		Address string   `json:"address"`
 		Topics  []string `json:"topics"`
 		Data    string   `json:"data"`
+		Index   int      `json:"-"` // Keep track of which index the log is at
 	}
 
 	LogBlockData interface {
@@ -959,14 +960,44 @@ func (r *GetTransactionResponse) IsPending() bool {
 
 type (
 	SearchLogsRequest struct {
-		FromBlock *big.Int
-		ToBlock   *big.Int
-		Addresses []string
-		Topics    []interface{}
+		FromBlock            *big.Int
+		ToBlock              *big.Int
+		Addresses            []string
+		Topics               []SearchLogsTopic
+		MinimumConfirmations *uint
 	}
 
 	SearchLogsResponse []TransactionReceipt
+	SearchLogsTopic    []string
 )
+
+func NewSearchLogsTopics(topics [][]string) []SearchLogsTopic {
+	result := make([]SearchLogsTopic, len(topics))
+
+	for i, topic := range topics {
+		result[i] = NewSearchLogsTopic(topic)
+	}
+
+	return result
+}
+
+func NewSearchLogsTopic(topics []string) SearchLogsTopic {
+	result := SearchLogsTopic{}
+
+	for _, topic := range topics {
+		result = append(result, topic)
+	}
+
+	return result
+}
+
+func (t SearchLogsTopic) MarshalJSON() ([]byte, error) {
+	if len(t) == 1 {
+		return []byte(`"` + t[0] + `"`), nil
+	}
+
+	return []byte("null"), nil
+}
 
 func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
 	/*
@@ -976,18 +1007,46 @@ func (r *SearchLogsRequest) MarshalJSON() ([]byte, error) {
 		4. "topics"           (string, optional) An array of values from which at least one must appear in the log entries. The order is important, if you want to leave topics out use null, e.g. ["null", "0x00..."].
 		5. "minconf"          (uint, optional, default=0) Minimal number of confirmations before a log is returned
 	*/
+	var addresses interface{}
+	if r.Addresses != nil && len(r.Addresses) != 0 {
+		addresses = map[string][]string{
+			"addresses": r.Addresses,
+		}
+	}
+
+	var topics interface{}
+	if len(r.Topics) > 0 {
+		// if all topics are null, filter them all out
+		nullCount := 0
+		for _, topic := range r.Topics {
+			byts, err := json.Marshal(topic)
+			if err != nil {
+				return []byte{}, err
+			}
+
+			if string(byts) == "null" {
+				nullCount++
+			}
+		}
+
+		if nullCount != len(r.Topics) {
+			topics = map[string][]SearchLogsTopic{
+				"topics": r.Topics,
+			}
+		}
+	}
+
 	data := []interface{}{
 		r.FromBlock,
 		r.ToBlock,
-		map[string][]string{
-			"addresses": r.Addresses,
-		},
+		// should be null if not specified
+		addresses,
+		// should be null if not specified
+		topics,
 	}
 
-	if len(r.Topics) > 0 {
-		data = append(data, map[string][]interface{}{
-			"topics": r.Topics,
-		})
+	if r.MinimumConfirmations != nil {
+		data = append(data, r.MinimumConfirmations)
 	}
 
 	return json.Marshal(data)
@@ -1710,8 +1769,8 @@ type (
 	}
 
 	WaitForLogsFilter struct {
-		Addresses *[]string      `json:"addresses,omitempty"`
-		Topics    *[]interface{} `json:"topics,omitempty"`
+		Addresses *[]string          `json:"addresses,omitempty"`
+		Topics    *[]SearchLogsTopic `json:"topics,omitempty"`
 	}
 
 	WaitForLogsEntry struct {

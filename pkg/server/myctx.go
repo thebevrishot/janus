@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/go-kit/kit/log"
@@ -14,6 +15,7 @@ import (
 type myCtx struct {
 	echo.Context
 	rpcReq      *eth.JSONRPCRequest
+	logWriter   io.Writer
 	logger      log.Logger
 	transformer *transformer.Transformer
 }
@@ -53,6 +55,14 @@ func (c *myCtx) JSONRPCError(err *eth.JSONRPCError) error {
 	}
 
 	return nil
+}
+
+func (c *myCtx) SetLogWriter(logWriter io.Writer) {
+	c.logWriter = logWriter
+}
+
+func (c *myCtx) GetLogWriter() io.Writer {
+	return c.logWriter
 }
 
 func (c *myCtx) SetLogger(l log.Logger) {

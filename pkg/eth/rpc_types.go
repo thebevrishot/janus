@@ -658,7 +658,7 @@ func newErrInvalidParameterType(idx int, gotType interface{}, wantedType interfa
 
 type (
 	EthLogSubscriptionParameter struct {
-		Address ETHAddress    `json:"address"`
+		Address interface{}   `json:"address"`
 		Topics  []interface{} `json:"topics"`
 	}
 
@@ -712,6 +712,44 @@ type (
 		TransactionsRoot string `json:"transactionsRoot"`
 	}
 )
+
+var ErrInvalidAddresses = errors.New("Invalid addresses")
+
+func (s *EthLogSubscriptionParameter) GetAddresses() ([]ETHAddress, error) {
+	// can be a string or a string array
+	if s.Address == nil {
+		return []ETHAddress{}, nil
+	} else if address, ok := s.Address.(string); ok {
+		ethAddress, err := NewETHAddress(address)
+		return []ETHAddress{ethAddress}, err
+	} else if addresss, ok := s.Address.([]string); ok {
+		ethAddresses := []ETHAddress{}
+		for _, address := range addresss {
+			ethAddress, err := NewETHAddress(address)
+			if err != nil {
+				return []ETHAddress{}, err
+			}
+			ethAddresses = append(ethAddresses, ethAddress)
+		}
+		return ethAddresses, nil
+	} else if addresss, ok := s.Address.([]interface{}); ok {
+		ethAddresses := []ETHAddress{}
+		for _, address := range addresss {
+			if addressString, ok := address.(string); ok {
+				ethAddress, err := NewETHAddress(addressString)
+				if err != nil {
+					return []ETHAddress{}, err
+				}
+				ethAddresses = append(ethAddresses, ethAddress)
+			} else {
+				return []ETHAddress{}, ErrInvalidAddresses
+			}
+		}
+		return ethAddresses, nil
+	}
+
+	return []ETHAddress{}, ErrInvalidAddresses
+}
 
 func (r *EthSubscriptionRequest) UnmarshalJSON(data []byte) error {
 	var params []interface{}

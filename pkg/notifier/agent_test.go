@@ -62,7 +62,7 @@ func TestAgentAddSubscriptionLogs(t *testing.T) {
 	id, err := agent.NewSubscription(notifier, &eth.EthSubscriptionRequest{
 		Method: "logs",
 		Params: &eth.EthLogSubscriptionParameter{
-			Address: eth.ETHAddress{},
+			Address: internal.QtumTransactionReceipt(nil).ContractAddress,
 			Topics: []interface{}{
 				topic1,
 			},

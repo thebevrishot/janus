@@ -17,6 +17,7 @@ build
 node_modules
 metamask/dist
 https
+janusLogs.txt
 
 # local env files
 .env.local

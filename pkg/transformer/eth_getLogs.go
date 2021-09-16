@@ -40,7 +40,7 @@ func (p *ProxyETHGetLogs) Request(rawreq *eth.JSONRPCRequest, c echo.Context) (i
 }
 
 func (p *ProxyETHGetLogs) request(req *qtum.SearchLogsRequest) (*eth.GetLogsResponse, error) {
-	receipts, err := p.SearchLogs(req)
+	receipts, err := conversion.SearchLogsAndFilterExtraTopics(p.Qtum, req)
 	if err != nil {
 		return nil, err
 	}
@@ -97,6 +97,6 @@ func (p *ProxyETHGetLogs) ToRequest(ethreq *eth.GetLogsRequest) (*qtum.SearchLog
 		Addresses: addresses,
 		FromBlock: from,
 		ToBlock:   to,
-		Topics:    topics,
+		Topics:    qtum.NewSearchLogsTopics(topics),
 	}, nil
 }
