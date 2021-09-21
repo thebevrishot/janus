@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/qtumproject/janus/pkg/eth"
@@ -253,6 +254,9 @@ func getBlockNumberByParam(p *qtum.Qtum, param string, defaultVal bool) (*big.In
 		return nil, errors.New("TODO: tag is in implementation")
 
 	default: // hex number
+		if !strings.HasPrefix(param, "0x") {
+			return nil, errors.New("quantity values must start with 0x")
+		}
 		n, err := utils.DecodeBig(param)
 		if err != nil {
 			p.GetDebugLogger().Log("function", "getBlockNumberByParam", "msg", "Failed to decode hex parameter", "value", param)
