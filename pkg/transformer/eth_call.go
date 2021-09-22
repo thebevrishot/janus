@@ -33,6 +33,10 @@ func (p *ProxyETHCall) request(ethreq *eth.CallRequest) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	if qtumreq.GasLimit.Cmp(big.NewInt(25000000)) > 0 {
+		qtumresp := eth.CallResponse("0x")
+		return &qtumresp, nil
+	}
 
 	qtumresp, err := p.CallContract(qtumreq)
 	if err != nil {
