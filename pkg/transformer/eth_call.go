@@ -33,7 +33,7 @@ func (p *ProxyETHCall) request(ethreq *eth.CallRequest) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if qtumreq.GasLimit.Cmp(big.NewInt(40000000)) > 0 {
+	if qtumreq.GasLimit != nil && qtumreq.GasLimit.Cmp(big.NewInt(40000000)) > 0 {
 		qtumresp := eth.CallResponse("0x")
 		p.Qtum.GetLogger().Log("msg", "Caller gas above allowance, capping", "requested", qtumreq.GasLimit.Int64(), "cap", "40,000,000")
 		return &qtumresp, nil
