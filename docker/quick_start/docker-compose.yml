@@ -1,4 +1,3 @@
-  
 version: "3.3"
 volumes:
    qtumd-volume:
@@ -26,7 +25,7 @@ services:
     ports:
       - "3889:3889"
     image: qtum/qtum
-    container_name: qtum_mainnet
+    container_name: qtum_testchain
+    command: qtumd -testnet -txindex -addrindex=1 -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole
     volumes:
-      - /home/qtum_data/mainnet:/data
-    command: qtumd -txindex -addrindex=1 -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole -datadir=/data
+      - qtumd-volume:/root/.qtum
