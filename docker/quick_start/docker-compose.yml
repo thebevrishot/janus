@@ -5,7 +5,7 @@ volumes:
 
 services:
   janus:
-    image: qtum/janus:websockets
+    image: qtum/janus:dev
     container_name: janus
     build: 
         context: ../../
@@ -26,7 +26,7 @@ services:
     ports:
       - "3889:3889"
     image: qtum/qtum
-    container_name: qtum_testchain
-    command: qtumd -testnet -txindex -addrindex=1 -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole
+    container_name: qtum_mainnet
     volumes:
-      - qtumd-volume:/root/.qtum
+      - /home/qtum_data/mainnet:/data
+    command: qtumd -txindex -addrindex=1 -rpcbind=0.0.0.0:3889 -rpcallowip=0.0.0.0/0 -logevents -rpcuser=qtum -rpcpassword=testpasswd -deprecatedrpc=accounts -printtoconsole -datadir=/data
