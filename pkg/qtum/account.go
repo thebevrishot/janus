@@ -36,11 +36,11 @@ var qtumMainNetParams = chaincfg.MainNetParams
 var qtumTestNetParams = chaincfg.MainNetParams
 
 func init() {
-	qtumMainNetParams.PubKeyHashAddrID = 58
-	qtumMainNetParams.ScriptHashAddrID = 50
+	qtumMainNetParams.PubKeyHashAddrID = 82
+	qtumMainNetParams.ScriptHashAddrID = 7
 
-	qtumTestNetParams.PubKeyHashAddrID = 120
-	qtumTestNetParams.ScriptHashAddrID = 110
+	qtumTestNetParams.PubKeyHashAddrID = 65
+	qtumTestNetParams.ScriptHashAddrID = 178
 }
 
 func (a *Account) ToBase58Address(isMain bool) (string, error) {
