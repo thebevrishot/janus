@@ -18,6 +18,7 @@ import (
 )
 
 func httpHandler(c echo.Context) error {
+	start := time.Now()
 	myctx := c.Get("myctx")
 	cc, ok := myctx.(*myCtx)
 	if !ok {
@@ -32,11 +33,11 @@ func httpHandler(c echo.Context) error {
 
 	cc.rpcReq = rpcReq
 
-	cc.GetLogger().Log("msg", "proxy RPC", "method", rpcReq.Method)
-
 	// level.Debug(cc.logger).Log("msg", "before call transformer#Transform")
 	result, err := cc.transformer.Transform(rpcReq, c)
 	// level.Debug(cc.logger).Log("msg", "after call transformer#Transform")
+
+	cc.GetLogger().Log("msg", "proxy RPC", "method", rpcReq.Method, "time", time.Since(start).String())
 
 	if err != nil {
 		err1 := errors.Cause(err)
