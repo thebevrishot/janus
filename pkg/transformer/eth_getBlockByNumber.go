@@ -1,7 +1,6 @@
 package transformer
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/labstack/echo"
@@ -34,13 +33,13 @@ func (p *ProxyETHGetBlockByNumber) WithBlockPoller() *ProxyETHGetBlockByNumber {
 }
 
 func (p *ProxyETHGetBlockByNumber) request(req *eth.GetBlockByNumberRequest) (*eth.GetBlockByNumberResponse, error) {
-	if p.poller != nil {
+	if p.poller != nil && !req.FullTransaction {
 		block, ok := p.poller.GetBlock(req.BlockNumber)
 		if ok {
-			fmt.Println("Hit")
 			return block, nil
+		} else if ok && block == nil {
+			return nil, errors.New("couldn't get block number by parameter")
 		}
-		fmt.Println("Miss")
 	}
 
 	blockNum, err := getBlockNumberByRawParam(p.Qtum, req.BlockNumber, false)

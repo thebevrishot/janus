@@ -3,7 +3,6 @@ package transformer
 import (
 	"container/list"
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -60,7 +59,7 @@ func (p *BlockPoller) loopSync() error {
 		// Query block count
 		blockCountResp, err := p.Qtum.GetBlockCount()
 		if err != nil {
-			p.Qtum.GetLogger().Log("loopSync", "fail to query blockcount", err)
+			p.Qtum.GetLogger().Log("function", "loopSync", "message", "fail to query blockcount", "error", err)
 			continue
 		}
 		upstreamBlock := blockCountResp.Int
@@ -83,16 +82,17 @@ func (p *BlockPoller) loopSync() error {
 		if localBlock.Cmp(upstreamBlock) < 0 {
 			newBlock, err := p.pullBlock(big.NewInt(0).Add(localBlock, big.NewInt(1)))
 			if err != nil {
-				p.Qtum.GetLogger().Log("loopSync", "fail to query block", err)
+				p.Qtum.GetLogger().Log("function", "loopSync", "message", "fail to query block", "error", err)
 				continue
 			}
 
 			if localHash == "" || newBlock.ParentHash == localHash {
 				p.lock.Lock()
 				p.blocks.PushBack(newBlock)
+				p.synced = true
 				p.lock.Unlock()
 			} else {
-				p.Qtum.GetLogger().Log("loopSync", "last block is invalid")
+				p.Qtum.GetLogger().Log("function", "loopSync", "message", "last block is invalid", "error", err)
 				p.lock.Lock()
 				p.clearBlocks()
 				p.lock.Unlock()
@@ -106,12 +106,12 @@ func (p *BlockPoller) loopSync() error {
 		} else {
 			upstreamHash, err := p.Qtum.GetBlockHash(localBlock)
 			if err != nil {
-				p.Qtum.GetLogger().Log("loopSync", "Fail to get block hash of local height", err)
+				p.Qtum.GetLogger().Log("function", "loopSync", "message", "Fail to get block hash of local height", "error", err)
 				continue
 			}
 
 			if "0x"+upstreamHash != qtum.GetBlockHashResponse(localHash) {
-				p.Qtum.GetLogger().Log("loopSync", "Upstream hash is not match with local", err)
+				p.Qtum.GetLogger().Log("function", "loopSync", "message", "Upstream hash is not match with local", "error", err)
 				p.lock.Lock()
 				p.clearBlocks()
 				p.lock.Unlock()
@@ -131,17 +131,11 @@ func (p *BlockPoller) loopSync() error {
 	}
 }
 
-func (p *BlockPoller) Synced() bool {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	return p.synced
-}
-
 func (p *BlockPoller) GetBlock(blockNumber json.RawMessage) (*eth.GetBlockByHashResponse, bool) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
-	if p.synced {
+	if !p.synced {
 		return nil, false
 	}
 
@@ -150,12 +144,13 @@ func (p *BlockPoller) GetBlock(blockNumber json.RawMessage) (*eth.GetBlockByHash
 		return nil, false
 	}
 
-	fmt.Println(blockNumberStr)
-
 	var element *list.Element
 	switch blockNumberStr {
 	case "latest":
 		element = p.blocks.Back()
+		if block, ok := element.Value.(*eth.GetBlockByHashResponse); ok {
+			return block, true
+		}
 	case "earliest":
 		return nil, false
 	case "pending":
@@ -165,16 +160,38 @@ func (p *BlockPoller) GetBlock(blockNumber json.RawMessage) (*eth.GetBlockByHash
 			return nil, false
 		}
 
-		blockItr := p.blocks.Front()
-		for blockItr != nil {
-			if block, ok := blockItr.Value.(*eth.GetBlockByHashResponse); ok && block.Number == blockNumberStr {
-				return block, true
-			}
+		blockItr := p.blocks.Back()
+		if blockItr == nil {
+			return nil, false
 		}
-	}
 
-	if block, ok := element.Value.(*eth.GetBlockByHashResponse); ok {
-		return block, true
+		for blockItr != nil {
+			if block, ok := blockItr.Value.(*eth.GetBlockByHashResponse); ok {
+				requestBlockNumber, err := strconv.ParseInt(blockNumberStr[2:], 16, 64)
+				if err != nil {
+					return nil, false
+				}
+
+				currentBlockNumber, err := strconv.ParseInt(block.Number[2:], 16, 64)
+				if err != nil {
+					return nil, false
+				}
+
+				if requestBlockNumber > currentBlockNumber {
+					// request block is higher than last block
+					return nil, true
+				}
+
+				if currentBlockNumber == requestBlockNumber {
+					return block, true
+				}
+			}
+
+			blockItr = blockItr.Prev()
+		}
+
+		// Not found in cache
+		return nil, false
 	}
 
 	return nil, false
