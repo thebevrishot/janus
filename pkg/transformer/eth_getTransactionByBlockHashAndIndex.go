@@ -38,7 +38,7 @@ func (p *ProxyETHGetTransactionByBlockHashAndIndex) request(req *eth.GetTransact
 	}
 
 	// Proxy eth_getBlockByHash and return the transaction at requested index
-	getBlockByNumber := ProxyETHGetBlockByHash{p.Qtum}
+	getBlockByNumber := ProxyETHGetBlockByHash{Qtum: p.Qtum}
 	blockByNumber, err := getBlockByNumber.request(&eth.GetBlockByHashRequest{BlockHash: req.BlockHash, FullTransaction: true})
 
 	if err != nil {

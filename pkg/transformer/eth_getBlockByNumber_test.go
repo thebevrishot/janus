@@ -10,7 +10,7 @@ import (
 )
 
 func initializeProxyETHGetBlockByNumber(qtumClient *qtum.Qtum) ETHProxy {
-	return &ProxyETHGetBlockByNumber{qtumClient}
+	return &ProxyETHGetBlockByNumber{Qtum: qtumClient}
 }
 
 func TestGetBlockByNumberRequest(t *testing.T) {
@@ -48,7 +48,7 @@ func TestGetBlockByNumberUnknownBlockRequest(t *testing.T) {
 	}
 
 	//preparing proxy & executing request
-	proxyEth := ProxyETHGetBlockByNumber{qtumClient}
+	proxyEth := ProxyETHGetBlockByNumber{Qtum: qtumClient}
 	got, err := proxyEth.Request(request, nil)
 	if err != nil {
 		t.Fatal(err)

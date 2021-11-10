@@ -1,6 +1,7 @@
 package transformer
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/labstack/echo"
@@ -12,6 +13,7 @@ import (
 // ProxyETHGetBlockByNumber implements ETHProxy
 type ProxyETHGetBlockByNumber struct {
 	*qtum.Qtum
+	poller *BlockPoller
 }
 
 func (p *ProxyETHGetBlockByNumber) Method() string {
@@ -26,7 +28,21 @@ func (p *ProxyETHGetBlockByNumber) Request(rpcReq *eth.JSONRPCRequest, c echo.Co
 	return p.request(req)
 }
 
+func (p *ProxyETHGetBlockByNumber) WithBlockPoller() *ProxyETHGetBlockByNumber {
+	p.poller, _ = NewBlockPoller(p.Qtum)
+	return p
+}
+
 func (p *ProxyETHGetBlockByNumber) request(req *eth.GetBlockByNumberRequest) (*eth.GetBlockByNumberResponse, error) {
+	if p.poller != nil {
+		block, ok := p.poller.GetBlock(req.BlockNumber)
+		if ok {
+			fmt.Println("Hit")
+			return block, nil
+		}
+		fmt.Println("Miss")
+	}
+
 	blockNum, err := getBlockNumberByRawParam(p.Qtum, req.BlockNumber, false)
 	if err != nil {
 		return nil, errors.WithMessage(err, "couldn't get block number by parameter")

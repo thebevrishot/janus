@@ -114,7 +114,7 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy 
 		&ProxyETHUninstallFilter{Qtum: qtumRPCClient, filter: filter},
 
 		&ProxyETHEstimateGas{ProxyETHCall: ethCall},
-		&ProxyETHGetBlockByNumber{Qtum: qtumRPCClient},
+		(&ProxyETHGetBlockByNumber{Qtum: qtumRPCClient}).WithBlockPoller(),
 		&ProxyETHGetBlockByHash{Qtum: qtumRPCClient},
 		&ProxyETHGetBalance{Qtum: qtumRPCClient},
 		&ProxyETHGetStorageAt{Qtum: qtumRPCClient},
