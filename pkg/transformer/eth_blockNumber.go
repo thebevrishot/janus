@@ -13,10 +13,16 @@ import (
 // ProxyETHBlockNumber implements ETHProxy
 type ProxyETHBlockNumber struct {
 	*qtum.Qtum
+	cacher *BlockSyncer
 }
 
 func (p *ProxyETHBlockNumber) Method() string {
 	return "eth_blockNumber"
+}
+
+func (p *ProxyETHBlockNumber) WithBlockCacher(cacher *BlockSyncer) *ProxyETHBlockNumber {
+	p.cacher = cacher
+	return p
 }
 
 func (p *ProxyETHBlockNumber) Request(_ *eth.JSONRPCRequest, c echo.Context) (interface{}, error) {
@@ -24,6 +30,14 @@ func (p *ProxyETHBlockNumber) Request(_ *eth.JSONRPCRequest, c echo.Context) (in
 }
 
 func (p *ProxyETHBlockNumber) request(c echo.Context, retries int) (*eth.BlockNumberResponse, error) {
+
+	if p.cacher != nil {
+		block, ok := p.cacher.GetLatestBlock()
+		if ok && block != nil {
+			return (*eth.BlockNumberResponse)(&block.Number), nil
+		}
+	}
+
 	qtumresp, err := p.Qtum.GetBlockCount()
 	if err != nil {
 		if retries > 0 && strings.Contains(err.Error(), qtum.ErrTryAgain.Error()) {

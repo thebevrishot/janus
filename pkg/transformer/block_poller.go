@@ -142,6 +142,23 @@ func (s *BlockSyncer) loopSync() error {
 	}
 }
 
+func (s *BlockSyncer) GetLatestBlock() (*eth.GetBlockByHashResponse, bool) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if !s.synced {
+		return nil, false
+	}
+
+	if element := s.blocks.Back(); element != nil {
+		if block, ok := element.Value.(*eth.GetBlockByHashResponse); ok {
+			return block, true
+		}
+	}
+
+	return nil, false
+}
+
 func (s *BlockSyncer) GetBlock(blockNumber json.RawMessage) (*eth.GetBlockByHashResponse, bool) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -214,7 +231,7 @@ func (s *BlockSyncer) Start() {
 }
 
 func NewBlockSyncer(client *qtum.Qtum) (*BlockSyncer, error) {
-	return NewBlockSyncerWithBlockPollerAndInterval(client, &DefaultBlockPoller{client}, 200*time.Millisecond)
+	return NewBlockSyncerWithBlockPollerAndInterval(client, &DefaultBlockPoller{client}, 5*time.Second)
 }
 
 func NewBlockSyncerWithBlockPollerAndInterval(client *qtum.Qtum, poller BlockPoller, interval time.Duration) (*BlockSyncer, error) {

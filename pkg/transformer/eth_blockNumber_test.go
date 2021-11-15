@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/qtumproject/janus/pkg/eth"
-	"github.com/qtumproject/janus/pkg/qtum"
 	"github.com/qtumproject/janus/pkg/internal"
+	"github.com/qtumproject/janus/pkg/qtum"
 )
 
 func TestBlockNumberRequest(t *testing.T) {
@@ -33,7 +33,7 @@ func TestBlockNumberRequest(t *testing.T) {
 	}
 
 	//preparing proxy & executing request
-	proxyEth := ProxyETHBlockNumber{qtumClient}
+	proxyEth := ProxyETHBlockNumber{Qtum: qtumClient}
 	got, err := proxyEth.Request(request, nil)
 	if err != nil {
 		t.Fatal(err)

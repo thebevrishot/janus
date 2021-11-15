@@ -101,7 +101,7 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy 
 		&ProxyNetListening{Qtum: qtumRPCClient},
 		&ProxyETHPersonalUnlockAccount{},
 		&ProxyETHChainId{Qtum: qtumRPCClient},
-		&ProxyETHBlockNumber{Qtum: qtumRPCClient},
+		(&ProxyETHBlockNumber{Qtum: qtumRPCClient}).WithBlockCacher(cacher),
 		&ProxyETHHashrate{Qtum: qtumRPCClient},
 		&ProxyETHMining{Qtum: qtumRPCClient},
 		&ProxyETHNetVersion{Qtum: qtumRPCClient},
@@ -120,7 +120,7 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy 
 		&ProxyETHUninstallFilter{Qtum: qtumRPCClient, filter: filter},
 
 		&ProxyETHEstimateGas{ProxyETHCall: ethCall},
-		(&ProxyETHGetBlockByNumber{Qtum: qtumRPCClient}).WithBlockPoller(cacher),
+		(&ProxyETHGetBlockByNumber{Qtum: qtumRPCClient}).WithBlockCacher(cacher),
 		&ProxyETHGetBlockByHash{Qtum: qtumRPCClient},
 		&ProxyETHGetBalance{Qtum: qtumRPCClient},
 		&ProxyETHGetStorageAt{Qtum: qtumRPCClient},
