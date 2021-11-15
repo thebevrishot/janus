@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/btcsuite/btcutil"
 	"github.com/go-kit/kit/log"
@@ -31,8 +32,9 @@ var (
 	httpsCert   = app.Flag("https-cert", "https certificate").Default("").String()
 	logFile     = app.Flag("log-file", "write logs to a file").Envar("LOG_FILE").Default("").String()
 
-	devMode        = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
-	singleThreaded = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
+	devMode         = app.Flag("dev", "[Insecure] Developer mode").Envar("DEV").Default("false").Bool()
+	cachingInterval = app.Flag("caching-interval", "[Insecure] Interval(in ms) to cache blocks which would be disabled by default and could be enabled by setting this flag to any number > 0").Envar("CACHING_INTERVAL").Int64()
+	singleThreaded  = app.Flag("singleThreaded", "[Non-production] Process RPC requests in a single thread").Envar("SINGLE_THREADED").Default("false").Bool()
 
 	ignoreUnknownTransactions = app.Flag("ignoreTransactions", "[Development] Ignore transactions inside blocks we can't fetch and return responses instead of failing").Default("false").Bool()
 	disableSnipping           = app.Flag("disableSnipping", "[Development] Disable ...snip... in logs").Default("false").Bool()
@@ -127,8 +129,13 @@ func action(pc *kingpin.ParseContext) error {
 		return errors.Wrap(err, "qtum#New")
 	}
 
+	var cacher *transformer.BlockSyncer
+	if cachingInterval != nil && *cachingInterval > 0 {
+		cacher, _ = transformer.NewBlockSyncerWithBlockPollerAndInterval(qtumClient, &transformer.DefaultBlockPoller{qtumClient}, time.Duration(*cachingInterval)*time.Millisecond)
+	}
+
 	agent := notifier.NewAgent(context.Background(), qtumClient, nil)
-	proxies := transformer.DefaultProxies(qtumClient, agent)
+	proxies := transformer.DefaultProxies(qtumClient, agent, cacher)
 	t, err := transformer.New(
 		qtumClient,
 		proxies,

@@ -85,16 +85,14 @@ func (t *Transformer) IsDebugEnabled() bool {
 }
 
 // DefaultProxies are the default proxy methods made available
-func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy {
+func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent, cacher *BlockSyncer) []ETHProxy {
 	filter := eth.NewFilterSimulator()
 	getFilterChanges := &ProxyETHGetFilterChanges{Qtum: qtumRPCClient, filter: filter}
 	ethCall := &ProxyETHCall{Qtum: qtumRPCClient}
 
-	cacher, err := NewBlockSyncer(qtumRPCClient)
-	if err != nil {
-		panic(err)
+	if cacher != nil {
+		cacher.Start()
 	}
-	cacher.Start()
 
 	return []ETHProxy{
 		ethCall,
