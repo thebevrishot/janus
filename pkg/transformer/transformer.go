@@ -90,6 +90,12 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy 
 	getFilterChanges := &ProxyETHGetFilterChanges{Qtum: qtumRPCClient, filter: filter}
 	ethCall := &ProxyETHCall{Qtum: qtumRPCClient}
 
+	cacher, err := NewBlockSyncer(qtumRPCClient)
+	if err != nil {
+		panic(err)
+	}
+	cacher.Start()
+
 	return []ETHProxy{
 		ethCall,
 		&ProxyNetListening{Qtum: qtumRPCClient},
@@ -114,7 +120,7 @@ func DefaultProxies(qtumRPCClient *qtum.Qtum, agent *notifier.Agent) []ETHProxy 
 		&ProxyETHUninstallFilter{Qtum: qtumRPCClient, filter: filter},
 
 		&ProxyETHEstimateGas{ProxyETHCall: ethCall},
-		(&ProxyETHGetBlockByNumber{Qtum: qtumRPCClient}).WithBlockPoller(),
+		(&ProxyETHGetBlockByNumber{Qtum: qtumRPCClient}).WithBlockPoller(cacher),
 		&ProxyETHGetBlockByHash{Qtum: qtumRPCClient},
 		&ProxyETHGetBalance{Qtum: qtumRPCClient},
 		&ProxyETHGetStorageAt{Qtum: qtumRPCClient},

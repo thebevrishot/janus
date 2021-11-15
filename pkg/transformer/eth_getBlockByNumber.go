@@ -29,9 +29,8 @@ func (p *ProxyETHGetBlockByNumber) Request(rpcReq *eth.JSONRPCRequest, c echo.Co
 	return p.request(req)
 }
 
-func (p *ProxyETHGetBlockByNumber) WithBlockPoller() *ProxyETHGetBlockByNumber {
-	p.cacher, _ = NewBlockSyncer(p.Qtum)
-	p.cacher.Start()
+func (p *ProxyETHGetBlockByNumber) WithBlockPoller(cacher *BlockSyncer) *ProxyETHGetBlockByNumber {
+	p.cacher = cacher
 	return p
 }
 

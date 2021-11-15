@@ -214,7 +214,7 @@ func (s *BlockSyncer) Start() {
 }
 
 func NewBlockSyncer(client *qtum.Qtum) (*BlockSyncer, error) {
-	return NewBlockSyncerWithBlockPollerAndInterval(client, &DefaultBlockPoller{client}, 100*time.Millisecond)
+	return NewBlockSyncerWithBlockPollerAndInterval(client, &DefaultBlockPoller{client}, 200*time.Millisecond)
 }
 
 func NewBlockSyncerWithBlockPollerAndInterval(client *qtum.Qtum, poller BlockPoller, interval time.Duration) (*BlockSyncer, error) {
