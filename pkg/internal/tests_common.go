@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -27,6 +28,8 @@ type Doer interface {
 	AddRawResponse(requestType string, rawResponse []byte)
 	AddResponse(requestType string, responseResult interface{}) error
 	AddResponseWithRequestID(requestID int, requestType string, responseResult interface{}) error
+	AddResponseWithParams(requestType string, params json.RawMessage, responseResult interface{}) error
+	AddResponseWithParamsAndRequestID(requestID int, requestType string, params json.RawMessage, responseResult interface{}) error
 	AddError(requestType string, responseError *eth.JSONRPCError) error
 	AddErrorWithRequestID(requestID int, requestType string, responseError *eth.JSONRPCError) error
 }
@@ -39,9 +42,10 @@ func NewDoerMappedMock() *doerMappedMock {
 
 //type for mocking requests to client with request -> response mapping
 type doerMappedMock struct {
-	mutex     sync.Mutex
-	latestId  int
-	Responses map[string][][]byte
+	mutex         sync.Mutex
+	latestId      int
+	Responses     map[string][][]byte
+	ResponsesDict map[string]map[string][]byte
 }
 
 func (d *doerMappedMock) updateId(id int) {
@@ -58,11 +62,32 @@ func (d *doerMappedMock) Do(request *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	if d.Responses[requestJSON.Method] == nil {
+	if d.Responses[requestJSON.Method] == nil && d.ResponsesDict[requestJSON.Method] == nil {
 		log.Printf("No mocked response for %s\n", requestJSON.Method)
 	}
 
-	responseWriter := ioutil.NopCloser(bytes.NewReader(d.popResponse(requestJSON.Method)))
+	var responseWriter io.ReadCloser
+	if responses, ok := d.ResponsesDict[requestJSON.Method]; ok {
+		params := requestJSON.Params
+		buffer := new(bytes.Buffer)
+		if err := json.Compact(buffer, params); err != nil {
+			panic(err)
+		}
+		params = buffer.Bytes()
+
+		if params == nil {
+			params = []byte{}
+		}
+
+		if response, ok := responses[string(params)]; ok {
+			responseWriter = ioutil.NopCloser(bytes.NewReader(response))
+		}
+	}
+
+	if responseWriter == nil {
+		responseWriter = ioutil.NopCloser(bytes.NewReader(d.popResponse(requestJSON.Method)))
+	}
+
 	return &http.Response{
 		StatusCode: 200,
 		Body:       responseWriter,
@@ -127,6 +152,21 @@ func (d *doerMappedMock) pushResponse(requestType string, responseRaw []byte) {
 	d.Responses[requestType] = append(d.Responses[requestType], responseRaw)
 }
 
+func (d *doerMappedMock) pushResponseWithParams(requestType string, params json.RawMessage, responseRaw []byte) {
+	if d.ResponsesDict == nil {
+		d.ResponsesDict = map[string]map[string][]byte{}
+	}
+
+	if _, exists := d.ResponsesDict[requestType]; !exists {
+		d.ResponsesDict[requestType] = map[string][]byte{}
+	}
+
+	if params == nil {
+		params = []byte{}
+	}
+	d.ResponsesDict[requestType][string(params)] = responseRaw
+}
+
 func (d *doerMappedMock) popResponse(requestType string) []byte {
 	responses := len(d.Responses[requestType])
 	if responses == 0 {
@@ -160,6 +200,33 @@ func (d *doerMappedMock) AddResponse(requestType string, responseResult interfac
 
 	d.updateId(requestID)
 	d.pushResponse(requestType, responseRaw)
+	return nil
+}
+
+func (d *doerMappedMock) AddResponseWithParamsAndRequestID(requestID int, requestType string, params json.RawMessage, responseResult interface{}) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	responseRaw, err := prepareRawResponse(requestID, responseResult, nil)
+	if err != nil {
+		return err
+	}
+
+	d.updateId(requestID)
+	d.pushResponseWithParams(requestType, params, responseRaw)
+	return nil
+}
+
+func (d *doerMappedMock) AddResponseWithParams(requestType string, params json.RawMessage, responseResult interface{}) error {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	requestID := d.latestId + 1
+	responseRaw, err := prepareRawResponse(requestID, responseResult, nil)
+	if err != nil {
+		return err
+	}
+
+	d.updateId(requestID)
+	d.pushResponseWithParams(requestType, params, responseRaw)
 	return nil
 }
 

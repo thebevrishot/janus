@@ -3,6 +3,7 @@ package transformer
 import (
 	"container/list"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -13,15 +14,15 @@ import (
 	"github.com/qtumproject/janus/pkg/qtum"
 )
 
-type BlockPoller struct {
-	Qtum   *qtum.Qtum
-	lock   sync.RWMutex
-	blocks *list.List
-	synced bool
-	limit  int
+type BlockPoller interface {
+	Pull(blockNumber *big.Int) (*eth.GetBlockByHashResponse, error)
 }
 
-func (p *BlockPoller) pullBlock(blockNumber *big.Int) (*eth.GetBlockByHashResponse, error) {
+type DefaultBlockPoller struct {
+	Qtum *qtum.Qtum
+}
+
+func (p *DefaultBlockPoller) Pull(blockNumber *big.Int) (*eth.GetBlockByHashResponse, error) {
 	proxy := ProxyETHGetBlockByNumber{Qtum: p.Qtum}
 
 	blockHash, err := proxyETHGetBlockByHash(&proxy, p.Qtum, blockNumber)
@@ -39,33 +40,43 @@ func (p *BlockPoller) pullBlock(blockNumber *big.Int) (*eth.GetBlockByHashRespon
 	return proxyETHGetBlockByHash.request(getBlockByHashReq)
 }
 
-func (p *BlockPoller) clearBlocks() {
-	p.synced = false
+type BlockSyncer struct {
+	Qtum     *qtum.Qtum
+	lock     sync.RWMutex
+	blocks   *list.List
+	synced   bool
+	limit    int
+	poller   BlockPoller
+	interval time.Duration
+}
+
+func (s *BlockSyncer) clearBlocks() {
+	s.synced = false
 
 	// Assume lock is locked
-	itr := p.blocks.Front()
+	itr := s.blocks.Front()
 
 	// No valid block then cleanup
 	for itr != nil {
 		delItr := itr
 		itr = itr.Next()
-		p.blocks.Remove(delItr)
+		s.blocks.Remove(delItr)
 	}
 }
 
-func (p *BlockPoller) loopSync() error {
+func (s *BlockSyncer) loopSync() error {
 
 	for {
 		// Query block count
-		blockCountResp, err := p.Qtum.GetBlockCount()
+		blockCountResp, err := s.Qtum.GetBlockCount()
 		if err != nil {
-			p.Qtum.GetLogger().Log("function", "loopSync", "message", "fail to query blockcount", "error", err)
+			s.Qtum.GetLogger().Log("function", "loopSync", "message", "fail to query blockcount", "error", err)
 			continue
 		}
 		upstreamBlock := blockCountResp.Int
 
 		// Get local block
-		blockItr := p.blocks.Back()
+		blockItr := s.blocks.Back()
 
 		var localBlock *big.Int
 		var localHash = ""
@@ -80,62 +91,62 @@ func (p *BlockPoller) loopSync() error {
 		}
 
 		if localBlock.Cmp(upstreamBlock) < 0 {
-			newBlock, err := p.pullBlock(big.NewInt(0).Add(localBlock, big.NewInt(1)))
+			newBlock, err := s.poller.Pull(big.NewInt(0).Add(localBlock, big.NewInt(1)))
 			if err != nil {
-				p.Qtum.GetLogger().Log("function", "loopSync", "message", "fail to query block", "error", err)
+				s.Qtum.GetLogger().Log("function", "loopSync", "message", "fail to query block", "error", err)
 				continue
 			}
 
 			if localHash == "" || newBlock.ParentHash == localHash {
-				p.lock.Lock()
-				p.blocks.PushBack(newBlock)
-				p.synced = true
-				p.lock.Unlock()
+				s.lock.Lock()
+				s.blocks.PushBack(newBlock)
+				s.synced = true
+				s.lock.Unlock()
 			} else {
-				p.Qtum.GetLogger().Log("function", "loopSync", "message", "last block is invalid", "error", err)
-				p.lock.Lock()
-				p.clearBlocks()
-				p.lock.Unlock()
+				s.Qtum.GetLogger().Log("function", "loopSync", "message", "last block is invalid", "error", err)
+				s.lock.Lock()
+				s.clearBlocks()
+				s.lock.Unlock()
 				continue
 			}
 		} else if localBlock.Cmp(upstreamBlock) > 0 {
-			p.lock.Lock()
-			p.clearBlocks()
-			p.lock.Unlock()
+			s.lock.Lock()
+			s.clearBlocks()
+			s.lock.Unlock()
 			continue
 		} else {
-			upstreamHash, err := p.Qtum.GetBlockHash(localBlock)
+			upstreamHash, err := s.Qtum.GetBlockHash(localBlock)
 			if err != nil {
-				p.Qtum.GetLogger().Log("function", "loopSync", "message", "Fail to get block hash of local height", "error", err)
+				s.Qtum.GetLogger().Log("function", "loopSync", "message", "Fail to get block hash of local height", "error", err)
 				continue
 			}
 
 			if "0x"+upstreamHash != qtum.GetBlockHashResponse(localHash) {
-				p.Qtum.GetLogger().Log("function", "loopSync", "message", "Upstream hash is not match with local", "error", err)
-				p.lock.Lock()
-				p.clearBlocks()
-				p.lock.Unlock()
+				s.Qtum.GetLogger().Log("function", "loopSync", "message", "Upstream hash is not match with local", "error", err)
+				s.lock.Lock()
+				s.clearBlocks()
+				s.lock.Unlock()
 				continue
 			}
 
 			// If last block is corrent just sleep
-			time.Sleep(5 * time.Second)
+			time.Sleep(s.interval)
 		}
 
 		// Cleanup old
-		for p.blocks.Len() > p.limit {
-			p.lock.Lock()
-			p.blocks.Remove(p.blocks.Front())
-			p.lock.Unlock()
+		for s.blocks.Len() > s.limit {
+			s.lock.Lock()
+			s.blocks.Remove(s.blocks.Front())
+			s.lock.Unlock()
 		}
 	}
 }
 
-func (p *BlockPoller) GetBlock(blockNumber json.RawMessage) (*eth.GetBlockByHashResponse, bool) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
+func (s *BlockSyncer) GetBlock(blockNumber json.RawMessage) (*eth.GetBlockByHashResponse, bool) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
-	if !p.synced {
+	if !s.synced {
 		return nil, false
 	}
 
@@ -147,7 +158,7 @@ func (p *BlockPoller) GetBlock(blockNumber json.RawMessage) (*eth.GetBlockByHash
 	var element *list.Element
 	switch blockNumberStr {
 	case "latest":
-		element = p.blocks.Back()
+		element = s.blocks.Back()
 		if block, ok := element.Value.(*eth.GetBlockByHashResponse); ok {
 			return block, true
 		}
@@ -160,45 +171,53 @@ func (p *BlockPoller) GetBlock(blockNumber json.RawMessage) (*eth.GetBlockByHash
 			return nil, false
 		}
 
-		blockItr := p.blocks.Back()
+		blockItr := s.blocks.Back()
 		if blockItr == nil {
 			return nil, false
 		}
 
 		for blockItr != nil {
 			if block, ok := blockItr.Value.(*eth.GetBlockByHashResponse); ok {
-				requestBlockNumber, err := strconv.ParseInt(blockNumberStr[2:], 16, 64)
-				if err != nil {
+				requestBlockNumber := new(big.Int)
+				if _, ok := requestBlockNumber.SetString(blockNumberStr[2:], 16); !ok {
+					fmt.Println("Fail to decode", blockNumberStr[2:])
 					return nil, false
 				}
 
-				currentBlockNumber, err := strconv.ParseInt(block.Number[2:], 16, 64)
-				if err != nil {
+				currentBlockNumber := new(big.Int)
+				if _, ok := currentBlockNumber.SetString(block.Number[2:], 16); !ok {
+					fmt.Println("Fail to decode", block.Number[2:])
 					return nil, false
 				}
 
-				if requestBlockNumber > currentBlockNumber {
+				fmt.Println(requestBlockNumber, currentBlockNumber)
+
+				if requestBlockNumber.Cmp(currentBlockNumber) > 0 {
 					// request block is higher than last block
 					return nil, true
 				}
 
-				if currentBlockNumber == requestBlockNumber {
+				if currentBlockNumber.Cmp(requestBlockNumber) == 0 {
 					return block, true
 				}
 			}
 
 			blockItr = blockItr.Prev()
 		}
-
-		// Not found in cache
-		return nil, false
 	}
 
 	return nil, false
 }
 
-func NewBlockPoller(client *qtum.Qtum) (*BlockPoller, error) {
-	p := &BlockPoller{client, sync.RWMutex{}, list.New().Init(), false, 256}
-	go p.loopSync()
-	return p, nil
+func (s *BlockSyncer) Start() {
+	go s.loopSync()
+}
+
+func NewBlockSyncer(client *qtum.Qtum) (*BlockSyncer, error) {
+	return NewBlockSyncerWithBlockPollerAndInterval(client, &DefaultBlockPoller{client}, 100*time.Millisecond)
+}
+
+func NewBlockSyncerWithBlockPollerAndInterval(client *qtum.Qtum, poller BlockPoller, interval time.Duration) (*BlockSyncer, error) {
+	s := &BlockSyncer{client, sync.RWMutex{}, list.New().Init(), false, 256, poller, interval}
+	return s, nil
 }

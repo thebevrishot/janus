@@ -1,6 +1,8 @@
 package transformer
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/big"
 
 	"github.com/labstack/echo"
@@ -12,7 +14,7 @@ import (
 // ProxyETHGetBlockByNumber implements ETHProxy
 type ProxyETHGetBlockByNumber struct {
 	*qtum.Qtum
-	poller *BlockPoller
+	cacher *BlockSyncer
 }
 
 func (p *ProxyETHGetBlockByNumber) Method() string {
@@ -28,17 +30,24 @@ func (p *ProxyETHGetBlockByNumber) Request(rpcReq *eth.JSONRPCRequest, c echo.Co
 }
 
 func (p *ProxyETHGetBlockByNumber) WithBlockPoller() *ProxyETHGetBlockByNumber {
-	p.poller, _ = NewBlockPoller(p.Qtum)
+	p.cacher, _ = NewBlockSyncer(p.Qtum)
+	p.cacher.Start()
 	return p
 }
 
 func (p *ProxyETHGetBlockByNumber) request(req *eth.GetBlockByNumberRequest) (*eth.GetBlockByNumberResponse, error) {
-	if p.poller != nil && !req.FullTransaction {
-		block, ok := p.poller.GetBlock(req.BlockNumber)
+	if p.cacher != nil && !req.FullTransaction {
+		block, ok := p.cacher.GetBlock(req.BlockNumber)
 		if ok {
-			return block, nil
-		} else if ok && block == nil {
-			return nil, errors.New("couldn't get block number by parameter")
+			if block != nil {
+				return block, nil
+			} else {
+				var blockReq string
+				if err := json.Unmarshal(req.BlockNumber, &blockReq); err != nil {
+					fmt.Println("fail to unmarshal", err)
+				}
+				return nil, errors.New("couldn't get block number by parameter " + blockReq)
+			}
 		}
 	}
 

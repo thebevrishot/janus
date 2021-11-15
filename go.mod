@@ -24,7 +24,7 @@ require (
 	github.com/shopspring/decimal v1.2.0
 	github.com/stretchr/testify v1.5.1
 	github.com/valyala/fasttemplate v1.0.1 // indirect
-	golang.org/x/net v0.0.0-20201021035429-f5854403a974
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )
